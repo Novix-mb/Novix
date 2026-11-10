@@ -1,4 +1,4 @@
-        (() => {
+(() => {
             const st = document.getElementById('fxStage'),
                 btn = document.getElementById('fxBgPickerBtn'),
                 cv = document.getElementById('fxBg');
@@ -179,7 +179,7 @@
                 cv.dataset.scene = isC(m) ? 'custom' : m;
                 cv.__prof = null;
                 if (isC(m) && u) profile(u);
-                if (u) st.style.setProperty('--fx-bg-image', 'url("' + u + '")');
+                if (u) st.style.setProperty('--fx-bg-image', 'url("' + new URL(u, document.baseURI).href + '")');
                 try {
                     localStorage.setItem(KEY, m)
                 } catch (e) {}
