@@ -1,5 +1,5 @@
 (() => {
-            const SOON = ['sims', 'smartboard'];
+            const SOON = ['sims'];
             let curView = 'home';
             const $ = s => document.querySelector(s),
                 $$ = s => [...document.querySelectorAll(s)],
