@@ -1,4 +1,4 @@
-        (() => {
+(() => {
             const SOON = ['sims', 'smartboard'];
             let curView = 'home';
             const $ = s => document.querySelector(s),
@@ -544,6 +544,7 @@
                 $$('.view').forEach(e => e.classList.toggle('on', e.id === 'v-' + shown));
                 $$('#nav a[data-v]').forEach(a => a.classList.toggle('on', a.dataset.v === id));
                 if (soon) fillSoon(id);
+                if (id === 'focus' && window.NXPRE && NXPRE.loadAudio) NXPRE.loadAudio();
                 const m = $('.main');
                 if (m) m.scrollTop = 0;
             }
@@ -2049,7 +2050,7 @@
             async function sysNotify(msg, go, urgent) {
                 if (!('Notification' in window) || Notification.permission !== 'granted') return;
                 const ap = document.querySelector('link[rel="apple-touch-icon"]'),
-                    ico = ap ? ap.href : 'icons/icon-192.png';
+                    ico = ap ? ap.href : 'assets/img/icon-256x256.png';
                 const o = {
                     body: msg,
                     tag: 'novix-' + ((go && (go.k || 'x')) || 'x') + '-' + ((go && go.id) || (go && go.tasks ? 'tasks' : 'd')),
