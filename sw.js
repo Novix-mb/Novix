@@ -1,4 +1,4 @@
-const CACHE = 'novix-v7';
+const CACHE = 'novix-v8';
 const CORE = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/img/icon-64x64.png', 'assets/img/icon-256x256.png', 'assets/img/icon-512x512.png',
@@ -34,7 +34,7 @@ self.addEventListener('activate', e => {
 async function navigate(r) {
   const c = await caches.open(CACHE);
   const cached = (await c.match(r, { ignoreSearch: true })) || (await c.match('./')) || (await c.match('index.html'));
-  const net = fetch(r).then(res => { if (res && res.ok) c.put(r, res.clone()).catch(() => {}); return res; });
+  const net = fetch(r, { cache: 'no-cache' }).then(res => { if (res && res.ok) c.put(r, res.clone()).catch(() => {}); return res; });
   if (!cached) return net;
   return Promise.race([net.catch(() => cached), new Promise(ok => setTimeout(() => ok(cached), 4000))]);
 }
@@ -52,9 +52,10 @@ self.addEventListener('fetch', e => {
   if (r.mode === 'navigate') { e.respondWith(navigate(r)); return; }
   e.respondWith((async () => {
     const c = await caches.open(CACHE), m = await c.match(r);
-    const net = fetch(r).then(res => { if (res && res.ok) c.put(r, res.clone()).catch(() => {}); return res; }).catch(() => null);
-    e.waitUntil(net);
-    return m || (await net) || Response.error();
+    const net = fetch(r, { cache: 'no-cache' }).then(res => { if (res && res.ok) c.put(r, res.clone()).catch(() => {}); return res; });
+    e.waitUntil(net.catch(() => {}));
+    if (!m) return net.catch(() => Response.error());
+    return Promise.race([net.catch(() => m), new Promise(ok => setTimeout(() => ok(m), 4000))]);
   })());
 });
 
