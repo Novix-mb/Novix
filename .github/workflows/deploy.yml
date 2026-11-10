@@ -23,6 +23,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Stamp service worker version
+        run: |
+          sed -i "s/^const VERSION = '.*';/const VERSION = '${GITHUB_SHA::10}';/" sw.js
+          grep "^const VERSION" sw.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
