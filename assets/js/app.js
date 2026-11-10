@@ -2409,10 +2409,10 @@
                 }
             })();
             Object.assign(AR, {
-                'Smart Board': 'السبورة الذكية',
-                'Draw, Explain, Present': 'ارسم واشرح وقدّم',
-                'Draw, explain and present on a smart whiteboard. We’re putting the finishing touches on it.': 'ارسم واشرح وقدّم على سبورة ذكية. نضع اللمسات الأخيرة عليها.'
-            });
+    'Draw and explain on a whiteboard with pens, highlighter, shapes, text, sticky notes and images. Add pages, pick your paper, point with a laser, expand to full screen and print or export.': 'ارسم واشرح على سبورة بيضاء بالأقلام والهايلايتر والأشكال والنصوص والملاحظات اللاصقة والصور. أضف صفحات واختر نوع الورقة وأشِر بالليزر، وكبّر السبورة لتملأ الشاشة، ثم اطبعها أو صدّرها.',
+    'Interactive Simulations are on their way.': 'المحاكاة التفاعلية في الطريق إليكم.',
+    'Books, notes, boards and settings are saved on this device only and are never uploaded. Clearing your browser data will remove them.': 'تُحفظ الكتب والملاحظات والسبورة والإعدادات على هذا الجهاز فقط ولا تُرفع إلى أي مكان. مسح بيانات المتصفح سيحذفها.'
+});
             (() => {
                 const A = {
                     'Focus Timer': 'مؤقت المذاكرة',
