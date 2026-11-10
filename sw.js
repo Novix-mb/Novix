@@ -1,4 +1,4 @@
-const CACHE = 'novix-v6';
+const CACHE = 'novix-v7';
 const CORE = [
   './', 'index.html', 'manifest.webmanifest',
   'assets/img/icon-64x64.png', 'assets/img/icon-256x256.png', 'assets/img/icon-512x512.png',
@@ -48,6 +48,7 @@ self.addEventListener('fetch', e => {
     })));
     return;
   }
+  if (/\/assets\/audio\//.test(new URL(r.url).pathname) || r.headers.has('range')) return;
   if (r.mode === 'navigate') { e.respondWith(navigate(r)); return; }
   e.respondWith((async () => {
     const c = await caches.open(CACHE), m = await c.match(r);
