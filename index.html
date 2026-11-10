@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <script src="assets/js/theme-init.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>NOVIX</title>
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/icon-64x64.png">
+    <link rel="icon" type="image/png" sizes="256x256" href="assets/img/icon-256x256.png">
+    <link rel="apple-touch-icon" href="assets/img/icon-512x512.png">
+    <meta name="theme-color" content="#f1fbfa">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="NOVIX">
+    <meta name="apple-mobile-web-app-title" content="NOVIX">
+    <script src="assets/js/theme-color.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Caveat:wght@500;700&family=Amiri:wght@400;700&family=Cairo:wght@400;700&family=Space+Mono:wght@400;700&family=Tajawal:wght@400;700&family=Almarai:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=Reem+Kufi:wght@400;700&family=El+Messiri:wght@400;700&family=Lateef:wght@400;700&family=Scheherazade+New:wght@400;700&family=Aref+Ruqaa:wght@400;700&family=Changa:wght@400;700&family=Lemonada:wght@400;700&family=Harmattan:wght@400;700&family=Markazi+Text:wght@400;700&family=Noto+Kufi+Arabic:wght@400;700&family=Rakkas&family=Mada:wght@400;700&family=Readex+Pro:wght@400;700&display=swap">
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <link id="nx-add" rel="stylesheet" href="assets/css/nx-add.css">
+    <link id="novix-opening-styles" rel="stylesheet" href="assets/css/opening.css">
+
+    <script id="novix-preload" src="assets/js/preload.js"></script>
+</head>
+
+<body>
+    <div id="novix-opening" class="novix-opening is-playing" role="dialog" aria-modal="true" aria-label="NOVIX welcome experience">
+        <div class="opening-aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+        <canvas id="novix-opening-fx" aria-hidden="true"></canvas>
+        <div class="opening-grid" aria-hidden="true"></div>
+        <div class="opening-orbit" aria-hidden="true"></div>
+        <section class="opening-intro" aria-label="NOVIX intro">
+            <div class="opening-lockup">
+                <div class="opening-mark-wrap">
+                    <img class="opening-mark" id="novix-opening-logo" src="assets/img/logo.webp" alt="NOVIX symbol">
+                    <span class="opening-spark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none"><path d="M16 1.5 19.1 12.9 30.5 16 19.1 19.1 16 30.5 12.9 19.1 1.5 16 12.9 12.9 16 1.5Z" fill="currentColor"/><circle cx="27" cy="5" r="1.5" fill="#A5C9FF"/><circle cx="4" cy="26" r="1" fill="#A5C9FF"/></svg>
+        </span>
+                </div>
+                <div class="opening-word-wrap"><span class="opening-word">NOVIX</span></div>
+            </div>
+            <div class="opening-tagline">THINK BEYOND</div>
+        </section>
+
+        <section class="opening-welcome" id="novix-welcome" aria-hidden="true">
+            <div class="welcome-topline">
+                <div class="welcome-brand"><img src="assets/img/logo.webp" alt=""><span>NOVIX</span></div>
+                <div class="welcome-chip" id="novix-welcome-chip">YOUR PERSONAL SPACE</div>
+            </div>
+            <div class="welcome-content">
+                <div class="welcome-portrait-wrap" aria-hidden="true">
+                    <div class="welcome-portrait-halo"></div>
+                    <div class="welcome-portrait-ring">
+                        <img id="novix-welcome-photo" alt="Profile photo" hidden>
+                        <span class="welcome-avatar-fallback" id="novix-welcome-fallback">S</span>
+                    </div>
+                    <span class="welcome-portrait-star">✦</span>
+                </div>
+                <div class="welcome-copy">
+                    <p class="welcome-kicker" id="novix-welcome-kicker">A NEW CHAPTER</p>
+                    <h1 class="welcome-heading"><span id="novix-welcome-greeting">Welcome to NOVIX,</span><strong id="novix-welcome-name">Student</strong></h1>
+                    <p class="welcome-message" id="novix-welcome-message">Your space to learn, explore, and think beyond.</p>
+                    <button type="button" class="welcome-cta" id="novix-welcome-enter">
+          <span id="novix-welcome-enter-label">Explore NOVIX</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7"/></svg>
+        </button>
+                </div>
+            </div>
+            <p class="welcome-foot">THINK BEYOND&nbsp;&nbsp;·&nbsp;&nbsp;LEARN WITHOUT LIMITS</p>
+        </section>
+
+    </div>
+
+    <svg class="sprite" aria-hidden="true"><defs>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
+<symbol id="i-tasks" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M2 5c3-1 7-1 10 2 3-3 7-3 10-2v14c-3-1-7-1-10 2-3-3-7-3-10-2z"/><path d="M12 7v14"/></symbol>
+<symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7.5 15h9"/></symbol><symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3"/></symbol><symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20l2-4M16 20l-2-4M12 4V2M7 10c1.4-1.8 2.6 1.8 4 0s2.6 1.8 4 0"/></symbol>
+
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3zM12 14v7"/></symbol><symbol id="i-notes" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M15 4v4h4M8 12h8M8 16h6"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/></symbol>
+<symbol id="i-go" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+<symbol id="i-ne" viewBox="0 0 24 24"><path d="M7 17L17 7M8 7h9v9"/></symbol>
+
+<symbol id="i-ck" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+<symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7M5 11l9 9"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol><symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol><symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></symbol><symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-cl" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol><symbol id="i-cr" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol></defs></svg>
+    <div class="app">
+        <aside class="side">
+            <div class="side-bg" aria-hidden="true"></div>
+            <a class="brand" href="#/home" aria-label="NOVIX"><img src="assets/img/logo.webp" alt="NOVIX logo"><b>NOVIX</b></a>
+            <nav id="nav" aria-label="Main">
+                <a href="#/home" data-v="home"><svg class="i"><use href="#i-home"/></svg><span data-t>Home</span></a>
+                <a href="#/library" data-v="library"><svg class="i"><use href="#i-book"/></svg><span data-t>Library</span></a>
+                <a href="#/tasks" data-v="tasks"><svg class="i"><use href="#i-tasks"/></svg><span data-t>My Tasks</span></a>
+                <a href="#/notes" data-v="notes"><svg class="i"><use href="#i-notes"/></svg><span data-t>Notes</span></a>
+                <a href="#/timetable" data-v="timetable"><svg class="i"><use href="#i-cal"/></svg><span data-t>Timetable</span></a>
+
+                <a href="#/focus" data-v="focus"><svg class="i"><use href="#i-timer"/></svg><span data-t>Focus Timer</span></a>
+                <a href="#/smartboard" data-v="smartboard" class="is-soon"><svg class="i"><use href="#i-board"/></svg><span data-t>Smart Board</span><i class="soon-dot" aria-hidden="true"></i></a>
+                <a href="#/sims" data-v="sims" class="is-soon"><svg class="i"><use href="#i-flask"/></svg><span data-t>Simulations</span><i class="soon-dot" aria-hidden="true"></i></a>
+                <a href="#/about" data-v="about"><svg class="i"><use href="#i-info"/></svg><span data-t>About</span></a>
+                <a href="#/settings" data-v="settings"><svg class="i"><use href="#i-gear"/></svg><span data-t>Settings</span></a>
+            </nav>
+            <div class="developer-credit" aria-label="Developer credit"><span data-t>DESIGNED &amp; DEVELOPED BY</span><strong>boody_3ta &amp; abo_hegap</strong></div>
+            <div class="side-profile">
+                <div class="profile-avatar" id="sideAv">S</div>
+                <div class="profile-meta"><b id="sideName">Student</b><span data-t>Personal Workspace</span></div>
+
+            </div>
+        </aside>
+        <section class="main">
+            <header class="top">
+                <button class="theme-btn fs-btn" id="fsBtn" type="button" aria-label="Full screen" title="Full screen"><svg class="i ic-exp"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i ic-cmp"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
+                <button class="theme-btn" role="switch" id="themeSw" type="button" aria-checked="true" aria-label="Dark mode" title="Dark mode"><svg class="i ic-moon"><use href="#i-moon"/></svg><svg class="i ic-sun"><use href="#i-sun"/></svg></button>
+                <button class="ib" id="bell" aria-label="Notifications"><svg class="i"><use href="#i-bell"/></svg><span class="dot" id="dot"></span></button>
+                <div class="user"><span class="av" id="av">S</span><b id="uname">Student</b></div>
+            </header>
+
+            <section class="view" id="v-home">
+                <div class="hero">
+                    <div style="position:relative;z-index:1"><h1><span data-t>Big</span> <em data-t>Dream.</em></h1>
+                        <p data-t>Learn more, explore further, and build the future you imagine.</p><a class="btn" href="#/about"><span data-t>About</span><svg class="i flip"><use href="#i-go"/></svg></a>
+                    </div><img class="bg" src="assets/img/welcome-bg.webp" alt="" decoding="async">
+                </div>
+                <div class="feat">
+                    <a class="fc k3" href="#/library"><svg class="art" viewBox="0 0 190 170" aria-hidden="true"><defs><linearGradient id="lbA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fd0b0"/><stop offset="1" stop-color="#1f8f7c"/></linearGradient><linearGradient id="lbB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fb8ee"/><stop offset="1" stop-color="#2e6fa5"/></linearGradient><linearGradient id="lbC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7cf7a"/><stop offset="1" stop-color="#c2892f"/></linearGradient><filter id="lbS" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#1f5a5a" flood-opacity=".35"/></filter></defs><ellipse cx="95" cy="152" rx="80" ry="8" fill="#1f6a6a" opacity=".2"/><g filter="url(#lbS)"><rect x="30" y="50" width="30" height="98" rx="5" fill="url(#lbB)"/><rect x="64" y="34" width="32" height="114" rx="5" fill="url(#lbA)"/><rect x="100" y="58" width="28" height="90" rx="5" fill="url(#lbC)"/><g transform="rotate(14 150 110)"><rect x="132" y="48" width="30" height="100" rx="5" fill="#e58aa5"/><rect x="137" y="60" width="20" height="4" rx="2" fill="#fff" opacity=".7"/></g></g><g fill="#fff" opacity=".75"><rect x="36" y="64" width="18" height="4" rx="2"/><rect x="36" y="74" width="18" height="4" rx="2"/><rect x="70" y="50" width="20" height="4" rx="2"/><rect x="70" y="60" width="20" height="4" rx="2"/><rect x="105" y="72" width="18" height="4" rx="2"/><rect x="105" y="82" width="18" height="4" rx="2"/></g></svg><div><h3 data-t>Library</h3><p data-t>Your Books &amp; PDFs</p></div><span class="go"><svg class="i flip"><use href="#i-go"/></svg></span></a>
+                    <a class="fc k1" href="#/tasks"><svg class="art" viewBox="0 0 190 170" aria-hidden="true"><defs><linearGradient id="tkA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fe3cc"/><stop offset="1" stop-color="#2fae88"/></linearGradient><filter id="tkS" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#1f5a50" flood-opacity=".35"/></filter></defs><ellipse cx="95" cy="154" rx="70" ry="8" fill="#1f6a6a" opacity=".2"/><g filter="url(#tkS)"><rect x="42" y="16" width="106" height="134" rx="14" fill="#fff"/><rect x="72" y="8" width="46" height="18" rx="8" fill="#35594d"/></g><g fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="66" cy="54" r="10" fill="url(#tkA)"/><path d="M61 54l4 4 7-8" stroke="#fff" stroke-width="3.5"/><rect x="84" y="50" width="48" height="8" rx="4" fill="#cfe3da" stroke="none"/><circle cx="66" cy="88" r="10" fill="url(#tkA)"/><path d="M61 88l4 4 7-8" stroke="#fff" stroke-width="3.5"/><rect x="84" y="84" width="38" height="8" rx="4" fill="#cfe3da" stroke="none"/><circle cx="66" cy="122" r="10" fill="none" stroke="#9fc3b6" stroke-width="3"/><rect x="84" y="118" width="44" height="8" rx="4" fill="#e3eeea" stroke="none"/></g></svg><div><h3 data-t>My Tasks</h3><p data-t>Small Steps, Big Wins</p></div><span class="go"><svg class="i flip"><use href="#i-go"/></svg></span></a>
+                    <a class="fc k2" href="#/notes"><svg class="art" viewBox="0 0 190 170" aria-hidden="true"><defs><linearGradient id="ntA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff2a8"/><stop offset="1" stop-color="#f6c453"/></linearGradient><linearGradient id="ntB" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0e8"/><stop offset="1" stop-color="#f09ab4"/></linearGradient><linearGradient id="ntC" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d6f5ea"/><stop offset="1" stop-color="#6fcbb0"/></linearGradient><filter id="ntS" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#1f5a50" flood-opacity=".33"/></filter></defs><ellipse cx="95" cy="154" rx="76" ry="8" fill="#1f6a6a" opacity=".2"/><g filter="url(#ntS)"><g transform="rotate(9 135 90)"><rect x="86" y="26" width="82" height="100" rx="9" fill="url(#ntC)"/></g><g transform="rotate(-8 60 90)"><rect x="22" y="34" width="80" height="100" rx="9" fill="url(#ntB)"/></g><g transform="rotate(-1 95 90)"><rect x="50" y="20" width="86" height="112" rx="9" fill="url(#ntA)"/><g fill="#a37a16" opacity=".55"><rect x="64" y="42" width="56" height="6" rx="3"/><rect x="64" y="58" width="58" height="5" rx="2.5"/><rect x="64" y="72" width="46" height="5" rx="2.5"/><rect x="64" y="86" width="52" height="5" rx="2.5"/></g></g></g></svg><div><h3 data-t>Notes</h3><p data-t>Capture Every Idea</p></div><span class="go"><svg class="i flip"><use href="#i-go"/></svg></span></a>
+                    <a class="fc k1" href="#/timetable"><svg class="art" viewBox="0 0 190 170" aria-hidden="true"><defs><linearGradient id="ttA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fd9c0"/><stop offset="1" stop-color="#2f9c86"/></linearGradient><filter id="ttS" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#1f5a50" flood-opacity=".33"/></filter></defs><ellipse cx="95" cy="154" rx="76" ry="8" fill="#1f6a6a" opacity=".2"/><g filter="url(#ttS)"><rect x="28" y="24" width="134" height="122" rx="16" fill="#fff"/><path d="M28 40a16 16 0 0 1 16-16h102a16 16 0 0 1 16 16v20H28z" fill="url(#ttA)"/><rect x="58" y="12" width="9" height="24" rx="4.5" fill="#35594d"/><rect x="123" y="12" width="9" height="24" rx="4.5" fill="#35594d"/></g><g><rect x="42" y="74" width="26" height="14" rx="5" fill="#cfe8f6"/><rect x="82" y="74" width="26" height="14" rx="5" fill="#ffe29a"/><rect x="122" y="74" width="26" height="14" rx="5" fill="#cfeedf"/><rect x="42" y="98" width="26" height="14" rx="5" fill="#ffd3da"/><rect x="82" y="98" width="26" height="14" rx="5" fill="#5fc2a4"/><rect x="42" y="122" width="26" height="12" rx="5" fill="#e7dcff"/></g><g transform="translate(128 108)" filter="url(#ttS)"><circle cx="22" cy="22" r="22" fill="#fff"/><circle cx="22" cy="22" r="17" fill="#eaf8f3" stroke="#2f9c86" stroke-width="3"/><path d="M22 11v12l8 5" fill="none" stroke="#35594d" stroke-width="3.2" stroke-linecap="round"/></g></svg><div><h3 data-t>Timetable</h3><p data-t>Plan Your Week</p></div><span class="go"><svg class="i flip"><use href="#i-go"/></svg></span></a>
+                    <a class="fc k2" href="#/focus"><svg class="art" viewBox="0 0 190 170" aria-hidden="true"><defs><linearGradient id="fxA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8aa6ff"/><stop offset="1" stop-color="#5b3fd0"/></linearGradient></defs><ellipse cx="95" cy="158" rx="60" ry="7" fill="#1f2a6a" opacity=".2"/><rect x="84" y="14" width="22" height="12" rx="4" fill="#4a3fb5"/><circle cx="95" cy="88" r="62" fill="url(#fxA)"/><circle cx="95" cy="88" r="48" fill="#f4f1ff"/><path d="M95 88V56M95 88l22 14" stroke="#4a3fb5" stroke-width="7" stroke-linecap="round"/><circle cx="95" cy="88" r="6" fill="#4a3fb5"/><circle cx="150" cy="40" r="3" fill="#ffd36b"/><circle cx="40" cy="52" r="2.2" fill="#fff"/></svg><div><h3 data-t>Focus Timer</h3><p data-t>Study with focus</p></div><span class="go"><svg class="i flip"><use href="#i-go"/></svg></span></a>
+                    <a class="fc k1 is-soon" href="#/smartboard"><span class="soon-tag" data-t>Coming soon</span><svg class="art" viewBox="0 0 190 170" aria-hidden="true"><defs><linearGradient id="sbA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fd9c0"/><stop offset="1" stop-color="#2f9c86"/></linearGradient><filter id="sbS" x="-20%" y="-20%" width="150%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#1f5a50" flood-opacity=".33"/></filter></defs><ellipse cx="95" cy="158" rx="70" ry="7" fill="#1f6a6a" opacity=".2"/><path d="M70 150l18-34M120 150l-18-34" stroke="#35594d" stroke-width="6" stroke-linecap="round"/><g filter="url(#sbS)"><rect x="22" y="22" width="146" height="98" rx="14" fill="url(#sbA)"/><rect x="31" y="31" width="128" height="80" rx="9" fill="#fff"/></g><path d="M44 78c10-22 18 20 30-2s20 18 32-2 18 12 34-6" fill="none" stroke="#2f9c86" stroke-width="4" stroke-linecap="round"/><path d="M46 52h46" stroke="#f6c453" stroke-width="5" stroke-linecap="round"/><path d="M46 64h28" stroke="#ef6f6c" stroke-width="5" stroke-linecap="round"/><circle cx="132" cy="56" r="14" fill="#ff2d2d" opacity=".18"/><circle cx="132" cy="56" r="8" fill="#ff2d2d" opacity=".4"/><circle cx="132" cy="56" r="4.5" fill="#ff3b3b"/><circle cx="132" cy="56" r="1.8" fill="#fff"/></svg><div><h3 data-t>Smart Board</h3><p data-t>Draw, Explain, Present</p></div><span class="go"><svg class="i flip"><use href="#i-go"/></svg></span></a>
+                    <a class="fc k2 is-soon" href="#/sims"><span class="soon-tag" data-t>Coming soon</span><svg class="art" viewBox="0 0 190 170" aria-hidden="true"><defs>
+<linearGradient id="ao" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5fb4ee"/><stop offset="1" stop-color="#b9ebfb"/></linearGradient>
+<radialGradient id="ac" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#d5eaf7"/><stop offset="1" stop-color="#8fc3e4"/></radialGradient>
+<radialGradient id="ab" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#9ad3fb"/><stop offset="1" stop-color="#2a73c4"/></radialGradient>
+<radialGradient id="ag" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fbe6a6"/><stop offset="1" stop-color="#d49a36"/></radialGradient>
+<filter id="ash" x="-30%" y="-30%" width="170%" height="170%"><feDropShadow dx="0" dy="4" stdDeviation="3.5" flood-color="#1f5a8a" flood-opacity=".35"/></filter></defs>
+<g fill="none" stroke="url(#ao)" stroke-width="5.5" filter="url(#ash)"><ellipse cx="95" cy="85" rx="82" ry="27"/><ellipse cx="95" cy="85" rx="82" ry="27" transform="rotate(60 95 85)"/><ellipse cx="95" cy="85" rx="82" ry="27" transform="rotate(-60 95 85)"/></g>
+<g fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.6"><ellipse cx="95" cy="82" rx="80" ry="24"/><ellipse cx="95" cy="82" rx="80" ry="24" transform="rotate(60 95 85)"/><ellipse cx="95" cy="82" rx="80" ry="24" transform="rotate(-60 95 85)"/></g>
+<circle cx="95" cy="85" r="24" fill="url(#ac)" filter="url(#ash)"/>
+<circle cx="150" cy="52" r="11" fill="url(#ab)" filter="url(#ash)"/><circle cx="40" cy="112" r="10" fill="url(#ag)" filter="url(#ash)"/><circle cx="72" cy="30" r="9" fill="url(#ab)" filter="url(#ash)"/><circle cx="132" cy="136" r="10.5" fill="url(#ag)" filter="url(#ash)"/><circle cx="168" cy="96" r="8" fill="#f2a05a" filter="url(#ash)"/></svg><div><h3 data-t>Interactive Simulations</h3><p data-t>Learn by Doing</p></div><span class="go"><svg class="i flip"><use href="#i-go"/></svg></span></a>
+                </div>
+                <div class="hm-row">
+                    <div class="hm-card" id="hmLibCard">
+                        <div class="hm-hd"><svg class="i hm-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><h2 data-t>Library</h2><a href="#/library"><span data-t>View All</span><svg class="i flip"><use href="#i-go"/></svg></a></div>
+                        <div class="hm-books" id="hmLib"></div>
+                    </div>
+                    <div class="hm-card" id="hmTaskCard">
+                        <div class="hm-hd"><svg class="i hm-tick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor" stroke="none"/><path d="M7.5 12.5l3 3 6-7" stroke="#fff" stroke-width="2.4"/></svg><h2 data-t>Today’s Tasks</h2><a href="#/tasks"><span data-t>View All</span><svg class="i flip"><use href="#i-go"/></svg></a></div>
+                        <div id="hmTasks"></div>
+                        <div class="hm-keep" id="hmKeep"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view" id="v-tasks">
+                <div class="section-banner tasks-banner">
+                    <div class="banner-orbit" aria-hidden="true"></div>
+                    <div class="banner-copy"><span class="eyebrow" data-t>YOUR PERSONAL WORKSPACE</span><h1 class="pg" data-t>My Tasks</h1>
+                        <p data-t>Small steps every day. Big progress over time.</p>
+                    </div>
+                    <div class="banner-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M25 51l16 16 35-39"/><circle cx="50" cy="50" r="39"/></svg></div>
+                </div>
+                <div class="card">
+                    <form class="form" id="addF"><input id="tin" required maxlength="80" data-ph="Add a new task…" placeholder="Add a new task…" aria-label="New task"><select id="tpr" aria-label="Difficulty"><option value="Low" data-t>Easy</option><option value="Medium" selected data-t>Medium</option><option value="High" data-t>Hard</option></select><button class="btn" type="submit"><span data-t>Add</span></button></form>
+                </div>
+                <div class="chips" id="flt"><button class="chip on" data-f="all" data-t>All</button><button class="chip" data-f="act" data-t>Active</button><button class="chip" data-f="done" data-t>Done</button></div>
+                <p class="nt-hint" data-t>Sorted from easiest to hardest</p>
+                <div class="card">
+                    <div id="allTasks"></div>
+                </div>
+            </section>
+
+            <section class="view" id="v-library"><h1 class="pg" data-t>Library</h1>
+                <div class="card">
+                    <form class="form" id="bkF"><input id="bt" required maxlength="80" data-ph="Book title" placeholder="Book title" aria-label="Book title"><select id="bs" aria-label="Subject"></select><input id="bsn" hidden maxlength="24" data-ph="New subject" placeholder="New subject" aria-label="New subject"><label class="btn ghost" style="cursor:pointer"><span data-t>Choose PDF</span><input id="bf" type="file" hidden accept=".pdf,application/pdf"></label><span id="fn" style="color:var(--muted);font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="btn" type="submit"><span data-t>Add book</span></button>
+                        <div class="cover-pick"><span class="cp-lab" data-t>Cover colour</span><span class="cp-sw" id="cpSw"></span></div>
+                    </form>
+                </div>
+                <div class="chips" id="subj"></div>
+                <div class="grid" id="lib"></div>
+            </section>
+
+            <section class="view" id="v-smartboard" hidden></section>
+
+            <section class="view" id="v-focus">
+                <div class="section-banner tasks-banner">
+                    <div class="banner-orbit" aria-hidden="true"></div>
+                    <div class="banner-copy"><span class="eyebrow" data-t>YOUR PERSONAL WORKSPACE</span><h1 class="pg" data-t>Focus Timer</h1>
+                        <p data-t>Stay in the zone with a calm timer, soft sounds and a view you love.</p>
+                    </div>
+                </div>
+                <div class="fx-stage" id="fxStage"><canvas class="fx-bg" id="fxBg"></canvas>
+
+                    <div class="fx-top">
+                        <div class="fx-tabs" id="fxTabs"><button type="button" data-m="f" data-t>Focus</button><button type="button" data-m="s" data-t>Short break</button><button type="button" data-m="l" data-t>Long break</button></div>
+                        <div class="fx-tools">
+                            <button type="button" class="fx-ib" id="fxMb" aria-haspopup="true" aria-expanded="false" aria-label="Sound" title="Sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4.6" height="6.6" rx="2"/><rect x="16.4" y="14" width="4.6" height="6.6" rx="2"/></svg></button>
+                            <button type="button" class="fx-ib" id="fxBgPickerBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Background" title="Background"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="m4 16.5 4.6-4.4 3.4 3.1 2.6-2.4 5.4 4.7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16.4" cy="9.2" r="1.6" fill="currentColor"/></svg></button>
+                            <button type="button" class="fx-ib" id="fxFs" aria-label="Full screen" title="Full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="fx-mid">
+                        <div class="fx-ring"><svg viewBox="0 0 260 260"><defs><linearGradient id="fxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ef0d8"/><stop offset="1" stop-color="#9aa8ff"/></linearGradient></defs><circle cx="130" cy="130" r="118" class="fx-trk"/><circle cx="130" cy="130" r="118" class="fx-prg" id="fxPrg" stroke="url(#fxG)"/></svg>
+                            <div class="fx-time"><b id="fxT">30:00</b><span id="fxL"></span></div>
+                        </div>
+                        <div class="fx-ctl"><button type="button" class="fx-b" id="fxReset" data-t>Reset</button><button type="button" class="fx-b big" id="fxGo">Start</button><button type="button" class="fx-b" id="fxSkip" data-t>Skip</button></div>
+                        <div class="fx-set">
+                            <div class="fx-pre" id="fxPre"></div><label class="fx-len"><input type="number" id="fxMin" min="1" max="180" inputmode="numeric"><span data-t>min</span></label><label class="fx-auto"><input type="checkbox" id="fxAuto"><span data-t>Auto-start next</span></label>
+                        </div>
+                        <div class="fx-stat" id="fxStat"></div>
+                    </div>
+                    <div class="fx-music" id="fxMusic" hidden role="dialog" aria-label="Sound">
+                        <div class="fx-mh"><div class="fx-mt"><i class="fx-mi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4.6" height="6.6" rx="2"/><rect x="16.4" y="14" width="4.6" height="6.6" rx="2"/></svg></i><b data-t>Sound</b></div><button type="button" class="fx-x" id="fxMx" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+                        <div class="fx-st" id="fxSt"></div>
+                        <p class="fx-hint" data-t>Tap a sound to preview it for 3 seconds. It plays while the timer runs.</p>
+                        <label class="fx-vol"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5l5 4v-13l-5 4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.6 6.4a8 8 0 0 1 0 11.2"/></svg><input type="range" id="fxVol" min="0" max="100" aria-label="Volume"><output id="fxVv">60%</output></label>
+                        <div id="fxMine" hidden>
+                            <div class="fx-np"><button type="button" id="fxPv" aria-label="Previous"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5.5v13"/><path d="M19 5.8v12.4L9 12z" fill="currentColor"/></svg></button><button type="button" class="pp" id="fxPp" aria-label="Play / Pause"></button><button type="button" id="fxNx" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5.5v13"/><path d="M5 5.8v12.4L15 12z" fill="currentColor"/></svg></button><button type="button" id="fxRp" aria-label="Repeat" title="Repeat" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 2l3 3-3 3"/><path d="M4 11V9a3 3 0 0 1 3-3h13"/><path d="M7 22l-3-3 3-3"/><path d="M20 13v2a3 3 0 0 1-3 3H4"/><path d="M11.2 10.2 12.6 9v6"/></svg></button><span id="fxNm"></span></div>
+                            <div class="fx-list" id="fxList"></div><label class="fx-add"><input type="file" id="fxFile" accept="audio/*" multiple hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-t>Add songs</span></label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="view" id="v-sims" hidden></section>
+
+            <section class="view" id="v-notes">
+                <div class="nn-head">
+                    <div><h1 class="pg" data-t>Notes</h1><small id="nnCount"></small></div>
+                </div>
+                <div class="nn-lbl" id="nnPinLbl" hidden><svg class="i"><use href="#i-pin"/></svg><span data-t>Pinned</span></div>
+                <div class="nn-grid" id="nnPin"></div>
+                <div class="nn-lbl" id="nnAllLbl" hidden data-t>All notes</div>
+                <div class="nn-grid" id="nnGrid"></div>
+            </section>
+
+            <section class="view" id="v-timetable">
+                <div class="section-banner tasks-banner">
+                    <div class="banner-copy"><span class="eyebrow" data-t>YOUR PERSONAL WORKSPACE</span><h1 class="pg" data-t>Timetable</h1>
+                        <p data-t>Plan your week and never miss a task.</p>
+                    </div>
+                    <div class="banner-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M22 28h56v50H22zM22 44h56M37 18v16M63 18v16"/><circle cx="50" cy="62" r="3"/></svg></div>
+                </div>
+                <div class="tt-bar">
+                    <div class="bpill nt-week"><button class="b" id="wkPrev" aria-label="Previous week"><svg class="i flip"><use href="#i-cl"/></svg></button><span id="wkLbl"></span><button class="b" id="wkToday" type="button"><span data-t>This week</span></button><button class="b" id="wkNext" aria-label="Next week"><svg class="i flip"><use href="#i-cr"/></svg></button></div><button class="btn" id="ttNew" type="button"><svg class="i"><use href="#i-plus"/></svg><span data-t>Add plan</span></button>
+                </div>
+                <div class="nt-perm" id="permBox"><span id="permTxt"></span><button class="btn ghost" type="button" id="permBtn"><span data-t>Enable notifications</span></button></div>
+                <div class="tt-strip" id="ttStrip"></div>
+                <div class="tt-wrap">
+                    <div class="tt-grid" id="ttGrid"></div>
+                </div>
+            </section>
+            <section class="view" id="v-soon" aria-live="polite">
+                <div class="card soon-card">
+                    <div class="soon-ico"><svg class="i"><use href="#i-flask"/></svg></div><span class="soon-tag big" data-t>Coming soon</span><h1 class="pg" id="soonT"></h1>
+                    <p id="soonP"></p>
+                </div>
+            </section>
+            <section class="view" id="v-about">
+                <h1 class="pg" data-t>About NOVIX</h1>
+                <div class="card about-hero">
+                    <div class="about-word">NOVIX</div>
+                    <div class="about-tag" data-t>Think Beyond</div>
+                    <p data-t>NOVIX is your personal study workspace: keep your books, tasks and notes, plan your week and stay focused, all in one calm place.</p>
+                </div>
+                <div class="about-grid">
+                    <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-book"/></svg></span><h3 data-t>Library</h3>
+                        <p data-t>Upload your PDF books, read them on this device and write on the pages with a pen, highlighter, text, sticky notes and shapes.</p>
+                    </div>
+                    <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-tasks"/></svg></span><h3 data-t>My Tasks</h3>
+                        <p data-t>Add tasks by difficulty, easiest first, tick them off and watch your progress grow.</p>
+                    </div>
+                    <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-notes"/></svg></span><h3 data-t>Notes</h3>
+                        <p data-t>Write and pin notes, format your text and keep every idea organised and easy to find.</p>
+                    </div>
+                    <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-cal"/></svg></span><h3 data-t>Timetable</h3>
+                        <p data-t>Plan your week with colour-coded sessions, link them to your tasks and get a reminder when it is time.</p>
+                    </div>
+                    <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-timer"/></svg></span><h3 data-t>Focus Timer</h3>
+                        <p data-t>Focus and break sessions with soft sounds, calm backgrounds and a screen that stays awake while the timer runs.</p>
+                    </div>
+                    <div class="card about-item"><span class="about-ic soon"><svg class="i"><use href="#i-spark"/></svg></span><h3 data-t>Coming soon</h3>
+                        <p data-t>Smart Board and Simulations are on their way.</p>
+                    </div>
+                </div>
+                <div class="card about-note"><h3 data-t>Your data stays with you</h3>
+                    <p data-t>Books, notes and settings are saved on this device only and are never uploaded. Clearing your browser data will remove them.</p>
+                </div>
+                <div class="card about-credit"><span data-t>Designed &amp; developed by</span><strong class="sign">boody_3ta &amp; abo_hegap</strong></div>
+            </section>
+            <section class="view" id="v-settings"><h1 class="pg" data-t>Settings</h1>
+                <div class="card">
+                    <div class="fld"><span data-t>Name</span><span class="fld" style="border:0;padding:0"><input id="nameIn" maxlength="24" aria-label="Name" data-ph="Student" placeholder="Student"></span></div>
+                    <div class="fld"><span data-t>Profile picture</span><span class="av-ctl"><span class="av" id="avPrev">S</span><label class="btn ghost" style="cursor:pointer"><span data-t>Upload photo</span><input id="avFile" type="file" accept="image/*" hidden></label><button class="btn ghost" id="avDel" type="button" hidden><span data-t>Remove</span></button></span></div>
+                    <div class="fld"><span data-t>Language</span><select id="langSel" aria-label="Language"><option value="en">English</option><option value="ar">العربية</option></select></div>
+                    <div class="fld"><span data-t>Light Mode</span><button class="theme-btn sm" role="switch" id="themeSw2" type="button" aria-checked="true" aria-label="Dark mode" title="Dark mode"><svg class="i ic-moon"><use href="#i-moon"/></svg><svg class="i ic-sun"><use href="#i-sun"/></svg></button></div>
+                    <div class="fld"><span data-t>Sound effects</span><button class="sw" id="sndSw" role="switch" aria-checked="true" aria-label="Sound effects"></button></div>
+                    <div class="fld"><span data-t>Volume</span><input type="range" id="vol" min="0" max="100" value="60" aria-label="Volume"></div>
+                    <div class="fld"><span data-t>Reset settings</span><button class="btn ghost" id="reset"><span data-t>Reset</span></button></div>
+                </div>
+            </section>
+        </section>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div><canvas id="fx" aria-hidden="true"></canvas>
+
+    <script src="assets/js/app.js"></script>
+    <link id="novix-board-reader-overhaul" rel="stylesheet" href="assets/css/board-reader-overhaul.css">
+    <div id="novix-pdf-reader" aria-label="PDF reader" data-theme="light" data-tool="pan" class="is-pdf">
+        <div class="reader-head">
+            <button id="nr-close" aria-label="Back to library" title="Back to library">←</button>
+            <div class="reader-title" id="nr-title">Document</div>
+            <div class="reader-page"><input id="nr-page" type="number" min="1" value="1" inputmode="numeric" aria-label="Page"><span id="nr-total">/ 1</span></div>
+            <button id="nr-undo" title="Undo" aria-label="Undo">↶</button><button id="nr-redo" title="Redo" aria-label="Redo">↷</button>
+            <button id="nr-minus" title="Zoom out" aria-label="Zoom out">−</button><button id="nr-zoom" title="Fit width">100%</button><button id="nr-plus" title="Zoom in" aria-label="Zoom in">＋</button>
+            <button id="nr-download" title="Download original file" aria-label="Download original file">↓</button><button id="nr-export" title="Export annotated PDF" aria-label="Export annotated PDF">↓ PDF</button>
+        </div>
+        <div class="reader-tools" role="toolbar" aria-label="PDF annotation tools">
+            <button data-pdf-tool="pan" class="active" title="Hand" aria-label="Hand"><svg viewBox="0 0 24 24"><path d="M8 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-5a2 2 0 0 1 4 0v8c0 5-3 8-8 8h-1c-2 0-3-1-4-2l-4-5a2 2 0 0 1 3-3z"/></svg><span class="tool-label">Hand</span></button>
+            <button data-pdf-tool="pen" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24"><path d="m4 20 4-.8L20 7a2.5 2.5 0 0 0-3-3L5 16zM14.5 5.5l4 4"/></svg><span class="tool-label">Pen</span></button>
+            <button data-pdf-tool="highlighter" title="Highlighter" aria-label="Highlighter"><svg viewBox="0 0 24 24"><path d="m4 15 8-9 7 7-8 8H4zM12 6l6 6M3 22h18"/></svg><span class="tool-label">Highlight</span></button>
+            <button data-pdf-tool="eraser" title="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24"><path d="m4 14 9-10a2 2 0 0 1 3 0l4 4a2 2 0 0 1 0 3l-9 9H7zM11 20h10"/></svg><span class="tool-label">Erase</span></button>
+            <button data-pdf-tool="text" title="Text" aria-label="Text"><svg viewBox="0 0 24 24"><path d="M4 5h16M12 5v14M8 19h8"/></svg><span class="tool-label">Text</span></button>
+            <button data-pdf-tool="sticky" title="Sticky note" aria-label="Sticky note"><svg viewBox="0 0 24 24"><path d="M5 3h14v13l-5 5H5zM14 21v-5h5"/></svg><span class="tool-label">Sticky</span></button>
+            <button data-pdf-tool="shape" title="Shapes" aria-label="Shapes"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="10" height="10" rx="2"/><circle cx="17" cy="16" r="4"/></svg><span class="tool-label">Shapes</span></button>
+            <button id="nr-clear" title="Clear annotations" aria-label="Clear annotations">⌫</button>
+        </div>
+        <div class="reader-shapes" id="nr-shapes"><button data-pdf-shape="rect">Rectangle</button><button data-pdf-shape="round">Rounded</button><button data-pdf-shape="circle">Circle</button><button data-pdf-shape="speech">Callout</button></div>
+        <div class="reader-options" id="nr-options" aria-label="Tool settings" hidden></div>
+        <div class="reader-note" id="nr-note"></div>
+        <div class="reader-scroll" id="nr-pages"></div>
+    </div>
+    <script id="novix-reader-v2-js" src="assets/js/reader-v2.js"></script>
+
+    <link id="novix-coming-soon" rel="stylesheet" href="assets/css/coming-soon.css">
+    <link id="novix-dark-theme" rel="stylesheet" href="assets/css/dark-theme.css">
+    <link id="novix-credit-sign" rel="stylesheet" href="assets/css/credit-sign.css">
+    <link id="novix-reader-v2" rel="stylesheet" href="assets/css/reader-v2.css">
+    <link id="novix-v3" rel="stylesheet" href="assets/css/v3.css">
+    <link id="novix-v4" rel="stylesheet" href="assets/css/v4.css">
+    <link id="novix-notes-tt" rel="stylesheet" href="assets/css/notes-tt.css">
+    <link id="nx-v5" rel="stylesheet" href="assets/css/v5.css">
+    <script id="novix-pdfjs" src="assets/js/pdf.min.js"></script>
+    <script id="novix-pdfjs-worker-init" src="assets/js/pdfjs-worker-init.js"></script>
+    <script id="novix-opening-controller" src="assets/js/opening-controller.js"></script>
+    <script id="nx-side-drag" src="assets/js/side-drag.js"></script>
+    <link id="nx-home-v2" rel="stylesheet" href="assets/css/home-v2.css">
+    <link id="novix-focus" rel="stylesheet" href="assets/css/focus.css">
+    <link id="novix-focus-bg" rel="stylesheet" href="assets/css/focus-bg.css">
+    <link id="novix-focus-ui" rel="stylesheet" href="assets/css/focus-ui.css">
+    <script id="novix-focus-bg-js" src="assets/js/focus-bg.js"></script>
+
+<script id="nx-keep-awake" src="assets/js/keep-awake.js"></script>
+</body>
+
+</html>
