@@ -1,4 +1,3 @@
-const VERSION = 'dev';
 const CODE = 'novix-code';
 const MEDIA = 'novix-media';
 const FONTS = 'novix-fonts';
