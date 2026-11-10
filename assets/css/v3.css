@@ -1,0 +1,172 @@
+        #novix-pdf-reader .pdf-page .pdf-ink {
+            touch-action: auto;
+            cursor: grab
+        }
+
+        #novix-pdf-reader.panning .pdf-page .pdf-ink {
+            cursor: grabbing
+        }
+
+        #novix-pdf-reader:is([data-tool=pen], [data-tool=highlighter], [data-tool=eraser], [data-tool=text], [data-tool=sticky], [data-tool=shape]) .pdf-page .pdf-ink {
+            touch-action: none;
+            cursor: crosshair
+        }
+
+        #novix-pdf-reader:is([data-tool=pen], [data-tool=highlighter], [data-tool=eraser]) .pdf-page .pdf-ink {
+            cursor: none
+        }
+
+        #novix-pdf-reader[data-tool=text] .pdf-page .pdf-ink {
+            cursor: text
+        }
+
+        #nr-brush {
+            position: fixed;
+            left: 0;
+            top: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10060;
+            display: none;
+            box-sizing: border-box;
+            will-change: transform
+        }
+
+        #nr-brush[data-t=pen] {
+            border: 1.5px solid var(--bc);
+            background: rgba(255, 255, 255, .18);
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, .7)
+        }
+
+        #nr-brush[data-t=highlighter] {
+            border: 1.5px solid var(--bc);
+            background: rgba(255, 255, 255, .12);
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, .18)
+        }
+
+        #nr-brush[data-t=eraser] {
+            border: 2px solid #fff;
+            background: rgba(255, 255, 255, .3);
+            box-shadow: 0 0 0 1.5px #20322b, inset 0 0 0 1px rgba(0, 0, 0, .2)
+        }
+
+        .cover-pick {
+            flex-basis: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap
+        }
+
+        .cp-lab {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted)
+        }
+
+        .cp-sw,
+        .recolor-pop {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap
+        }
+
+        .cp-chip {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--card);
+            box-shadow: 0 0 0 1px var(--line);
+            padding: 0;
+            cursor: pointer;
+            flex: none;
+            transition: transform .12s
+        }
+
+        .cp-chip:hover {
+            transform: scale(1.12)
+        }
+
+        .cp-chip.on {
+            box-shadow: 0 0 0 2.5px var(--btn)
+        }
+
+        .cp-chip.auto {
+            background: conic-gradient(#2e6fa5, #1f8f7c, #c2892f, #c4503f, #7a56b8, #2e6fa5)
+        }
+
+        .cp-input {
+            width: 30px;
+            height: 30px;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            border-radius: 50%;
+            cursor: pointer;
+            min-width: 0 !important;
+            flex: none !important
+        }
+
+        .recolor-pop {
+            position: fixed;
+            z-index: 9000;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 10px 12px;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, .28);
+            max-width: min(300px, calc(100vw - 16px))
+        }
+
+        .recolor-pop[hidden] {
+            display: none
+        }
+
+        .cp-input::-webkit-color-swatch-wrapper,
+        #nr-options input[type=color]::-webkit-color-swatch-wrapper {
+            padding: 0
+        }
+
+        .cp-input::-webkit-color-swatch,
+        #nr-options input[type=color]::-webkit-color-swatch {
+            border: 2px solid var(--card, #fff);
+            border-radius: 50%;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, .2)
+        }
+
+        .cp-input::-moz-color-swatch,
+        #nr-options input[type=color]::-moz-color-swatch {
+            border: 2px solid #fff;
+            border-radius: 50%
+        }
+
+        .rc-btn {
+            margin-inline-start: auto;
+            margin-inline-end: 6px;
+            width: 26px;
+            height: 26px;
+            border: 0;
+            border-radius: 50%;
+            background: var(--act);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            padding: 0;
+            cursor: pointer;
+            flex: none
+        }
+
+        .rc-btn svg {
+            width: 15px;
+            height: 15px
+        }
+
+        .rc-btn:hover {
+            background: var(--btn);
+            color: #fff
+        }
+
+        .rc-btn+.open-btn {
+            margin-inline-start: 0
+        }

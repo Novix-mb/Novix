@@ -1,0 +1,337 @@
+        :root[data-theme="dark"] {
+            --grid: #354a40
+        }
+
+        @keyframes novix-pop {
+            from {
+                opacity: 0;
+                transform: translateY(6px) scale(.96)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+        }
+
+        #novix-pdf-reader {
+            position: fixed;
+            inset: 0;
+            z-index: 10050;
+            background: #e9efec;
+            color: #1d302a;
+            display: none;
+            flex-direction: column;
+            font-family: Manrope, Alexandria, Arial, sans-serif
+        }
+
+        #novix-pdf-reader.open {
+            display: flex
+        }
+
+        #novix-pdf-reader .reader-head {
+            min-height: 52px;
+            flex: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            background: rgba(255, 255, 255, .96);
+            border-bottom: 1px solid #dce5e0;
+            box-shadow: 0 3px 15px #19382b12
+        }
+
+        #novix-pdf-reader .reader-title {
+            font-weight: 800;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 14px
+        }
+
+        #novix-pdf-reader button {
+            border: 0;
+            border-radius: 11px;
+            background: #edf4f0;
+            color: #21463a;
+            padding: 8px 10px;
+            font-weight: 750;
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        #novix-pdf-reader button.active {
+            background: #278f79;
+            color: white
+        }
+
+        #novix-pdf-reader button:disabled {
+            opacity: .36;
+            cursor: default
+        }
+
+        #novix-pdf-reader .reader-tools {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            overflow-x: auto;
+            flex: none;
+            padding: 7px 10px;
+            background: #fff;
+            border-bottom: 1px solid #dce5e0;
+            scrollbar-width: thin
+        }
+
+        #novix-pdf-reader .reader-tools button {
+            min-width: 38px;
+            height: 38px;
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 12px
+        }
+
+        #novix-pdf-reader .reader-tools svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round
+        }
+
+        #novix-pdf-reader .reader-tools .tool-label {
+            font-size: 11px
+        }
+
+        #novix-pdf-reader .reader-options {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 42px;
+            padding: 5px 10px;
+            overflow-x: auto;
+            background: #f7faf8;
+            border-bottom: 1px solid #dce5e0
+        }
+
+        #novix-pdf-reader .reader-options input[type=color] {
+            width: 30px;
+            height: 30px;
+            border: 0;
+            padding: 0;
+            background: transparent
+        }
+
+        #novix-pdf-reader .reader-options input[type=range] {
+            width: 90px;
+            accent-color: #278f79
+        }
+
+        #novix-pdf-reader .reader-swatch {
+            width: 21px;
+            height: 21px;
+            min-width: 21px;
+            padding: 0 !important;
+            border-radius: 50% !important;
+            border: 2px solid #fff !important;
+            box-shadow: 0 0 0 1px #9fb8ac
+        }
+
+        #novix-pdf-reader .reader-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 16px 10px 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            overscroll-behavior: contain
+        }
+
+        #novix-pdf-reader .pdf-page {
+            position: relative;
+            flex: none;
+            background: white;
+            box-shadow: 0 5px 22px #132b2024;
+            max-width: none;
+            overflow: visible
+        }
+
+        #novix-pdf-reader .pdf-page .pdf-base {
+            position: absolute;
+            inset: 0;
+            display: block
+        }
+
+        #novix-pdf-reader .pdf-page .pdf-ink {
+            position: absolute;
+            inset: 0;
+            touch-action: none;
+            z-index: 2
+        }
+
+        #novix-pdf-reader .pdf-annotation-object {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            min-width: 110px;
+            min-height: 66px;
+            pointer-events: auto;
+            border: 1.5px solid #368c75;
+            border-radius: 12px;
+            background: #e3f5eb;
+            color: #20372e;
+            box-shadow: 0 5px 16px #132b2020;
+            overflow: visible
+        }
+
+        #novix-pdf-reader .pdf-annotation-object.sticky {
+            background: #fff1b3;
+            border-color: #e2c85b;
+            border-radius: 4px 12px 5px 12px
+        }
+
+        #novix-pdf-reader .pdf-annotation-object.textbox {
+            background: #ffffffd9;
+            border-style: dashed
+        }
+
+        #novix-pdf-reader .pdf-annotation-object.shape-circle {
+            border-radius: 50%;
+            background: #dcefe8dd
+        }
+
+        #novix-pdf-reader .pdf-annotation-object.shape-speech {
+            border-radius: 16px;
+            background: #eaf2ff
+        }
+
+        #novix-pdf-reader .pdf-object-head {
+            height: 18px;
+            flex: none;
+            text-align: right;
+            padding: 0 4px;
+            cursor: grab;
+            opacity: .55
+        }
+
+        #novix-pdf-reader .pdf-object-head button {
+            font-size: 11px;
+            padding: 0 3px;
+            background: transparent
+        }
+
+        #novix-pdf-reader .pdf-object-text {
+            flex: 1;
+            min-width: 0;
+            width: 100%;
+            height: calc(100% - 18px);
+            resize: none;
+            border: 0;
+            outline: 0;
+            background: transparent;
+            color: inherit;
+            padding: 3px 8px;
+            font: 600 13px/1.45 Alexandria, Manrope, sans-serif;
+            direction: auto
+        }
+
+        #novix-pdf-reader .pdf-object-resize {
+            position: absolute;
+            right: -5px;
+            bottom: -5px;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+            border-radius: 50%;
+            background: #278f79;
+            cursor: nwse-resize
+        }
+
+        #novix-pdf-reader .reader-note {
+            font-size: 11px;
+            color: #6b7d75;
+            padding: 4px 12px
+        }
+
+        #novix-pdf-reader .reader-shapes {
+            display: none;
+            gap: 5px;
+            padding: 6px 10px;
+            background: #f1f7f3;
+            border-bottom: 1px solid #dce5e0;
+            overflow-x: auto
+        }
+
+        #novix-pdf-reader .reader-shapes.open {
+            display: flex
+        }
+
+        #novix-pdf-reader .reader-shapes button {
+            font-size: 11px
+        }
+
+        :root[data-theme="dark"] #novix-pdf-reader {
+            background: #111b17;
+            color: #e7f2ec
+        }
+
+        :root[data-theme="dark"] #novix-pdf-reader .reader-head,
+        :root[data-theme="dark"] #novix-pdf-reader .reader-tools {
+            background: #1b2b24;
+            border-color: #344b3f
+        }
+
+        :root[data-theme="dark"] #novix-pdf-reader .reader-options,
+        :root[data-theme="dark"] #novix-pdf-reader .reader-shapes {
+            background: #202f28;
+            border-color: #344b3f
+        }
+
+        :root[data-theme="dark"] #novix-pdf-reader button {
+            background: #2b4237;
+            color: #e7f2ec
+        }
+
+        :root[data-theme="dark"] #novix-pdf-reader button.active {
+            background: #278f79;
+            color: #fff
+        }
+
+        :root[data-theme="dark"] #novix-pdf-reader .reader-note {
+            color: #a2b5ac
+        }
+
+        @media(max-width:620px) {
+            #novix-pdf-reader .reader-head {
+                padding: 6px 8px;
+                gap: 5px;
+                min-height: 48px
+            }
+
+            #novix-pdf-reader .reader-head button {
+                padding: 7px 8px
+            }
+
+            #novix-pdf-reader .reader-tools {
+                padding: 6px 7px
+            }
+
+            #novix-pdf-reader .reader-tools .tool-label {
+                display: none
+            }
+
+            #novix-pdf-reader .reader-tools button {
+                min-width: 40px
+            }
+
+            #novix-pdf-reader .reader-scroll {
+                padding: 10px 5px 22px
+            }
+        }

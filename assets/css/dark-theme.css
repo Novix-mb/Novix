@@ -1,0 +1,356 @@
+        .open-btn {
+            margin-inline-start: auto;
+            margin-inline-end: 6px;
+            height: 26px;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 99px;
+            background: var(--act);
+            color: var(--text);
+            font: 700 11px/1 inherit;
+            font-family: inherit;
+            transition: background .15s, transform .12s
+        }
+
+        .open-btn:hover {
+            background: var(--btn);
+            color: #fff
+        }
+
+        .open-btn:active {
+            transform: scale(.95)
+        }
+
+        .book.fresh .cover {
+            animation: freshGlow 1.6s ease 2
+        }
+
+        @keyframes freshGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(31, 162, 143, 0)
+            }
+
+            50% {
+                box-shadow: 0 0 0 7px rgba(31, 162, 143, .28)
+            }
+        }
+
+        .developer-credit strong {
+            letter-spacing: .05em;
+            line-height: 1.55;
+            text-transform: none;
+            overflow-wrap: anywhere
+        }
+
+        :root[data-theme="dark"] {
+            --bg1: #06121a;
+            --bg2: #0a1a20;
+            --bg3: #0b1824;
+            --card: #102128;
+            --text: #e8f4f1;
+            --muted: #8fa9a9;
+            --line: #1f363e;
+            --primary: #5fe0c8;
+            --btn: #1c9c8b;
+            --act: #15363a;
+            --ok: #2fc79a;
+            --acc: #34d6bd;
+            --sh: 0 12px 34px rgba(0, 0, 0, .45);
+            color-scheme: dark
+        }
+
+        :root[data-theme="dark"] body {
+            background: radial-gradient(ellipse at 84% 0%, rgba(47, 211, 187, .13), transparent 38%), radial-gradient(ellipse at 6% 100%, rgba(72, 120, 255, .09), transparent 42%), linear-gradient(135deg, var(--bg1), var(--bg2) 55%, var(--bg3)) fixed !important;
+            color: var(--text)
+        }
+
+        :root[data-theme="dark"] .side {
+            background: linear-gradient(180deg, #0c1e25 0%, #0a1a20 52%, #0b2a2c 82%, #0e3b3a 100%) !important;
+            border: 1px solid rgba(95, 224, 200, .10);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, .45)
+        }
+
+        :root[data-theme="dark"] .side::before {
+            opacity: .55
+        }
+
+        :root[data-theme="dark"] .side::after {
+            opacity: .6
+        }
+
+        :root[data-theme="dark"] nav a:hover {
+            background: rgba(95, 224, 200, .08)
+        }
+
+        :root[data-theme="dark"] #nav a.on,
+        :root[data-theme="dark"] #nav a.on span {
+            color: #eafffa !important
+        }
+
+        :root[data-theme="dark"] nav a.on {
+            background: linear-gradient(110deg, rgba(47, 211, 187, .22), rgba(47, 211, 187, .08));
+            color: #eafffa;
+            box-shadow: inset 0 0 0 1px rgba(95, 224, 200, .22)
+        }
+
+        :root[data-theme="dark"] .developer-credit {
+            border-top-color: rgba(95, 224, 200, .14)
+        }
+
+        :root[data-theme="dark"] .developer-credit span {
+            color: #7f9c9b
+        }
+
+        :root[data-theme="dark"] .developer-credit strong {
+            color: #6ee7d0
+        }
+
+        :root[data-theme="dark"] .side-profile {
+            background: rgba(16, 33, 40, .82) !important;
+            border-color: rgba(95, 224, 200, .16) !important;
+            box-shadow: 0 8px 22px rgba(0, 0, 0, .35) !important;
+            color: var(--text)
+        }
+
+        :root[data-theme="dark"] .side-profile b {
+            color: var(--text)
+        }
+
+        :root[data-theme="dark"] .side-profile span,
+        :root[data-theme="dark"] .side-profile .i {
+            color: var(--muted)
+        }
+
+        :root[data-theme="dark"] .top-mode {
+            background: rgba(16, 33, 40, .88) !important;
+            border-color: rgba(95, 224, 200, .16) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .35) !important;
+            color: var(--text)
+        }
+
+        :root[data-theme="dark"] .search {
+            background: var(--card);
+            border: 1px solid rgba(95, 224, 200, .12) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .3) !important
+        }
+
+        :root[data-theme="dark"] input,
+        :root[data-theme="dark"] select,
+        :root[data-theme="dark"] textarea {
+            color: var(--text)
+        }
+
+        :root[data-theme="dark"] input::placeholder {
+            color: #6f8b8b
+        }
+
+        :root[data-theme="dark"] input,
+        :root[data-theme="dark"] .form select,
+        :root[data-theme="dark"] .fld input,
+        :root[data-theme="dark"] .fld select,
+        :root[data-theme="dark"] select {
+            background: #0b1a20;
+            border-color: var(--line)
+        }
+
+        :root[data-theme="dark"] .sw {
+            background: #33504f
+        }
+
+        :root[data-theme="dark"] .sw[aria-checked=true] {
+            background: var(--ok)
+        }
+
+        :root[data-theme="dark"] .ib {
+            color: var(--text)
+        }
+
+        :root[data-theme="dark"] .dot {
+            border-color: var(--bg2)
+        }
+
+        :root[data-theme="dark"] .card {
+            border: 1px solid rgba(95, 224, 200, .07)
+        }
+
+        :root[data-theme="dark"] .hero {
+            background: linear-gradient(112deg, #0c2a33 0%, #0f3238 46%, #0d2638 100%) !important;
+            border: 1px solid rgba(95, 224, 200, .16) !important;
+            box-shadow: 0 18px 48px rgba(0, 0, 0, .45) !important
+        }
+
+        :root[data-theme="dark"] .hero .bg {
+            filter: brightness(.62) saturate(1.1) contrast(1.05)
+        }
+
+        :root[data-theme="dark"] .hero::after {
+            background: radial-gradient(ellipse at 82% 20%, rgba(56, 218, 200, .16), transparent 45%), linear-gradient(to right, rgba(6, 18, 26, .82), rgba(6, 18, 26, .25) 70%) !important
+        }
+
+        :root[data-theme="dark"] [dir=rtl] .hero::after,
+        :root[data-theme="dark"][dir=rtl] .hero::after {
+            background: radial-gradient(ellipse at 18% 20%, rgba(56, 218, 200, .16), transparent 45%), linear-gradient(to left, rgba(6, 18, 26, .82), rgba(6, 18, 26, .25) 70%) !important
+        }
+
+        :root[data-theme="dark"] .hero::before {
+            color: rgba(95, 224, 200, .07) !important
+        }
+
+        :root[data-theme="dark"] .hero h1 {
+            color: #f0fbf8;
+            text-shadow: 0 4px 22px rgba(0, 0, 0, .35)
+        }
+
+        :root[data-theme="dark"] .hero p {
+            color: #b4cfcc
+        }
+
+        :root[data-theme="dark"] .hero .btn,
+        :root[data-theme="dark"] .btn {
+            box-shadow: 0 9px 22px rgba(0, 0, 0, .35)
+        }
+
+        :root[data-theme="dark"] .btn.ghost {
+            background: var(--act);
+            color: var(--text)
+        }
+
+        :root[data-theme="dark"] .chip {
+            background: var(--card)
+        }
+
+        :root[data-theme="dark"] .chip.on {
+            background: var(--btn);
+            border-color: var(--btn);
+            color: #fff
+        }
+
+        :root[data-theme="dark"] .great {
+            background: linear-gradient(180deg, #12403a, #0e2c2e) !important
+        }
+
+        :root[data-theme="dark"] .great h3 {
+            color: #f0fbf8
+        }
+
+        :root[data-theme="dark"] .great p {
+            color: #a9c8c3
+        }
+
+        :root[data-theme="dark"] .fc {
+            background: linear-gradient(125deg, #14303a, #0f232b)
+        }
+
+        :root[data-theme="dark"] .fc .art {
+            filter: brightness(.9)
+        }
+
+        :root[data-theme="dark"] .fc.is-soon .art {
+            filter: grayscale(.45) brightness(.8)
+        }
+
+        :root[data-theme="dark"] .section-banner {
+            background: linear-gradient(112deg, #0f3238 0%, #0e2c3a 55%, #102a40 100%) !important;
+            border-color: rgba(95, 224, 200, .14) !important
+        }
+
+        :root[data-theme="dark"] .banner-copy .pg {
+            color: #f0fbf8 !important
+        }
+
+        :root[data-theme="dark"] .banner-copy p {
+            color: #a9c8c3
+        }
+
+        :root[data-theme="dark"] .eyebrow {
+            color: #5fe0c8
+        }
+
+        :root[data-theme="dark"] .banner-mark {
+            background: rgba(255, 255, 255, .06);
+            border-color: rgba(95, 224, 200, .2);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 12px 26px rgba(0, 0, 0, .3)
+        }
+
+        :root[data-theme="dark"] .banner-mark svg {
+            stroke: #5fe0c8
+        }
+
+        :root[data-theme="dark"] .High {
+            background: rgba(239, 68, 68, .16);
+            color: #ff9d9d
+        }
+
+        :root[data-theme="dark"] .Medium {
+            background: rgba(88, 160, 255, .16);
+            color: #9cc9ff
+        }
+
+        :root[data-theme="dark"] .Low {
+            background: rgba(47, 199, 154, .16);
+            color: #7fe3bd
+        }
+
+        :root[data-theme="dark"] .chk {
+            border-color: #4a6968
+        }
+
+        :root[data-theme="dark"] #toast {
+            background: #e8f4f1;
+            color: #0b1b1f
+        }
+
+        :root[data-theme="dark"] .soon-ico {
+            background: rgba(95, 224, 200, .12);
+            color: #5fe0c8
+        }
+
+        :root[data-theme="dark"] .soon-tag {
+            background: linear-gradient(110deg, #4a3a10, #5c4513);
+            color: #ffd77a;
+            box-shadow: none
+        }
+
+        :root[data-theme="dark"] nav a.is-soon {
+            color: #7f9a99
+        }
+
+        :root[data-theme="dark"] .soon-dot {
+            box-shadow: 0 0 0 3px rgba(243, 180, 63, .18)
+        }
+
+        :root[data-theme="dark"] .search input {
+            background: none !important;
+            border: 0 !important
+        }
+
+        :root[data-theme="dark"] .stats .stat:nth-child(1) .tile {
+            background: rgba(47, 199, 154, .16)
+        }
+
+        :root[data-theme="dark"] .stats .stat:nth-child(2) .tile {
+            background: rgba(246, 196, 83, .15)
+        }
+
+        :root[data-theme="dark"] .stats .stat:nth-child(3) .tile {
+            background: rgba(88, 160, 255, .16)
+        }
+
+        :root[data-theme="dark"] .stats .stat:nth-child(4) .tile {
+            background: rgba(255, 120, 90, .16)
+        }
+
+        :root[data-theme="dark"] .uic,
+        :root[data-theme="dark"] .fc .go {
+            background: rgba(120, 175, 255, .16)
+        }
+
+        :root[data-theme="dark"] .open-btn {
+            background: #17383b
+        }
+
+        :root[data-theme="dark"] .open-btn:hover {
+            background: var(--btn)
+        }

@@ -1,0 +1,895 @@
+        #novix-opening,
+        #novix-opening * {
+            box-sizing: border-box;
+        }
+
+        #novix-opening [hidden] {
+            display: none !important;
+        }
+
+        #novix-opening {
+            --opening-ink: #f1fffd;
+            --opening-muted: rgba(225, 247, 244, .68);
+            --opening-mint: #73e1d1;
+            --opening-blue: #a5c9ff;
+            position: fixed;
+            inset: 0;
+            z-index: 2147483000;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+            isolation: isolate;
+            padding: max(24px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+            color: var(--opening-ink);
+            background:
+                radial-gradient(ellipse at 50% 42%, rgba(34, 132, 139, .24) 0%, transparent 38%),
+                radial-gradient(ellipse at 14% 88%, rgba(71, 150, 192, .16) 0%, transparent 38%),
+                radial-gradient(ellipse at 88% 12%, rgba(70, 204, 184, .14) 0%, transparent 34%),
+                linear-gradient(132deg, #071a2a 0%, #0a2634 48%, #0b3338 100%);
+            opacity: 1;
+            visibility: visible;
+            transition: opacity .72s cubic-bezier(.22, .72, .22, 1), visibility .72s;
+            font-family: Manrope, Alexandria, system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html.novix-skip-opening #novix-opening {
+            display: none !important;
+        }
+
+        #novix-opening::before,
+        #novix-opening::after {
+            content: "";
+            position: absolute;
+            inset: -25%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #novix-opening::before {
+            background:
+                radial-gradient(ellipse at 50% 48%, rgba(103, 230, 210, .13), transparent 29%),
+                radial-gradient(ellipse at 50% 50%, transparent 38%, rgba(1, 13, 24, .46) 100%);
+            animation: novix-ambient-drift 18s ease-in-out infinite alternate;
+        }
+
+        #novix-opening::after {
+            opacity: .14;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+            mix-blend-mode: soft-light;
+        }
+
+        #novix-opening .opening-grid {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: .12;
+            background-image: linear-gradient(rgba(195, 245, 239, .08) 1px, transparent 1px), linear-gradient(90deg, rgba(195, 245, 239, .08) 1px, transparent 1px);
+            background-size: 76px 76px;
+            mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
+        }
+
+        #novix-opening .opening-orbit {
+            position: absolute;
+            width: min(76vw, 760px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 1px solid rgba(158, 232, 222, .075);
+            pointer-events: none;
+            box-shadow: 0 0 90px rgba(74, 205, 190, .035), inset 0 0 90px rgba(74, 205, 190, .025);
+        }
+
+        #novix-opening .opening-orbit::before,
+        #novix-opening .opening-orbit::after {
+            content: "";
+            position: absolute;
+            border: 1px solid rgba(158, 232, 222, .06);
+            border-radius: 50%;
+        }
+
+        #novix-opening .opening-orbit::before {
+            inset: 10%;
+        }
+
+        #novix-opening .opening-orbit::after {
+            inset: 21%;
+        }
+
+        #novix-opening .opening-intro,
+        #novix-opening .opening-welcome {
+            grid-area: 1 / 1;
+        }
+
+        #novix-opening .opening-intro {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: min(100%, 760px);
+            min-height: 310px;
+            text-align: center;
+            transform-origin: center;
+        }
+
+        #novix-opening .opening-lockup {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(5px, 2vw, 24px);
+        }
+
+        #novix-opening .opening-mark-wrap {
+            position: relative;
+            width: clamp(172px, 28vw, 284px);
+            aspect-ratio: 188 / 160;
+            flex: none;
+            display: grid;
+            place-items: center;
+            transform-origin: 58% 52%;
+        }
+
+        #novix-opening .opening-mark {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 12px 28px rgba(49, 199, 189, .22)) drop-shadow(0 0 18px rgba(112, 224, 213, .13));
+            opacity: 0;
+            transform: translateY(10px) scale(.88);
+        }
+
+        #novix-opening.is-playing .opening-mark {
+            animation: novix-mark-arrive .78s .10s cubic-bezier(.2, .82, .22, 1) forwards, novix-mark-hit .76s .91s cubic-bezier(.18, .78, .2, 1) both;
+        }
+
+        #novix-opening .opening-word-wrap {
+            overflow: visible;
+            padding: 8px 12px 10px 0;
+        }
+
+        #novix-opening .opening-word {
+            display: block;
+            color: #f1fffd;
+            font-size: clamp(43px, 8.4vw, 82px);
+            line-height: .98;
+            font-weight: 800;
+            letter-spacing: .145em;
+            text-indent: .145em;
+            text-shadow: 0 8px 32px rgba(0, 0, 0, .18);
+            opacity: 0;
+            transform: translateX(118px) scale(.96);
+            transform-origin: left center;
+        }
+
+        #novix-opening.is-playing .opening-word {
+            animation: novix-word-impact .94s .56s cubic-bezier(.16, .86, .2, 1) forwards;
+        }
+
+        #novix-opening .opening-spark {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            top: 2px;
+            right: 5px;
+            z-index: 3;
+            color: #c2fff4;
+            opacity: 0;
+            transform: translate(-3px, 12px) scale(.15) rotate(-35deg);
+            filter: drop-shadow(0 0 12px rgba(130, 255, 235, .9));
+        }
+
+        #novix-opening .opening-spark svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            overflow: visible;
+        }
+
+        #novix-opening.is-playing .opening-spark {
+            animation: novix-star-wink .82s 1.48s cubic-bezier(.18, .78, .2, 1) both;
+        }
+
+        #novix-opening .opening-tagline {
+            margin-top: 25px;
+            color: rgba(209, 245, 239, .7);
+            font-size: 10px;
+            letter-spacing: .42em;
+            text-indent: .42em;
+            font-weight: 700;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+
+        #novix-opening.is-playing .opening-tagline {
+            animation: novix-tagline-in .65s 1.62s ease-out forwards;
+        }
+
+        #novix-opening .opening-welcome {
+            position: relative;
+            z-index: 3;
+            width: min(100%, 900px);
+            padding: clamp(8px, 2.4vw, 24px);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(18px) scale(.985);
+        }
+
+        #novix-opening.is-welcome .opening-intro {
+            animation: novix-intro-out .56s cubic-bezier(.4, 0, .2, 1) forwards;
+        }
+
+        #novix-opening.is-welcome .opening-welcome {
+            visibility: visible;
+            pointer-events: auto;
+            animation: novix-welcome-in .78s cubic-bezier(.2, .75, .2, 1) forwards;
+        }
+
+        #novix-opening .welcome-topline {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin: 0 0 clamp(24px, 5vh, 48px);
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        #novix-opening .welcome-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(241, 255, 253, .92);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .22em;
+        }
+
+        #novix-opening .welcome-brand img {
+            width: 128px;
+            height: 84px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 12px rgba(49, 199, 189, .22));
+        }
+
+        #novix-opening .welcome-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(164, 230, 222, .16);
+            border-radius: 999px;
+            padding: 9px 13px;
+            color: rgba(220, 248, 243, .68);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .18em;
+            background: rgba(233, 255, 251, .045);
+            backdrop-filter: blur(12px);
+        }
+
+        #novix-opening .welcome-chip::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #79e3cc;
+            box-shadow: 0 0 12px rgba(121, 227, 204, .75);
+        }
+
+        #novix-opening .welcome-content {
+            display: grid;
+            grid-template-columns: minmax(180px, .78fr) minmax(0, 1.5fr);
+            align-items: center;
+            gap: clamp(28px, 6vw, 72px);
+            padding: clamp(22px, 4vw, 46px);
+            border: 1px solid rgba(185, 239, 230, .13);
+            border-radius: 34px;
+            background: linear-gradient(125deg, rgba(220, 255, 249, .075), rgba(220, 255, 249, .025) 62%, rgba(145, 215, 224, .045));
+            box-shadow: 0 26px 90px rgba(0, 8, 16, .22), inset 0 1px 0 rgba(255, 255, 255, .08);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        #novix-opening .welcome-portrait-wrap {
+            position: relative;
+            width: clamp(142px, 20vw, 202px);
+            aspect-ratio: 1;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(20px) scale(.88);
+        }
+
+        #novix-opening .welcome-portrait-halo {
+            position: absolute;
+            inset: -18%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(72, 222, 201, .19), rgba(79, 152, 207, .08) 46%, transparent 70%);
+            filter: blur(5px);
+        }
+
+        #novix-opening .welcome-portrait-ring {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            padding: 7px;
+            border: 1px solid rgba(176, 241, 231, .46);
+            background: linear-gradient(145deg, rgba(187, 255, 244, .23), rgba(102, 166, 195, .08));
+            box-shadow: 0 0 0 8px rgba(192, 255, 245, .025), 0 18px 50px rgba(0, 0, 0, .2), 0 0 38px rgba(86, 220, 201, .14);
+        }
+
+        #novix-opening .welcome-portrait-ring img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(234, 255, 250, .84);
+            background: linear-gradient(145deg, #55cabb, #327e91);
+        }
+
+        #novix-opening .welcome-avatar-fallback {
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid rgba(234, 255, 250, .84);
+            color: #fff;
+            font-size: clamp(48px, 7vw, 72px);
+            font-weight: 700;
+            letter-spacing: -.06em;
+            background: radial-gradient(circle at 28% 22%, rgba(255, 255, 255, .42), transparent 35%), linear-gradient(145deg, #54cbbb, #327b8c 72%, #315b81);
+            box-shadow: inset 0 1px 16px rgba(255, 255, 255, .15);
+        }
+
+        #novix-opening .welcome-portrait-star {
+            position: absolute;
+            top: 1%;
+            right: 2%;
+            color: #c9fff4;
+            font-size: 25px;
+            text-shadow: 0 0 16px rgba(133, 255, 231, .9);
+            opacity: 0;
+            transform: scale(.4) rotate(-35deg);
+        }
+
+        #novix-opening .welcome-copy {
+            min-width: 0;
+            text-align: left;
+        }
+
+        #novix-opening .welcome-kicker {
+            margin: 0 0 15px;
+            color: #8ce7d8;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        #novix-opening .welcome-heading {
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            column-gap: 12px;
+            row-gap: 3px;
+            color: #effffc;
+            font-size: clamp(26px, 4.1vw, 44px);
+            line-height: 1.23;
+            letter-spacing: -.045em;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(14px);
+        }
+
+        #novix-opening .welcome-heading strong {
+            display: inline-block;
+            max-width: 100%;
+            color: #a4eee0;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+            text-shadow: 0 4px 24px rgba(88, 216, 196, .13);
+        }
+
+        #novix-opening .welcome-message {
+            margin: 18px 0 28px;
+            max-width: 460px;
+            color: var(--opening-muted);
+            font-size: clamp(13px, 1.35vw, 15px);
+            line-height: 1.9;
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        #novix-opening .welcome-cta {
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 17px;
+            padding: 0 22px;
+            border: 1px solid rgba(203, 255, 247, .28);
+            border-radius: 16px;
+            color: #07313a;
+            background: linear-gradient(105deg, #a9f0e2, #78dccc 64%, #9edeea);
+            font: 800 13px Manrope, Alexandria, sans-serif;
+            letter-spacing: .015em;
+            box-shadow: 0 12px 32px rgba(71, 208, 190, .17), inset 0 1px 0 rgba(255, 255, 255, .7);
+            cursor: pointer;
+            opacity: 0;
+            transform: translateY(12px) scale(.98);
+            transition: transform .22s ease, box-shadow .22s ease, filter .22s ease;
+        }
+
+        #novix-opening .welcome-cta svg {
+            width: 17px;
+            height: 17px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: transform .22s ease;
+        }
+
+        #novix-opening .welcome-cta:focus-visible {
+            outline: 3px solid rgba(176, 248, 237, .85);
+            outline-offset: 4px;
+        }
+
+        #novix-opening .welcome-cta:active {
+            transform: translateY(1px) scale(.985);
+        }
+
+        #novix-opening .welcome-foot {
+            margin: 24px 0 0;
+            text-align: center;
+            color: rgba(217, 246, 241, .38);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .28em;
+            opacity: 0;
+        }
+
+        #novix-opening.is-welcome .welcome-topline {
+            animation: novix-detail-in .64s .1s ease-out forwards;
+        }
+
+        #novix-opening.is-welcome .welcome-portrait-wrap {
+            animation: novix-portrait-in .9s .16s cubic-bezier(.2, .78, .2, 1) forwards;
+        }
+
+        #novix-opening.is-welcome .welcome-portrait-star {
+            animation: novix-star-soft .7s .72s cubic-bezier(.2, .8, .2, 1) forwards;
+        }
+
+        #novix-opening.is-welcome .welcome-kicker {
+            animation: novix-detail-in .64s .28s ease-out forwards;
+        }
+
+        #novix-opening.is-welcome .welcome-heading {
+            animation: novix-detail-in .7s .43s cubic-bezier(.2, .75, .2, 1) forwards;
+        }
+
+        #novix-opening.is-welcome .welcome-message {
+            animation: novix-detail-in .7s .62s ease-out forwards;
+        }
+
+        #novix-opening.is-welcome .welcome-cta {
+            animation: novix-detail-in .7s .82s cubic-bezier(.2, .75, .2, 1) forwards;
+        }
+
+        #novix-opening.is-welcome .welcome-foot {
+            animation: novix-detail-in .8s 1.02s ease-out forwards;
+        }
+
+        @media (hover:hover) and (pointer:fine) {
+            #novix-opening .welcome-cta:hover {
+                transform: translateY(-2px);
+                filter: brightness(1.04);
+                box-shadow: 0 16px 38px rgba(71, 208, 190, .25), inset 0 1px 0 rgba(255, 255, 255, .8);
+            }
+
+            #novix-opening .welcome-cta:hover svg {
+                transform: translateX(3px);
+            }
+
+        }
+
+        #novix-opening[dir="rtl"] .welcome-copy {
+            text-align: right;
+        }
+
+        #novix-opening[dir="rtl"] .welcome-heading {
+            justify-content: flex-start;
+        }
+
+        #novix-opening[dir="rtl"] .welcome-message {
+            margin-right: 0;
+            margin-left: auto;
+        }
+
+        #novix-opening.is-leaving {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        @keyframes novix-ambient-drift {
+            from {
+                transform: translate3d(-1.5%, 1%, 0) scale(1);
+            }
+
+            to {
+                transform: translate3d(1.5%, -1%, 0) scale(1.06);
+            }
+        }
+
+        @keyframes novix-mark-arrive {
+            0% {
+                opacity: 0;
+                transform: translateY(12px) scale(.84);
+            }
+
+            65% {
+                opacity: 1;
+                transform: translateY(-3px) scale(1.035);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes novix-word-impact {
+            0% {
+                opacity: 0;
+                transform: translateX(118px) scale(.96);
+            }
+
+            48% {
+                opacity: 1;
+                transform: translateX(-13px) scale(1.025);
+            }
+
+            68% {
+                opacity: 1;
+                transform: translateX(5px) scale(.99);
+            }
+
+            84% {
+                opacity: 1;
+                transform: translateX(-2px) scale(1.005);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes novix-mark-hit {
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0) scale(1);
+            }
+
+            28% {
+                transform: translateX(-13px) rotate(-5deg) scale(.97);
+            }
+
+            53% {
+                transform: translateX(6px) rotate(2.5deg) scale(1.025);
+            }
+
+            74% {
+                transform: translateX(-2px) rotate(-.8deg) scale(.995);
+            }
+        }
+
+        @keyframes novix-star-wink {
+            0% {
+                opacity: 0;
+                transform: translate(-3px, 12px) scale(.15) rotate(-35deg);
+            }
+
+            24% {
+                opacity: 1;
+                transform: translate(19px, -18px) scale(1.15) rotate(12deg);
+            }
+
+            43% {
+                opacity: 1;
+                transform: translate(25px, -25px) scale(.92) rotate(28deg);
+            }
+
+            74% {
+                opacity: .7;
+                transform: translate(31px, -34px) scale(.5) rotate(50deg);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translate(35px, -38px) scale(.14) rotate(65deg);
+            }
+        }
+
+        @keyframes novix-tagline-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes novix-intro-out {
+            to {
+                opacity: 0;
+                transform: translateY(-12px) scale(.98);
+                filter: blur(5px);
+                visibility: hidden;
+            }
+        }
+
+        @keyframes novix-welcome-in {
+            to {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes novix-detail-in {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes novix-portrait-in {
+            0% {
+                opacity: 0;
+                transform: translateY(22px) scale(.84);
+                filter: blur(9px);
+            }
+
+            72% {
+                opacity: 1;
+                transform: translateY(-3px) scale(1.025);
+                filter: blur(0);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes novix-star-soft {
+            0% {
+                opacity: 0;
+                transform: scale(.35) rotate(-35deg);
+            }
+
+            55% {
+                opacity: 1;
+                transform: scale(1.15) rotate(10deg);
+            }
+
+            100% {
+                opacity: .9;
+                transform: scale(1) rotate(0);
+            }
+        }
+
+        @media (max-width: 680px) {
+            #novix-opening {
+                padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+            }
+
+            #novix-opening .opening-intro {
+                min-height: 250px;
+            }
+
+            #novix-opening .opening-mark-wrap {
+                width: clamp(124px, 31vw, 204px);
+            }
+
+            #novix-opening .opening-word {
+                font-size: clamp(35px, 10vw, 58px);
+                letter-spacing: .105em;
+                text-indent: .105em;
+            }
+
+            #novix-opening .opening-spark {
+                width: 25px;
+                height: 25px;
+                right: 0;
+            }
+
+            #novix-opening .opening-tagline {
+                margin-top: 18px;
+                font-size: 9px;
+            }
+
+            #novix-opening .opening-welcome {
+                padding: 0;
+            }
+
+            #novix-opening .welcome-topline {
+                margin-bottom: 18px;
+            }
+
+            #novix-opening .welcome-brand {
+                font-size: 11px;
+            }
+
+            #novix-opening .welcome-brand img {
+                width: 104px;
+                height: 68px;
+            }
+
+            #novix-opening .welcome-chip {
+                padding: 8px 10px;
+                font-size: 8px;
+                letter-spacing: .12em;
+            }
+
+            #novix-opening .welcome-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 22px 19px 24px;
+                border-radius: 26px;
+                text-align: center;
+            }
+
+            #novix-opening .welcome-portrait-wrap {
+                width: clamp(105px, 28vw, 132px);
+            }
+
+            #novix-opening .welcome-copy {
+                text-align: center !important;
+            }
+
+            #novix-opening .welcome-kicker {
+                margin-bottom: 10px;
+                font-size: 9px;
+            }
+
+            #novix-opening .welcome-heading {
+                justify-content: center;
+                gap: 6px 9px;
+                font-size: clamp(26px, 7.2vw, 36px);
+            }
+
+            #novix-opening .welcome-message {
+                margin: 13px auto 19px;
+                font-size: 13px;
+                line-height: 1.75;
+            }
+
+            #novix-opening .welcome-cta {
+                min-height: 48px;
+                width: min(100%, 280px);
+            }
+
+            #novix-opening .welcome-foot {
+                margin-top: 17px;
+                font-size: 8px;
+            }
+
+        }
+
+        @media (max-width: 380px) {
+            #novix-opening .welcome-chip {
+                display: none;
+            }
+
+            #novix-opening .welcome-content {
+                padding-inline: 15px;
+            }
+
+            #novix-opening .opening-word {
+                font-size: 32px;
+            }
+
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            #novix-opening,
+            #novix-opening *,
+            #novix-opening::before,
+            #novix-opening::after {
+                animation-duration: .01ms !important;
+                animation-delay: 0ms !important;
+                transition-duration: .01ms !important;
+            }
+
+        }
+
+        #novix-opening .opening-aurora {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        #novix-opening .opening-aurora i {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(72px);
+            opacity: .5;
+            will-change: transform;
+        }
+
+        #novix-opening .opening-aurora i:nth-child(1) {
+            width: 52vmax;
+            height: 52vmax;
+            left: -14vmax;
+            top: -16vmax;
+            background: radial-gradient(circle, #2fd0b8, transparent 66%);
+            animation: nxAur1 15s ease-in-out infinite alternate;
+        }
+
+        #novix-opening .opening-aurora i:nth-child(2) {
+            width: 46vmax;
+            height: 46vmax;
+            right: -12vmax;
+            bottom: -14vmax;
+            background: radial-gradient(circle, #4a8fe0, transparent 66%);
+            animation: nxAur2 18s ease-in-out infinite alternate;
+        }
+
+        #novix-opening .opening-aurora i:nth-child(3) {
+            width: 30vmax;
+            height: 30vmax;
+            left: 35%;
+            top: 30%;
+            background: radial-gradient(circle, #73e1d1, transparent 68%);
+            opacity: .28;
+            animation: nxAur3 12s ease-in-out infinite alternate;
+        }
+
+        #novix-opening #novix-opening-fx {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        @keyframes nxAur1 {
+            to {
+                transform: translate(20vmax, 14vmax) scale(1.25);
+            }
+        }
+
+        @keyframes nxAur2 {
+            to {
+                transform: translate(-22vmax, -12vmax) scale(1.2);
+            }
+        }
+
+        @keyframes nxAur3 {
+            to {
+                transform: translate(-14vmax, 10vmax) scale(1.5);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #novix-opening .opening-aurora i {
+                animation: none !important;
+            }
+        }
