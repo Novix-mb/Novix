@@ -89,15 +89,22 @@
         }
         return res.blob();
     };
+    const small = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent) || (navigator.deviceMemory && navigator.deviceMemory < 4);
+    const readerOpen = () => {
+        const r = document.getElementById('novix-pdf-reader');
+        return !!(r && r.classList.contains('open'));
+    };
     P.loadAudio = () => {
         if (audioStarted || lite()) return;
         audioStarted = true;
         const queue = Object.keys(SND);
         const next = async () => {
+            if (readerOpen()) return setTimeout(next, 3000);
             const id = queue.shift();
             if (!id) return;
             try {
-                P.url[id] = URL.createObjectURL(await fetchBlob(SND[id]));
+                const blob = await fetchBlob(SND[id]);
+                if (!small) P.url[id] = URL.createObjectURL(blob);
             } catch (e) {}
             return next();
         };
