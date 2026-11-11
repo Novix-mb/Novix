@@ -1,4 +1,4 @@
- ;
+;
         if (window.pdfjsLib) {
             try {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = "assets/js/pdf.worker.js"
@@ -2060,7 +2060,7 @@
             }
             async function sysNotify(msg, go, urgent) {
                 if (!('Notification' in window) || Notification.permission !== 'granted') return;
-                const ico = new URL('assets/img/icon-256x256.png?v=5', location.href).href;
+                const ico = new URL('assets/img/novix-icon-256.png?v=6', location.href).href;
                 const o = {
                     body: msg,
                     tag: 'novix-' + ((go && (go.k || 'x')) || 'x') + '-' + ((go && go.id) || (go && go.tasks ? 'tasks' : 'd')),
