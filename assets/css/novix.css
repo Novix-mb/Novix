@@ -3720,7 +3720,8 @@
             display: flex;
             flex-direction: column;
             overflow: auto;
-            padding: 12px
+            padding: 12px;
+            gap: 14px
         }
 
         #novix-pdf-reader .reader-head {
