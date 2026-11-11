@@ -121,7 +121,8 @@ async function rangeResponse(req) {
 /* ---------- Background reminders & notification clicks ----------
    The page stores its upcoming reminders in IndexedDB ("novix-sw" / "kv" / "sched")
    and reads back "fired" on startup, so the worker uses the same keys. */
-const NOTIF_ICON = './assets/img/novix-icon-256.png?v=7';
+const NOTIF_ICON = './assets/img/novix-notif-192.png?v=8';
+const NOTIF_BADGE = './assets/img/novix-badge-96.png?v=8';
 
 function kvOp(mode, fn) {
   return new Promise((ok, no) => {
@@ -155,7 +156,7 @@ async function showDueReminders() {
           body: missed ? it.msg2 : it.msg,
           tag: it.tag,
           icon: NOTIF_ICON,
-          badge: NOTIF_ICON,
+          badge: NOTIF_BADGE,
           lang: sched.lang || 'en',
           dir: sched.lang === 'ar' ? 'rtl' : 'ltr',
           vibrate: [200, 100, 200],
