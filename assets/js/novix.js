@@ -4229,7 +4229,7 @@
                 curPage = 1,
                 currentUrl = null,
                 lastMod = null;
-            const dpr = () => Math.min(window.devicePixelRatio || 1, 2);
+            const dpr = () => Math.min(window.devicePixelRatio || 1, 3);
             const note = t => {
                 const n = $('#nr-note');
                 if (n) n.textContent = t
@@ -4426,46 +4426,28 @@
                     n = p.length,
                     sz = s.size * k;
                 if (!n) return 0;
-                const W = i => sz * Math.max(.18, p[i][2] == null ? 1 : p[i][2]),
+                const W = i => sz * Math.max(.16, p[i][2] == null ? 1 : p[i][2]),
                     X = i => p[i][0] * k,
                     Y = i => p[i][1] * k;
-                ctx.save();
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.globalAlpha = 1;
-                ctx.strokeStyle = ctx.fillStyle = s.color || '#000';
+                const S = []; /* samples along the curve: [x, y, radius] */
                 const seg = (ax, ay, cx, cy, bx, by, w0, w1) => {
-                    const m = Math.max(1, Math.min(16, Math.ceil(Math.hypot(bx - ax, by - ay) / 1.5)));
-                    let px = ax,
-                        py = ay;
-                    for (let j = 1; j <= m; j++) {
+                    const m = Math.max(1, Math.min(14, Math.ceil(Math.hypot(bx - ax, by - ay) / (2.2 * Math.max(1, k)))));
+                    for (let j = 0; j <= m; j++) {
                         const t = j / m,
-                            u = 1 - t,
-                            x = u * u * ax + 2 * u * t * cx + t * t * bx,
-                            y = u * u * ay + 2 * u * t * cy + t * t * by;
-                        ctx.lineWidth = w0 + (w1 - w0) * t;
-                        ctx.beginPath();
-                        ctx.moveTo(px, py);
-                        ctx.lineTo(x, y);
-                        ctx.stroke();
-                        px = x;
-                        py = y
+                            u = 1 - t;
+                        S.push([u * u * ax + 2 * u * t * cx + t * t * bx, u * u * ay + 2 * u * t * cy + t * t * by, (w0 + (w1 - w0) * t) / 2])
                     }
                 };
                 let i = from;
                 if (i === 0) {
-                    ctx.beginPath();
-                    ctx.arc(X(0), Y(0), W(0) / 2, 0, Math.PI * 2);
-                    ctx.fill();
                     if (n === 1) {
-                        ctx.restore();
-                        return 0
+                        S.push([X(0), Y(0), W(0) / 2])
+                    } else {
+                        const mx = (X(0) + X(1)) / 2,
+                            my = (Y(0) + Y(1)) / 2;
+                        seg(X(0), Y(0), X(0), Y(0), mx, my, W(0), (W(0) + W(1)) / 2);
+                        i = 1
                     }
-                    const mx = (X(0) + X(1)) / 2,
-                        my = (Y(0) + Y(1)) / 2;
-                    seg(X(0), Y(0), X(0), Y(0), mx, my, W(0), (W(0) + W(1)) / 2);
-                    i = 1
                 }
                 for (; i <= n - 2; i++) {
                     const ax = (X(i - 1) + X(i)) / 2,
@@ -4479,8 +4461,42 @@
                         my = (Y(n - 2) + Y(n - 1)) / 2;
                     seg(mx, my, mx, my, X(n - 1), Y(n - 1), (W(n - 2) + W(n - 1)) / 2, W(n - 1))
                 }
+                if (!S.length) return n === 1 ? 0 : i;
+                /* one single fill: no overlapping translucent edges, so the outline stays crisp */
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = s.color || '#000';
+                ctx.beginPath();
+                for (let q = 0; q < S.length; q++) {
+                    const [x, y, r] = S[q];
+                    ctx.moveTo(x + r, y);
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    if (q) {
+                        const [px, py, pr] = S[q - 1],
+                            dx = x - px,
+                            dy = y - py,
+                            len = Math.hypot(dx, dy);
+                        if (len > .01) {
+                            const nx = -dy / len,
+                                ny = dx / len,
+                                P = [
+                                    [px + nx * pr, py + ny * pr],
+                                    [x + nx * r, y + ny * r],
+                                    [x - nx * r, y - ny * r],
+                                    [px - nx * pr, py - ny * pr]
+                                ],
+                                cr = (P[1][0] - P[0][0]) * (P[2][1] - P[1][1]) - (P[1][1] - P[0][1]) * (P[2][0] - P[1][0]);
+                            if (cr < 0) P.reverse();
+                            ctx.moveTo(P[0][0], P[0][1]);
+                            for (let z = 1; z < 4; z++) ctx.lineTo(P[z][0], P[z][1]);
+                            ctx.closePath()
+                        }
+                    }
+                }
+                ctx.fill('nonzero');
                 ctx.restore();
-                return i
+                return n === 1 ? 0 : i
             }
 
             function drawInkStroke(ctx, s, k) {
@@ -4666,9 +4682,11 @@
                     if (!v.mounted || tok !== v.tok) return;
                     v.base.replaceWith(tmp);
                     v.base = tmp;
-                    v.ink.width = tmp.width;
-                    v.ink.height = tmp.height;
-                    v.rs = rs;
+                    /* ink is drawn at a higher resolution than the page so pen lines stay razor sharp */
+                    const ss = Math.max(1, Math.min(2, 4096 / Math.max(tmp.width, tmp.height), Math.sqrt(16e6 / (tmp.width * tmp.height))));
+                    v.ink.width = Math.ceil(tmp.width * ss);
+                    v.ink.height = Math.ceil(tmp.height * ss);
+                    v.rs = rs * ss;
                     drawInkAll(v);
                     v.wrap.classList.add('ready');
                     if (quick) enqueue(v)
@@ -5428,8 +5446,8 @@
                         /* taper the tail like real ink */
                         const P = st.points,
                             n = P.length;
-                        [.85, .6, .35].forEach((f, j) => {
-                            const q = P[n - 3 + j];
+                        [.94, .84, .72, .58, .44, .3].forEach((f, j) => {
+                            const q = P[n - 6 + j];
                             if (q && q.length > 2) q[2] = +(q[2] * f).toFixed(3)
                         })
                     }
