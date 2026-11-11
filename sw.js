@@ -117,3 +117,75 @@ async function rangeResponse(req) {
     }
   });
 }
+
+/* ---------- Background reminders & notification clicks ----------
+   The page stores its upcoming reminders in IndexedDB ("novix-sw" / "kv" / "sched")
+   and reads back "fired" on startup, so the worker uses the same keys. */
+const NOTIF_ICON = './assets/img/novix-icon-256.png?v=6';
+
+function kvOp(mode, fn) {
+  return new Promise((ok, no) => {
+    const open = indexedDB.open('novix-sw', 1);
+    open.onupgradeneeded = () => open.result.createObjectStore('kv');
+    open.onerror = () => no(open.error);
+    open.onsuccess = () => {
+      const db = open.result;
+      const tx = db.transaction('kv', mode);
+      const req = fn(tx.objectStore('kv'));
+      tx.oncomplete = () => { db.close(); ok(req && req.result); };
+      tx.onerror = tx.onabort = () => { db.close(); no(tx.error); };
+    };
+  });
+}
+const kvGet = k => kvOp('readonly', s => s.get(k)).catch(() => undefined);
+const kvPut = (k, v) => kvOp('readwrite', s => s.put(v, k)).catch(() => {});
+
+async function showDueReminders() {
+  const sched = await kvGet('sched');
+  if (!sched || !Array.isArray(sched.items)) return;
+  const fired = (await kvGet('fired')) || {};
+  const now = Date.now();
+  let changed = false;
+  for (const it of sched.items) {
+    if (!it || fired[it.key]) continue;
+    if (now >= it.ts && now < it.ts + (it.win || 0)) {
+      const missed = it.msg2 && now - it.ts > 30 * 60000;
+      try {
+        await self.registration.showNotification('NOVIX', {
+          body: missed ? it.msg2 : it.msg,
+          tag: it.tag,
+          icon: NOTIF_ICON,
+          badge: NOTIF_ICON,
+          lang: sched.lang || 'en',
+          dir: sched.lang === 'ar' ? 'rtl' : 'ltr',
+          vibrate: [200, 100, 200],
+          renotify: true,
+          requireInteraction: !!it.ri,
+          data: { go: it.go || null }
+        });
+        fired[it.key] = 1;
+        changed = true;
+      } catch (e) {}
+    }
+  }
+  if (changed) await kvPut('fired', fired);
+}
+
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'novix-check') event.waitUntil(showDueReminders());
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const go = (event.notification.data && event.notification.data.go) || null;
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of wins) {
+      try { await c.focus(); } catch (e) {}
+      c.postMessage({ type: 'go', go });
+      return;
+    }
+    const w = await self.clients.openWindow('./');
+    if (w) setTimeout(() => { try { w.postMessage({ type: 'go', go }); } catch (e) {} }, 2000);
+  })());
+});
