@@ -34,6 +34,7 @@ self.addEventListener('fetch', event => {
     return;
   }
   if (url.origin !== self.location.origin) return;
+  if (url.pathname.endsWith('/version.json')) return;
 
   if (req.headers.has('range')) {
     event.respondWith(rangeResponse(req));
