@@ -121,7 +121,7 @@ async function rangeResponse(req) {
 /* ---------- Background reminders & notification clicks ----------
    The page stores its upcoming reminders in IndexedDB ("novix-sw" / "kv" / "sched")
    and reads back "fired" on startup, so the worker uses the same keys. */
-const NOTIF_ICON = './assets/img/novix-icon-256.png?v=6';
+const NOTIF_ICON = './assets/img/novix-icon-256.png?v=7';
 
 function kvOp(mode, fn) {
   return new Promise((ok, no) => {
