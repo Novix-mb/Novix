@@ -2060,13 +2060,13 @@
             }
             async function sysNotify(msg, go, urgent) {
                 if (!('Notification' in window) || Notification.permission !== 'granted') return;
-                const ap = document.querySelector('link[rel="apple-touch-icon"]'),
-                    ico = ap ? ap.href : 'assets/img/icon-256x256.png';
+                const ico = new URL('assets/img/icon-256x256.png?v=2', location.href).href,
+                    bdg = new URL('assets/img/notif-badge.png?v=2', location.href).href;
                 const o = {
                     body: msg,
                     tag: 'novix-' + ((go && (go.k || 'x')) || 'x') + '-' + ((go && go.id) || (go && go.tasks ? 'tasks' : 'd')),
                     icon: ico,
-                    badge: ico,
+                    badge: bdg,
                     lang: S.lang,
                     dir: isAr() ? 'rtl' : 'ltr',
                     vibrate: [200, 100, 200],
@@ -8353,6 +8353,7 @@
     let reg = null,
         waiting = null,
         base = null,
+        baseV = null,
         running = null,
         quiet = false,
         lastAuto = 0,
@@ -8364,7 +8365,20 @@
         for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
         return String(h);
     };
-    const fingerprint = async res => res.headers.get('etag') || res.headers.get('last-modified') || res.headers.get('content-length') || hash(await res.clone().text());
+    const fingerprint = async res => hash(await res.clone().text());
+
+    const remoteVersion = async () => {
+        const r = await fetch('version.json?t=' + Date.now(), {
+            cache: 'no-store'
+        });
+        if (!r.ok) return null;
+        try {
+            const j = await r.json();
+            return j && j.v ? String(j.v) : null;
+        } catch (e) {
+            return null;
+        }
+    };
 
     const files = () => {
         const set = new Set([location.origin + location.pathname]);
@@ -8400,6 +8414,14 @@
                 if (reg && reg.waiting && navigator.serviceWorker.controller) {
                     waiting = reg.waiting;
                     return 'update';
+                }
+                const v = await remoteVersion();
+                if (v) {
+                    if (!baseV) {
+                        baseV = v;
+                        return 'same';
+                    }
+                    return v === baseV ? 'same' : 'update';
                 }
                 const now = await snapshot();
                 if (!base) {
@@ -8522,7 +8544,7 @@
             location.reload();
         });
 
-        setTimeout(() => check(), 4000);
+        check();
         document.addEventListener('visibilitychange', () => {
             if (document.hidden || Date.now() - lastAuto < 60000) return;
             lastAuto = Date.now();
