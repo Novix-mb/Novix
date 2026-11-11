@@ -1,4 +1,4 @@
-;
+ ;
         if (window.pdfjsLib) {
             try {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = "assets/js/pdf.worker.js"
