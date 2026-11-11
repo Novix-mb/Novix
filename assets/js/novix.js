@@ -882,19 +882,30 @@
                     toast(tr('No file attached'));
                     return
                 }
+                /* Open a tab synchronously while the click is still a user gesture;
+                   opening it after the storage read is blocked by popup blockers. */
+                const viewable = /\.(pdf|png|jpe?g|gif|webp|svg|txt|md|csv|json)$/i.test(b.fn);
+                const win = viewable ? window.open('', '_blank') : null;
                 try {
                     const f = await idbGet(id);
-                    if (!f) throw 0;
-                    const u = URL.createObjectURL(f),
-                        a = document.createElement('a');
-                    a.href = u;
-                    a.rel = 'noopener';
-                    if (/pdf|image/.test(f.type)) a.target = '_blank';
-                    else a.download = b.fn;
-                    a.click();
+                    if (!f) throw new Error('Missing file');
+                    const u = URL.createObjectURL(f);
+                    if (win) {
+                        win.location.href = u;
+                    } else {
+                        const a = document.createElement('a');
+                        a.href = u;
+                        a.rel = 'noopener';
+                        a.download = b.fn;
+                        a.click();
+                    }
                     setTimeout(() => URL.revokeObjectURL(u), 6e4);
                     SFX.tap()
                 } catch (e) {
+                    console.error(e);
+                    try {
+                        if (win) win.close()
+                    } catch (x) {}
                     toast(tr('No file attached'))
                 }
             }
@@ -2060,7 +2071,7 @@
             }
             async function sysNotify(msg, go, urgent) {
                 if (!('Notification' in window) || Notification.permission !== 'granted') return;
-                const ico = new URL('assets/img/novix-icon-256.png?v=6', location.href).href;
+                const ico = new URL('assets/img/novix-icon-256.png?v=7', location.href).href;
                 const o = {
                     body: msg,
                     tag: 'novix-' + ((go && (go.k || 'x')) || 'x') + '-' + ((go && go.id) || (go && go.tasks ? 'tasks' : 'd')),
@@ -2077,13 +2088,20 @@
                 };
                 let reg = null;
                 try {
-                    reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration()
-                } catch (x) {}
+                    if (navigator.serviceWorker) reg = await Promise.race([
+                        navigator.serviceWorker.ready,
+                        new Promise((_, no) => setTimeout(() => no(new Error('sw timeout')), 3000))
+                    ])
+                } catch (x) {
+                    reg = null
+                }
                 if (reg && reg.showNotification) {
                     try {
                         await reg.showNotification('NOVIX', o);
                         return
-                    } catch (x) {}
+                    } catch (x) {
+                        console.warn('Service worker notification failed', x)
+                    }
                 }
                 try {
                     const nt = new Notification('NOVIX', o);
