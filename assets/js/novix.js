@@ -3134,7 +3134,17 @@
                     if (t.closest('#fxTabs button')) mode(t.closest('#fxTabs button').dataset.m)
                 });
                 $('#fxGo').onclick = start;
-                $('#fxReset').onclick = () => mode(fm);
+                /* Reset also restores the default length of the current mode: focus 30 · short break 5 · long break 15 */
+                const DEF = {
+                    f: 30,
+                    s: 5,
+                    l: 15
+                };
+                $('#fxReset').onclick = () => {
+                    D[fm] = DEF[fm];
+                    save2();
+                    mode(fm)
+                };
                 $('#fxSkip').onclick = () => {
                     if (fm === 'f') {
                         mode('s')
