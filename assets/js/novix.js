@@ -2858,6 +2858,8 @@
                     'Sound': 'الصوت',
                     'Tap a sound to preview it for 3 seconds. It plays while the timer runs.': 'اضغط على صوت لمعاينته ٣ ثوانٍ، ويشتغل مع المؤقت ويتوقف معه.',
                     'Background': 'الخلفية',
+                    'Digital timer': 'تايمر رقمي',
+                    'Ring timer': 'تايمر دائري',
                     'Stay in the zone with a calm timer, soft sounds and a view you love.': 'ركّز بهدوء مع مؤقت وأصوات هادئة وخلفية تحبها.'
                 };
                 for (const k in A)
@@ -2865,6 +2867,7 @@
                 const FK = 'novix.focus.v1',
                     D = Object.assign({
                         f: 30,
+                        skin: 'ring',
                         s: 5,
                         l: 15,
                         auto: 0,
@@ -2924,16 +2927,118 @@
                 const len = m => D[m] * 60,
                     left = () => run ? Math.max(0, Math.ceil((end - Date.now()) / 1000)) : rem;
 
+                /* ===== timer style: ring (dial) or digits (rolling numbers) ===== */
+                const SK = () => D.skin === 'digits' ? 'digits' : 'ring';
+                const SKI = {
+                    toDigits: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="7.2" height="11" rx="2.6"/><rect x="13.8" y="6.5" width="7.2" height="11" rx="2.6"/></svg>',
+                    toRing: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" stroke-width="2.6"/></svg>'
+                };
+
+                function fxTime(txt) {
+                    const T = $('#fxT');
+                    if (SK() === 'digits') return fxDigits(txt);
+                    if (T._c) {
+                        T._c = null;
+                        T.textContent = txt;
+                        return
+                    }
+                    if (T.textContent !== txt) T.textContent = txt
+                }
+
+                function fxDigits(txt) {
+                    const T = $('#fxT'),
+                        chars = txt.split(''),
+                        rm = matchMedia('(prefers-reduced-motion: reduce)').matches,
+                        pv = s => {
+                            const p = s.split(':');
+                            return +p[0] * 60 + +p[1]
+                        };
+                    if (!T._c || T._c.length !== chars.length) {
+                        T.innerHTML = '';
+                        T._c = chars.map(ch => {
+                            const c = document.createElement('span');
+                            if (ch === ':') {
+                                c.className = 'cl';
+                                c.textContent = ':'
+                            } else {
+                                c.className = 'dg';
+                                const i = document.createElement('i');
+                                i.textContent = ch;
+                                c.appendChild(i)
+                            }
+                            c._ch = ch;
+                            T.appendChild(c);
+                            return c
+                        });
+                        T._v = pv(txt);
+                        return
+                    }
+                    const nv = pv(txt),
+                        dir = nv > T._v ? 1 : -1;
+                    T._v = nv;
+                    chars.forEach((ch, k) => {
+                        const c = T._c[k];
+                        if (ch === ':' || c._ch === ch) return;
+                        c._ch = ch;
+                        const old = c.lastElementChild,
+                            n = document.createElement('i');
+                        n.textContent = ch;
+                        c.appendChild(n);
+                        while (c.children.length > 3) c.firstElementChild.remove();
+                        if (rm) {
+                            old && old.remove();
+                            return
+                        }
+                        const d = run ? 340 : 460,
+                            ez = 'cubic-bezier(.2,.85,.25,1)',
+                            f = dir > 0 ? ['70%', '-70%'] : ['-70%', '70%'];
+                        n.animate([{
+                            transform: `translateY(${f[0]})`,
+                            opacity: 0,
+                            filter: 'blur(6px)'
+                        }, {
+                            transform: 'none',
+                            opacity: 1,
+                            filter: 'blur(0)'
+                        }], {
+                            duration: d,
+                            easing: ez,
+                            fill: 'backwards'
+                        });
+                        if (old) {
+                            const a = old.animate([{
+                                transform: 'none',
+                                opacity: 1,
+                                filter: 'blur(0)'
+                            }, {
+                                transform: `translateY(${f[1]})`,
+                                opacity: 0,
+                                filter: 'blur(6px)'
+                            }], {
+                                duration: d,
+                                easing: ez,
+                                fill: 'forwards'
+                            });
+                            a.onfinish = () => old.remove()
+                        }
+                    })
+                }
+
                 function render() {
-                    if (dlReady) RING.classList.toggle('locked', !!act);
+                    if (dlReady) {
+                        RING.classList.toggle('locked', !!act);
+                        RING.classList.toggle('adj', SK() === 'digits' && !act && rem >= len(fm))
+                    }
                     ST.classList.toggle('fx-act', act);
+                    ST.classList.toggle('fx-run', run);
+                    ST.classList.toggle('fx-l3', Math.floor(left() / 60) >= 100);
                     const C = 2 * Math.PI * 118,
                         r = left(),
                         tot = len(fm),
                         mm = String(Math.floor(r / 60)).padStart(2, '0'),
                         ss = String(r % 60).padStart(2, '0'),
                         p = $('#fxPrg');
-                    $('#fxT').textContent = mm + ':' + ss;
+                    fxTime(mm + ':' + ss);
                     p.style.strokeDasharray = C;
                     p.style.strokeDashoffset = C * (1 - r / tot);
                     $('#fxL').textContent = tr(fm === 'f' ? 'Focus' : fm === 's' ? 'Short break' : 'Long break') + (fm === 'f' ? ' · ' + tr('Session') + ' ' + (D.done % 4 + 1) : '');
@@ -2995,10 +3100,24 @@
                     } catch (e) {}
                 }
 
+                /* the timer shakes when the time is up */
+                function shake() {
+                    const r = ST.querySelector('.fx-ring');
+                    if (!r) return;
+                    r.classList.remove('fx-shake');
+                    void r.offsetWidth;
+                    r.classList.add('fx-shake');
+                    setTimeout(() => r.classList.remove('fx-shake'), 1500);
+                    try {
+                        navigator.vibrate && navigator.vibrate([200, 100, 200, 100, 300])
+                    } catch (e) {}
+                }
+
                 function done() {
                     clearInterval(tk);
                     run = false;
                     chime();
+                    shake();
                     const wasF = fm === 'f';
                     if (wasF) {
                         D.done++;
@@ -3097,7 +3216,8 @@
                 HIT.className = 'fx-kh-hit';
                 RING.append(HIT);
                 const dhT = () => {
-                    dh.textContent = document.documentElement.lang === 'ar' ? 'اسحب لضبط الوقت' : 'DRAG TO SET'
+                    const ar = document.documentElement.lang === 'ar';
+                    dh.textContent = SK() === 'digits' ? (ar ? 'مرّر أو اسحب لضبط الوقت' : 'SCROLL OR SWIPE TO SET') : (ar ? 'اسحب لضبط الوقت' : 'DRAG TO SET')
                 };
                 dhT();
                 addEventListener('novix:lang', dhT);
@@ -3194,7 +3314,7 @@
                     e.stopImmediatePropagation()
                 }, true);
                 RING.addEventListener('pointerdown', e => {
-                    if (e.button > 0 || act) return;
+                    if (e.button > 0 || act || SK() === 'digits') return;
                     if (e.pointerType === 'touch' && !(e.target.closest && e.target.closest('.fx-kh-hit'))) return;
                     try {
                         RING.setPointerCapture(e.pointerId)
@@ -3240,7 +3360,7 @@
                 RING.addEventListener('pointerup', dEnd);
                 RING.addEventListener('pointercancel', dEnd);
                 RING.addEventListener('wheel', e => {
-                    if (act || rem < len(fm)) return;
+                    if (act || rem < len(fm) || SK() === 'digits') return;
                     if (!ST.classList.contains('max') && document.activeElement !== RING) return;
                     e.preventDefault();
                     const n = Date.now();
@@ -3274,6 +3394,95 @@
                     }
                 });
                 dlReady = true;
+                /* ===== digits style: set the time by scrolling / swiping the numbers =====
+                   same lock as the ring: no changes while a session is running or paused (reset or skip to change) */
+                {
+                    const can = () => SK() === 'digits' && !act && rem >= len(fm),
+                        onNum = e => e.target.closest && e.target.closest('#fxT'),
+                        WHEEL_PX = 120, /* scroll distance per minute: one mouse-wheel notch = 1 min (slower than the other design) */
+                        DRAG_PX = 38, /* swipe distance per minute (slower than before) */
+                        MIN_GAP = 80; /* ms between two scroll steps */
+                    let acc = 0,
+                        at = 0,
+                        ls = 0,
+                        gd = null;
+                    RING.addEventListener('wheel', e => {
+                        if (SK() !== 'digits' || !onNum(e) || !can()) return;
+                        e.preventDefault();
+                        const n = Date.now(),
+                            raw = e.deltaY || e.deltaX,
+                            d = e.deltaMode ? Math.sign(raw) * WHEEL_PX : raw;
+                        if (n - at > 600) acc = 0;
+                        at = n;
+                        acc += d;
+                        const s = Math.trunc(acc / WHEEL_PX);
+                        if (!s) return;
+                        acc -= s * WHEEL_PX;
+                        if (n - ls < MIN_GAP) return;
+                        ls = n;
+                        used();
+                        if (setMin(D[fm] + Math.max(-3, Math.min(3, -s)) * (e.shiftKey ? 5 : 1))) save2()
+                    }, {
+                        passive: false
+                    });
+                    const gEnd = () => {
+                        if (!gd) return;
+                        gd = null;
+                        RING.classList.remove('dgdrag');
+                        save2()
+                    };
+                    RING.addEventListener('pointerdown', e => {
+                        if (SK() !== 'digits' || e.button > 0 || !onNum(e) || !can()) return;
+                        gd = {
+                            y: e.clientY,
+                            base: D[fm]
+                        };
+                        try {
+                            RING.setPointerCapture(e.pointerId)
+                        } catch (x) {}
+                        RING.classList.add('dgdrag');
+                        used()
+                    });
+                    RING.addEventListener('pointermove', e => {
+                        if (!gd) return;
+                        if (!can()) return gEnd();
+                        const dy = gd.y - e.clientY,
+                            a = Math.abs(dy);
+                        setMin(gd.base + Math.sign(dy) * Math.round(a / DRAG_PX + Math.pow(a / 280, 2) * 3))
+                    });
+                    RING.addEventListener('pointerup', gEnd);
+                    RING.addEventListener('pointercancel', gEnd);
+
+                    const skinUI = reset => {
+                        const dg = SK() === 'digits',
+                            b = $('#fxSkin'),
+                            lb = tr(dg ? 'Ring timer' : 'Digital timer');
+                        ST.dataset.skin = dg ? 'digits' : 'ring';
+                        b.innerHTML = dg ? SKI.toRing : SKI.toDigits;
+                        b.setAttribute('aria-label', lb);
+                        b.title = lb;
+                        RING.setAttribute('aria-orientation', dg ? 'vertical' : 'circular');
+                        dhT();
+                        if (reset) {
+                            const T = $('#fxT');
+                            T._c = null;
+                            T._v = undefined;
+                            T.textContent = ''
+                        }
+                    };
+                    $('#fxSkin').onclick = () => {
+                        D.skin = SK() === 'digits' ? 'ring' : 'digits';
+                        save2();
+                        skinUI(true);
+                        render();
+                        RING.classList.remove('fx-skin-in');
+                        void RING.offsetWidth;
+                        RING.classList.add('fx-skin-in')
+                    };
+                    addEventListener('novix:lang', () => skinUI(false));
+                    skinUI(true);
+                    render()
+                }
                 const FS_EXP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
                     FS_CMP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
                 const fsSet = on => {
