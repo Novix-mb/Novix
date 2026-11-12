@@ -61,6 +61,9 @@
                 'Update note': 'تحديث الملاحظة',
                 'Note saved': 'تم حفظ الملاحظة',
                 'Download note': 'تحميل الملاحظة',
+                'Short break can’t be longer than 10 minutes': 'الاستراحة القصيرة لا تزيد عن 10 دقائق',
+                'Long break must be at least 11 minutes': 'الاستراحة الطويلة لا تقل عن 11 دقيقة',
+                'Time is locked during a session — reset or skip to change it': 'الوقت مقفل أثناء الجلسة — أعد الضبط أو تخطَّ لتغييره',
                 'Something went wrong': 'حدث خطأ ما',
                 'Note downloaded': 'تم تحميل الملاحظة',
                 'Unlink task': 'إلغاء ربط المهمة',
@@ -1719,8 +1722,6 @@
             /* ---------- download a note as an image, laid out exactly like the editor shows it ---------- */
             async function noteToPng(n) {
                 const W = 1080,
-                    P = 76,
-                    CW = W - P * 2,
                     K = 2,
                     T = tOf(n),
                     fam = o => (FONTS[o.font] || FONTS[0])[1],
@@ -1772,29 +1773,56 @@
                     });
                     return out
                 };
-                const tpx = T.size * K,
+                /* same proportions as the editor card: 30px corners, 26px side padding, soft shadow */
+                const P = 52,
+                    CW = W - P * 2,
+                    R = 30 * K,
+                    M = 70,
+                    TOP = 96,
+                    BOT = 60,
+                    PADX = 12 * K,
+                    PADY = 8 * K,
+                    tpx = T.size * K,
                     bpx = n.size * K || 36,
-                    tl = (n.title || '').trim() ? wrap(n.title, T, tpx, CW - (T.bg ? 56 : 0)) : [],
+                    tw = CW - (T.bg ? PADX * 2 : 0),
+                    tl = (n.title || '').trim() ? wrap(n.title, T, tpx, tw) : [],
                     bl = (n.body || '').trim() ? wrap(n.body, n, bpx, CW) : [],
                     tlh = tpx * 1.3,
                     blh = bpx * 1.75,
-                    dateH = 70,
-                    tbH = tl.length ? tl.length * tlh + (T.bg ? 40 : 0) : 0,
-                    H = Math.max(560, Math.round(P + dateH + tbH + (tbH ? 36 : 0) + bl.length * blh + P));
+                    tbH = tl.length ? tl.length * tlh + (T.bg ? PADY * 2 : 0) : 0,
+                    H = Math.max(560, Math.round(TOP + tbH + (tbH ? 14 : 0) + bl.length * blh + BOT));
                 const cv = document.createElement('canvas');
-                cv.width = W;
-                cv.height = H;
+                cv.width = W + M * 2;
+                cv.height = H + M * 2;
                 const c = cv.getContext('2d');
-                c.fillStyle = cl(n.pc, '#fff3b0');
+                const rr = (x, y, w, h, r) => {
+                    c.beginPath();
+                    if (c.roundRect) c.roundRect(x, y, w, h, r);
+                    else c.rect(x, y, w, h)
+                };
+                const paper = cl(n.pc, '#fff3b0');
+                c.save();
+                c.shadowColor = 'rgba(0,0,0,.32)';
+                c.shadowBlur = 76;
+                c.shadowOffsetY = 30;
+                c.fillStyle = paper;
+                rr(M, M, W, H, R);
+                c.fill();
+                c.restore();
+                c.save();
+                rr(M, M, W, H, R);
+                c.clip();
+                c.translate(M, M);
+                c.fillStyle = paper;
                 c.fillRect(0, 0, W, H);
                 c.textBaseline = 'middle';
                 const dRtl = document.documentElement.dir === 'rtl';
-                c.font = `600 26px Manrope,Alexandria,sans-serif`;
+                c.font = `700 24px Manrope,Alexandria,sans-serif`;
                 c.fillStyle = cl(n.tc, '#1c3a33');
-                c.globalAlpha = .55;
+                c.globalAlpha = .6;
                 c.direction = dRtl ? 'rtl' : 'ltr';
                 c.textAlign = dRtl ? 'right' : 'left';
-                c.fillText(fmtD(n.ts || Date.now()), dRtl ? W - P : P, P - 6 + 20);
+                c.fillText(fmtD(n.ts || Date.now()), dRtl ? W - 44 : 44, 50);
                 c.globalAlpha = 1;
                 const draw = (lines, o, px, lh, top, left, width) => {
                     c.font = fstr(o, px);
@@ -1814,19 +1842,25 @@
                         }
                     })
                 };
-                let y = P + dateH - 14;
+                let y = TOP;
                 if (tl.length) {
                     if (T.bg) {
                         c.fillStyle = cl(T.bg, 'transparent');
-                        c.beginPath();
-                        if (c.roundRect) c.roundRect(P, y, CW, tbH, 28);
-                        else c.rect(P, y, CW, tbH);
+                        rr(P, y, CW, tbH, 12 * K);
                         c.fill()
                     }
-                    draw(tl, T, tpx, tlh, y + (T.bg ? 20 : 0), P + (T.bg ? 28 : 0), CW - (T.bg ? 56 : 0));
-                    y += tbH + 36
+                    draw(tl, T, tpx, tlh, y + (T.bg ? PADY : 0), P + (T.bg ? PADX : 0), tw);
+                    y += tbH + 14
                 }
                 draw(bl, n, bpx, blh, y, P, CW);
+                c.restore();
+                /* hairline edge like the card on screen */
+                c.save();
+                c.lineWidth = 2;
+                c.strokeStyle = 'rgba(0,0,0,.07)';
+                rr(M + 1, M + 1, W - 2, H - 2, R - 1);
+                c.stroke();
+                c.restore();
                 return new Promise(ok => cv.toBlob(ok, 'image/png'))
             }
             async function downloadNote(n) {
@@ -2857,8 +2891,25 @@
                     PRE = {
                         f: [15, 25, 30, 45, 60],
                         s: [3, 5, 10],
-                        l: [10, 15, 20, 30]
+                        l: [15, 20, 30, 45]
                     };
+                /* short break: 10 min at most · long break: 11 min at least */
+                const LIM = {
+                        f: [1, 180],
+                        s: [1, 10],
+                        l: [11, 180]
+                    },
+                    clampM = (m, v) => Math.max(LIM[m][0], Math.min(LIM[m][1], Math.round(+v) || D[m]));
+                ['f', 's', 'l'].forEach(m => {
+                    D[m] = clampM(m, D[m])
+                });
+                let lockT = 0;
+                const lockHint = () => {
+                    const n = Date.now();
+                    if (n - lockT < 3000) return;
+                    lockT = n;
+                    toast(tr('Time is locked during a session — reset or skip to change it'))
+                };
                 if (D.day !== ymd(new Date())) {
                     D.day = ymd(new Date());
                     D.n = 0;
@@ -2874,7 +2925,7 @@
                     left = () => run ? Math.max(0, Math.ceil((end - Date.now()) / 1000)) : rem;
 
                 function render() {
-                    if (dlReady) RING.classList.toggle('locked', !!run);
+                    if (dlReady) RING.classList.toggle('locked', !!act);
                     ST.classList.toggle('fx-act', act);
                     const C = 2 * Math.PI * 118,
                         r = left(),
@@ -2889,10 +2940,12 @@
                     $('#fxGo').textContent = run ? tr('Pause') : tr('Start');
                     document.title = run ? mm + ':' + ss + ' · NOVIX' : T0;
                     document.querySelectorAll('#fxTabs button').forEach(b => b.classList.toggle('on', b.dataset.m === fm));
-                    $('#fxPre').innerHTML = PRE[fm].map(v => `<button type="button" data-v="${v}" class="${v===D[fm]?'on':''}" ${run?'disabled':''}>${v}</button>`).join('');
+                    $('#fxPre').innerHTML = PRE[fm].map(v => `<button type="button" data-v="${v}" class="${v===D[fm]?'on':''}" ${act?'disabled':''}>${v}</button>`).join('');
                     const mi = $('#fxMin');
+                    mi.min = LIM[fm][0];
+                    mi.max = LIM[fm][1];
                     if (document.activeElement !== mi) mi.value = D[fm];
-                    mi.disabled = run;
+                    mi.disabled = act;
                     $('#fxAuto').checked = !!D.auto;
                     $('#fxStat').textContent = tr('Sessions today') + ': ' + D.n + ' · ' + tr('Focus time') + ': ' + D.min + ' ' + tr('min');
                     dialSync();
@@ -2970,15 +3023,23 @@
                 };
                 $('#fxPre').onclick = e => {
                     const b = e.target.closest('button');
-                    if (!b || run) return;
+                    if (!b || act) return;
                     D[fm] = +b.dataset.v;
                     rem = len(fm);
                     save2();
                     render()
                 };
                 $('#fxMin').onchange = e => {
-                    D[fm] = Math.min(180, Math.max(1, Math.round(+e.target.value) || D[fm]));
-                    if (!run) rem = len(fm);
+                    if (act) {
+                        e.target.value = D[fm];
+                        return lockHint()
+                    }
+                    const raw = Math.round(+e.target.value) || D[fm];
+                    if (fm === 's' && raw > 10) toast(tr('Short break can’t be longer than 10 minutes'));
+                    if (fm === 'l' && raw < 11) toast(tr('Long break must be at least 11 minutes'));
+                    D[fm] = clampM(fm, raw);
+                    e.target.value = D[fm];
+                    rem = len(fm);
                     save2();
                     render()
                 };
@@ -3071,6 +3132,8 @@
                     const on = Math.round(kf * 60);
                     for (let i = 0; i < 60; i++) tkG.children[i].classList.toggle('on', i < on);
                     const vn = full ? D[fm] : Math.max(1, Math.ceil(r / 60));
+                    RING.setAttribute('aria-valuemin', LIM[fm][0]);
+                    RING.setAttribute('aria-valuemax', LIM[fm][1]);
                     RING.setAttribute('aria-valuenow', vn);
                     RING.setAttribute('aria-valuetext', vn + ' min')
                 }
@@ -3106,8 +3169,8 @@
                         }
                     },
                     setMin = m => {
-                        m = Math.max(1, Math.min(180, Math.round(m)));
-                        if (m === D[fm] || run || rem < len(fm)) return false;
+                        m = clampM(fm, m);
+                        if (m === D[fm] || act || rem < len(fm)) return false;
                         D[fm] = m;
                         rem = len(fm);
                         render();
@@ -3120,17 +3183,18 @@
                         return Math.atan2(e.clientX - (r.left + r.width / 2), -(e.clientY - (r.top + r.height / 2))) * 180 / Math.PI
                     };
                 RING.addEventListener('pointerdown', e => {
-                    if (!run) return;
+                    if (!act) return;
                     if (dr) dEnd();
+                    lockHint();
                     e.stopImmediatePropagation()
                 }, true);
                 RING.addEventListener('pointermove', e => {
-                    if (!run) return;
+                    if (!act) return;
                     if (dr) dEnd();
                     e.stopImmediatePropagation()
                 }, true);
                 RING.addEventListener('pointerdown', e => {
-                    if (e.button > 0 || run) return;
+                    if (e.button > 0 || act) return;
                     if (e.pointerType === 'touch' && !(e.target.closest && e.target.closest('.fx-kh-hit'))) return;
                     try {
                         RING.setPointerCapture(e.pointerId)
@@ -3147,14 +3211,14 @@
                 });
                 RING.addEventListener('pointermove', e => {
                     if (!dr) return;
-                    if (run) return dEnd();
+                    if (act) return dEnd();
                     const a = angOf(e);
                     let dl = a - dr.a;
                     if (dl > 180) dl -= 360;
                     if (dl < -180) dl += 360;
                     dr.a = a;
                     if (dr.full) {
-                        dr.acc = Math.max(6, Math.min(1080, dr.acc + dl));
+                        dr.acc = Math.max(LIM[fm][0] * 6, Math.min(LIM[fm][1] * 6, dr.acc + dl));
                         setMin(dr.acc / 6)
                     } else {
                         dr.f = Math.max(.004, Math.min(1, dr.f + dl / 360));
@@ -3176,7 +3240,7 @@
                 RING.addEventListener('pointerup', dEnd);
                 RING.addEventListener('pointercancel', dEnd);
                 RING.addEventListener('wheel', e => {
-                    if (run || rem < len(fm)) return;
+                    if (act || rem < len(fm)) return;
                     if (!ST.classList.contains('max') && document.activeElement !== RING) return;
                     e.preventDefault();
                     const n = Date.now();
@@ -3188,7 +3252,7 @@
                     passive: false
                 });
                 RING.addEventListener('keydown', e => {
-                    if (run || rem < len(fm)) return;
+                    if (act || rem < len(fm)) return;
                     const k = {
                         ArrowRight: 1,
                         ArrowUp: 1,
@@ -4546,7 +4610,14 @@
                 };
                 return o
             })();
-            const saveCfg = () => LS.set('novix.pdf.tools.v1', cfg);
+            const saveCfg = () => {
+                LS.set('novix.pdf.tools.v1', cfg);
+                try {
+                    paintTools()
+                } catch (e) {}
+            };
+            const menuEl = document.getElementById('nr-menu');
+            let menuFor = null;
             if (!cfg.shape.nofill1) {
                 cfg.shape.fillOn = false;
                 cfg.shape.nofill1 = true;
@@ -6389,8 +6460,10 @@
                     mode = o ? toolOfObj(o) : tool;
                 box.replaceChildren();
                 reader.dataset.panel = mode;
+                $$('[data-pdf-tool]').forEach(b => b.classList.toggle('has-sel', !!o && b.dataset.pdfTool === mode));
                 if (mode === 'pan') {
                     box.hidden = true;
+                    closeMenu();
                     return
                 }
                 box.hidden = false;
@@ -6405,7 +6478,7 @@
                 };
                 const c = cfg[mode],
                     cur = (key, prop) => o && o[prop] != null ? o[prop] : c[key];
-                box.appendChild(el('span', 'opt-title', (o ? L('Selected · ', 'المحدد · ') : '') + names[mode]));
+                box.appendChild(el('span', 'opt-title' + (o ? ' is-sel' : ''), (o ? L('Selected · ', 'المحدد · ') : '') + names[mode]));
                 const add = n => box.appendChild(n);
                 if (mode === 'laser') {
                     add(grp(L('Colour', 'اللون'), swatches(PAL.laser, () => c.color, v => setProp('laser', 'color', v))));
@@ -6418,15 +6491,35 @@
                     add(grp(L('Colour', 'اللون'), swatches(PAL.hl, () => c.color, v => setProp('highlighter', 'color', v))));
                     add(grp(L('Size', 'الحجم'), range(6, 96, () => c.size, v => setProp('highlighter', 'size', v))))
                 } else if (mode === 'eraser') {
-                    add(grp(L('Size', 'الحجم'), range(6, 160, () => c.size, v => setProp('eraser', 'size', v))))
+                    add(grp(L('Size', 'الحجم'), range(6, 160, () => c.size, v => setProp('eraser', 'size', v))));
+                    const cb = el('button', 'opt-clear', '');
+                    cb.type = 'button';
+                    cb.innerHTML = '<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></svg><span>' + L('Clear this session’s edits', 'مسح تعديلات هذه الجلسة') + '</span>';
+                    cb.onclick = () => {
+                        closeMenu();
+                        $('#nr-clear').click()
+                    };
+                    add(cb)
                 } else if (mode === 'text') {
                     add(grp(L('Text colour', 'لون النص'), swatches(PAL.ink, () => cur('color', 'color'), v => setProp('text', 'color', v))));
                     add(grp(L('Font size', 'حجم الخط'), range(8, 192, () => cur('size', 'fs'), v => setProp('text', 'size', v))));
-                    const sel2 = el('select');
-                    sel2.innerHTML = `<option value="sans">${L('Sans','عادي')}</option><option value="serif">${L('Serif','مزخرف')}</option><option value="mono">${L('Mono','ثابت')}</option>`;
-                    sel2.value = cur('family', 'family');
-                    sel2.onchange = () => setProp('text', 'family', sel2.value);
-                    add(grp(L('Font', 'الخط'), sel2));
+                    const seg = el('span', 'opt-seg');
+                    [
+                        ['sans', L('Sans', 'عادي'), 'system-ui,sans-serif'],
+                        ['serif', L('Serif', 'مزخرف'), 'Georgia,serif'],
+                        ['mono', L('Mono', 'ثابت'), 'ui-monospace,Menlo,monospace']
+                    ].forEach(([k, t, ff]) => {
+                        const b = el('button', 'opt-sg', '');
+                        b.type = 'button';
+                        b.innerHTML = `<b style="font-family:${ff}">Aa</b><small>${t}</small>`;
+                        b.classList.toggle('on', cur('family', 'family') === k);
+                        b.onclick = () => {
+                            setProp('text', 'family', k);
+                            seg.querySelectorAll('.opt-sg').forEach(x => x.classList.toggle('on', x === b))
+                        };
+                        seg.appendChild(b)
+                    });
+                    add(grp(L('Font', 'الخط'), seg));
                     add(toggle('B', () => cur('bold', 'bold'), v => setProp('text', 'bold', v), L('Bold', 'عريض')))
                 } else if (mode === 'sticky') {
                     add(grp(L('Paper', 'لون الورقة'), swatches(PAL.paper, () => cur('paper', 'paper'), v => setProp('sticky', 'paper', v))));
@@ -6451,6 +6544,73 @@
                     }));
                     add(grp(L('Text colour', 'لون النص'), swatches(PAL.ink, () => cur('textColor', 'color'), v => setProp('shape', 'textColor', v))))
                 }
+                if (menuFor) requestAnimationFrame(placeMenu)
+            }
+
+            /* ---------- dropdown menu that hangs from the tool button ---------- */
+            function placeMenu() {
+                if (!menuFor || menuEl.hidden) return;
+                const r = menuFor.getBoundingClientRect(),
+                    mw = menuEl.offsetWidth,
+                    mh = menuEl.offsetHeight,
+                    vw = window.innerWidth,
+                    vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                let left = r.left + r.width / 2 - mw / 2;
+                left = Math.max(8, Math.min(vw - mw - 8, left));
+                let top = r.bottom + 12,
+                    up = false;
+                if (top + mh > vh - 8 && r.top - mh - 12 > 8) {
+                    top = r.top - mh - 12;
+                    up = true
+                }
+                menuEl.classList.toggle('up', up);
+                menuEl.style.left = left + 'px';
+                menuEl.style.top = Math.max(8, top) + 'px';
+                menuEl.style.setProperty('--ax', Math.max(18, Math.min(mw - 18, r.left + r.width / 2 - left)) + 'px')
+            }
+
+            function openMenu(anchor) {
+                menuFor = anchor;
+                buildOptions();
+                menuFor = anchor;
+                menuEl.hidden = false;
+                $$('[data-pdf-tool]').forEach(b => {
+                    b.classList.toggle('menu-open', b === anchor);
+                    b.setAttribute('aria-expanded', b === anchor)
+                });
+                placeMenu();
+                requestAnimationFrame(() => {
+                    placeMenu();
+                    menuEl.classList.add('in')
+                })
+            }
+
+            function closeMenu() {
+                if (!menuEl) return;
+                menuFor = null;
+                menuEl.classList.remove('in');
+                menuEl.hidden = true;
+                $$('[data-pdf-tool]').forEach(b => {
+                    b.classList.remove('menu-open');
+                    b.setAttribute('aria-expanded', 'false')
+                })
+            }
+            /* the little coloured line under a tool's icon = its current colour */
+            function paintTools() {
+                const C = {
+                    pen: () => cfg.pen.color,
+                    highlighter: () => cfg.highlighter.color,
+                    eraser: () => 'currentColor',
+                    text: () => cfg.text.color,
+                    sticky: () => cfg.sticky.paper,
+                    shape: () => cfg.shape.stroke,
+                    laser: () => cfg.laser.color
+                };
+                $$('[data-pdf-tool]').forEach(b => {
+                    const f = C[b.dataset.pdfTool];
+                    b.classList.toggle('has-menu', !!f);
+                    if (f) b.style.setProperty('--tc', f())
+                })
             }
 
             function syncShapeButtons(kind) {
@@ -6458,6 +6618,7 @@
             }
 
             function setTool(t) {
+                closeMenu();
                 clearStrokeSel();
                 const ae = document.activeElement;
                 if (ae && ae.classList && ae.classList.contains('pdf-obj-text')) ae.blur();
@@ -6472,7 +6633,43 @@
                 syncShapeButtons(cfg.shape.kind);
                 buildOptions()
             }
-            $$('[data-pdf-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.pdfTool)));
+            $$('[data-pdf-tool]').forEach(b => b.addEventListener('click', () => {
+                const t = b.dataset.pdfTool,
+                    o = selObj();
+                if (t === 'pan') {
+                    closeMenu();
+                    setTool(t);
+                    return
+                }
+                if (menuFor === b) {
+                    closeMenu();
+                    return
+                }
+                if (tool === t || (o && toolOfObj(o) === t)) {
+                    openMenu(b);
+                    return
+                }
+                setTool(t)
+            }));
+            reader.addEventListener('pointerdown', e => {
+                if (!menuFor) return;
+                if (e.target.closest('#nr-menu,[data-pdf-tool]')) return;
+                closeMenu()
+            }, true);
+            reader.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && menuFor) {
+                    e.stopPropagation();
+                    closeMenu()
+                }
+            }, true);
+            window.addEventListener('resize', placeMenu);
+            new MutationObserver(() => {
+                if (!reader.classList.contains('open')) closeMenu()
+            }).observe(reader, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+            paintTools();
             $$('[data-pdf-shape]').forEach(b => b.addEventListener('click', () => {
                 const k = b.dataset.pdfShape;
                 cfg.shape.kind = k;
@@ -6552,6 +6749,7 @@
                 $('#nr-export').textContent = L('Export PDF', 'تصدير PDF');
                 $('#nr-close').title = L('Back to library', 'العودة للمكتبة');
                 $('#nr-clear').title = L('Clear this session’s edits', 'مسح تعديلات هذه الجلسة');
+                $('#nr-clear-l').textContent = L('Clear', 'مسح');
                 const SH = isAr() ? {
                     rect: 'مستطيل',
                     round: 'دائري',
