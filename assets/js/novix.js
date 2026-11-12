@@ -9578,6 +9578,10 @@
         lock = null,
         asking = false,
         err = '',
+        lockAt = 0,
+        relAt = 0,
+        offInfo = null,
+        offT = 0,
         vid = null,
         pill = null;
     const focusOn = () => !!document.querySelector('#v-focus.on');
@@ -9641,8 +9645,13 @@
             }
             lock = l;
             err = '';
+            lockAt = Date.now();
+            relAt = 0;
             l.addEventListener('release', () => {
-                if (lock === l) lock = null;
+                if (lock === l) {
+                    lock = null;
+                    relAt = Date.now()
+                }
                 if (active()) setTimeout(sync, 300);
                 badge()
             });
@@ -9671,10 +9680,18 @@
             st.appendChild(pill)
         }
         const ar = (document.documentElement.lang || '').toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
-        pill.style.opacity = active() ? '1' : '0';
-        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') + (playing() ? ' ✓✓' : '') + ' · v6' :
-            playing() ? (ar ? '🔆 الشاشة لن تنطفئ (وضع بديل)' : '🔆 Screen stays on (backup)') + ' · v6' :
-            (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on') + (err ? ' · ' + err : '') + ' · v6'
+        if (!active()) {
+            pill.style.opacity = '0';
+            return
+        }
+        pill.style.opacity = '1';
+        if (offInfo) {
+            pill.textContent = offInfo;
+            return
+        }
+        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') + (playing() ? ' ✓✓' : '') + ' · v7' :
+            playing() ? (ar ? '🔆 الشاشة لن تنطفئ (وضع بديل)' : '🔆 Screen stays on (backup)') + ' · v7' :
+            (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on') + (err ? ' · ' + err : '') + ' · v7'
     }
 
     function sync() {
@@ -9704,7 +9721,31 @@
         attributes: true,
         attributeFilter: ['class']
     });
+    let hidAt = 0,
+        hadLock = false,
+        hadRel = false,
+        hadVid = false;
     document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (want) {
+                hidAt = Date.now();
+                hadLock = !!lock;
+                hadRel = !!relAt;
+                hadVid = playing()
+            }
+        } else if (hidAt && want) {
+            const ar = (document.documentElement.lang || '').toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
+            const sec = lockAt ? Math.round((hidAt - lockAt) / 1000) : 0;
+            const info = ar ? 'انطفأت الشاشة بعد ' + sec + 'ث · القفل ' + (hadLock ? 'كان ممسوكاً' : hadRel ? 'أُفلت قبلها' : 'غير مفعّل') + ' · فيديو ' + (hadVid ? 'يعمل' : 'متوقف') :
+                'Screen went off after ' + sec + 's · lock ' + (hadLock ? 'was held' : hadRel ? 'was released before' : 'not active') + ' · video ' + (hadVid ? 'playing' : 'stopped');
+            offInfo = info + ' · v7';
+            clearTimeout(offT);
+            offT = setTimeout(() => {
+                offInfo = null;
+                badge()
+            }, 25000);
+            hidAt = 0
+        }
         lockOff();
         sync()
     });
