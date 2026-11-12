@@ -9369,7 +9369,9 @@
                 vid.loop = true;
                 vid.defaultMuted = true;
                 vid.disableRemotePlayback = true;
-                vid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.02;pointer-events:none;z-index:-1';
+                vid.style.cssText = 'position:fixed;left:0;bottom:0;width:4px;height:4px;opacity:.05;pointer-events:none;z-index:2147483000';
+                vid.addEventListener('playing', () => setTimeout(badge, 50));
+                vid.addEventListener('pause', () => setTimeout(badge, 50));
                 for (const [u, ty] of [
                         [MP4, 'video/mp4'],
                         [WEBM, 'video/webm']
@@ -9435,6 +9437,24 @@
                 l.release().catch(() => {})
             }
 
+            /* small badge so the user can see the screen is being kept awake */
+            let pill = null;
+
+            function badge() {
+                const st = document.getElementById('fxStage');
+                if (!st) return;
+                if (!pill) {
+                    pill = document.createElement('div');
+                    pill.setAttribute('aria-live', 'polite');
+                    pill.style.cssText = 'position:absolute;bottom:10px;inset-inline-start:12px;z-index:5;font:600 12px/1 system-ui,sans-serif;padding:7px 11px;border-radius:99px;background:rgba(0,0,0,.45);color:#fff;pointer-events:none;transition:opacity .3s';
+                    st.appendChild(pill)
+                }
+                const ar = (document.documentElement.lang || '').startsWith('ar') || document.documentElement.dir === 'rtl';
+                const on = !!lock || (vid && !vid.paused && active());
+                pill.style.opacity = active() ? '1' : '0';
+                pill.textContent = on ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') : (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on')
+            }
+
             function sync() {
                 if (active()) {
                     lockOn();
@@ -9443,7 +9463,15 @@
                     lockOff();
                     vidOff()
                 }
+                badge()
             }
+            /* some browsers only grant the lock / allow the video from a real tap: retry on every touch while the timer runs */
+            ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
+                if (!active()) return;
+                if (!failed && !lock) lockOn();
+                if (!lock) vidOn();
+                setTimeout(badge, 400)
+            }, true));
             window.__nxAwake = on => {
                 want = !!on;
                 sync()
@@ -9461,10 +9489,14 @@
                 }
             });
             setInterval(() => {
-                if (!active()) return;
+                if (!active()) {
+                    badge();
+                    return
+                }
                 if (!failed && !lock) lockOn();
-                if ((failed || !lock) && vid && vid.paused) vidOn()
-            }, 4000);
+                if (!lock) vidOn();
+                badge()
+            }, 3000);
             addEventListener('pagehide', () => {
                 want = false;
                 lockOff()
