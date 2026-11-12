@@ -1,4 +1,4 @@
- ;
+;
         if (window.pdfjsLib) {
             try {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = "assets/js/pdf.worker.js"
@@ -9569,25 +9569,21 @@
 ;
 
 ;
-/* keep the screen awake while the Focus timer runs */
+/* keep the screen awake while the Focus timer runs
+   1) Screen Wake Lock API, requested from the tap on Start itself
+   2) backup: a real, visible, silent looping video inside the timer page (browsers keep the screen on while a video plays) */
 (() => {
-    'use strict';
     const MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAN2bW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAqB0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAUAAAAC0AAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAIYbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAAAoAAAAUABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABw21pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAYNzdGJsAAAAu3N0c2QAAAAAAAAAAQAAAKthdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAUAAtABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAAMWF2Y0MBQsAL/+EAGWdCwAvZAUGfnwEQAAADABAAAAMBQPFCpIABAAVoy4PLIAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAABAwAAAQMAAAABhzdHRzAAAAAAAAAAEAAAAUAAAEAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAAUAAAAAQAAAGRzdHN6AAAAAAAAAAAAAAAUAAADOwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAALAAAACwAAAAsAAAAUc3RjbwAAAAAAAAABAAADpgAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNjAuMTYuMTAwAAAACGZyZWUAAAQUbWRhdAAAAnEGBf//bdxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjQgcjMxMDggMzFlMTlmOSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjMgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0zIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MSBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEwIHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAwmWIhA/yYoAAw+ycnJycnJycnJycnJycnJycnJyddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeAAAAB0GaOB/gPGAAAAAHQZpUB/gPGAAAAAdBmmA/wHjAAAAAB0GagD/AeMAAAAAHQZqgP8B4wAAAAAdBmsA/wHjAAAAAB0Ga4D/AeMAAAAAHQZsAP8B4wAAAAAdBmyA/wHjAAAAAB0GbQD/AeMAAAAAHQZtgP8B4wAAAAAdBm4A/wHjAAAAAB0GboD/AeMAAAAAHQZvAP8B4wAAAAAdBm+A/wHjAAAAAB0GaAD/AeMAAAAAHQZogP8B4wAAAAAdBmkA7wHjAAAAAB0GaYDfAeMA=',
         WEBM = 'data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAASXEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHYTbuMU6uEElTDZ1OsggEfTbuMU6uEHFO7a1OsggSB7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsirXsYMPQkBNgI1MYXZmNjAuMTYuMTAwV0GNTGF2ZjYwLjE2LjEwMESJiECfQAAAAAAAFlSua8KuAQAAAAAAADnXgQFzxYhs9RfA62fuWZyBACK1nIN1bmSIgQCGhVZfVlA4g4EBI+ODhAX14QDgirCCAUC6gbSagQISVMNn/HNzoGPAgGfImkWjh0VOQ09ERVJEh41MYXZmNjAuMTYuMTAwc3PWY8CLY8WIbPUXwOtn7llnyKFFo4dFTkNPREVSRIeUTGF2YzYwLjMxLjEwMiBsaWJ2cHhnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjAyLjAwMDAwMDAwMAAfQ7Z1QtvngQCjQIqBAACA8A4AnQEqQAG0AABHCIWFiIWEiAICAAYWBPcGgWSfa9ubJzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jzh7Jy4A/v+rUICjnYEAZACxAgABEBAAGAAYWC/0AAiABDNfrXJPlYAAo52BAMgAsQIAARAQABgAGFgv9AAIgAQzX61yT5WAAKOdgQEsALECAAEQEAAYABhYL/QACIAEM1+tck+VgACjnYEBkACxAgABEBAAGAAYWC/0AAiABDNfrXJPlYAAo52BAfQAsQIAARAQABgAGFgv9AAIgAQzX61yT5WAAKOdgQJYALECAAEQEAAYABhYL/QACIAEM1+tck+VgACjnIECvACRAgABEBAUYABhYL/QACIAEM1+tck+VgCjnYEDIACxAgABEBAAGAAYWC/0AAiABDNfrXJPlYAAo52BA4QAsQIAARAQABgAGFgv9AAIgAQzX61yT5WAAKOdgQPoALECAAEQEAAYABhYL/QACIAEM1+tck+VgACjnYEETACxAgABEBAAGAAYWC/0AAiABDNfrXJPlYAAo52BBLAAsQIAARAQABgAGFgv9AAIgAQzX61yT5WAAKOdgQUUALECAAEQEAAYABhYL/QACIAEM1+tck+VgACjnYEFeACxAgABEBAAGAAYWC/0AAiABDNfrXJPlYAAo52BBdwAsQIAARAQABgAGFgv9AAIgAQzX61yT5WAAKOdgQZAALECAAEQEAAYABhYL/QACIAEM1+tck+VgACjnYEGpACxAgABEBAAGAAYWC/0AAiABDNfrXJPlYAAo5yBBwgAkQIAARAQFGAAYWC/0AAiABDNfrXJPlYAo52BB2wAsQIAARAQABgAGFgv9AAIgAQzX61yT5WAABxTu2uRu4+zgQC3iveBAfGCAaDwgQM=';
-    let hook = false,
+    let want = false,
         lock = null,
         asking = false,
-        lockErr = '',
+        err = '',
         vid = null,
-        pill = null,
-        offT = 0,
-        lastTry = 0;
-
-    /* running = the page title shows the countdown ("12:34 · NOVIX"), or novix.js told us so */
-    const titleRun = () => /^\d+:\d{2}\s*·/.test(document.title);
-    const running = () => hook || titleRun();
-    const onFocusPage = () => !!document.querySelector('#v-focus.on');
-    const active = () => running() && !document.hidden && onFocusPage();
+        pill = null;
+    const focusOn = () => !!document.querySelector('#v-focus.on');
+    const active = () => want && !document.hidden && focusOn();
+    const playing = () => !!(vid && !vid.paused && !vid.ended);
 
     function video() {
         if (vid) return vid;
@@ -9595,32 +9591,22 @@
         ['playsinline', 'webkit-playsinline', 'muted'].forEach(a => vid.setAttribute(a, ''));
         vid.setAttribute('aria-hidden', 'true');
         vid.setAttribute('tabindex', '-1');
-        vid.muted = true;
-        vid.defaultMuted = true;
-        vid.loop = true;
+        vid.muted = vid.defaultMuted = vid.loop = true;
         vid.disableRemotePlayback = true;
-        /* big enough and really inside the viewport so the browser counts it as a playing video */
-        vid.style.cssText = 'position:fixed;left:0;top:0;width:240px;height:135px;opacity:.01;pointer-events:none;z-index:-1';
-        [
-            [MP4, 'video/mp4'],
-            [WEBM, 'video/webm']
-        ].forEach(([u, t]) => {
-            const s = document.createElement('source');
-            s.src = u;
-            s.type = t;
-            vid.appendChild(s)
+        /* fully visible (not transparent) but sits under the timer's own layers, so nobody sees it */
+        vid.style.cssText = 'position:absolute;left:0;top:0;width:256px;height:144px;opacity:1;pointer-events:none;z-index:0';
+        [[MP4, 'video/mp4'], [WEBM, 'video/webm']].forEach(([u, t]) => {
+            const e = document.createElement('source');
+            e.src = u;
+            e.type = t;
+            vid.appendChild(e)
         });
-        ['playing', 'pause', 'ended', 'error'].forEach(e => vid.addEventListener(e, () => setTimeout(badge, 60)));
-        /* if the browser pauses it, start it again while we still need it */
-        vid.addEventListener('pause', () => {
-            if (active()) vidOn()
-        });
-        document.body.appendChild(vid);
+        ['playing', 'pause', 'error'].forEach(ev => vid.addEventListener(ev, () => setTimeout(badge, 60)));
+        (document.getElementById('fxStage') || document.body).insertBefore(vid, (document.getElementById('fxStage') || document.body).firstChild);
         return vid
     }
 
     function vidOn() {
-        clearTimeout(offT);
         const v = video();
         if (v.paused) {
             const p = v.play();
@@ -9629,12 +9615,7 @@
     }
 
     function vidOff() {
-        clearTimeout(offT);
-        offT = setTimeout(() => {
-            if (vid && !active()) {
-                vid.pause()
-            }
-        }, 1500)
+        if (vid && !vid.paused) vid.pause()
     }
 
     function lockOn() {
@@ -9647,16 +9628,16 @@
                 return
             }
             lock = l;
-            lockErr = '';
+            err = '';
             l.addEventListener('release', () => {
                 if (lock === l) lock = null;
-                if (active()) setTimeout(sync, 250);
+                if (active()) setTimeout(sync, 300);
                 badge()
             });
             badge()
         }).catch(e => {
             asking = false;
-            lockErr = (e && e.name) || 'Error';
+            err = (e && e.name) || 'Error';
             badge()
         })
     }
@@ -9678,20 +9659,16 @@
             st.appendChild(pill)
         }
         const ar = (document.documentElement.lang || '').toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
-        const playing = !!(vid && !vid.paused && !vid.ended);
-        const ok = !!lock || playing;
         pill.style.opacity = active() ? '1' : '0';
-        let t;
-        if (ok) t = ar ? '🔆 الشاشة لن تنطفئ' + (lock ? '' : ' (وضع بديل)') : '🔆 Screen stays on' + (lock ? '' : ' (fallback)');
-        else if (lockErr === 'NotAllowedError') t = ar ? '⚠️ المتصفح رفض: أوقف «توفير الطاقة/البطارية» في الجهاز' : '⚠️ Blocked: turn off battery saver';
-        else t = ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' + (lockErr ? ' (' + lockErr + ')' : '') : '⚠️ Could not keep screen on' + (lockErr ? ' (' + lockErr + ')' : '');
-        pill.textContent = t + ' · v3 · lock:' + (lock ? 1 : 0) + ' video:' + (playing ? 1 : 0) + ' api:' + ('wakeLock' in navigator ? 1 : 0) + (lockErr ? ' err:' + lockErr : '')
+        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') :
+            playing() ? (ar ? '🔆 الشاشة لن تنطفئ (وضع بديل)' : '🔆 Screen stays on (backup)') :
+            (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on') + (err ? ' · ' + err : '')
     }
 
     function sync() {
         if (active()) {
             lockOn();
-            vidOn()
+            if (!lock) vidOn(); else vidOff()
         } else {
             lockOff();
             vidOff()
@@ -9699,58 +9676,34 @@
         badge()
     }
     window.__nxAwake = on => {
-        hook = !!on;
+        want = !!on;
         sync()
     };
-    window.__nxAwakeInfo = () => ({
-        active: active(),
-        lock: !!lock,
-        lockErr,
-        video: !!(vid && !vid.paused),
-        wakeLockSupported: 'wakeLock' in navigator,
-        secure: window.isSecureContext
-    });
 
-    /* watch the page title (countdown) and the Focus page being shown/hidden */
-    const tEl = document.querySelector('title');
-    if (tEl) new MutationObserver(sync).observe(tEl, {
-        childList: true,
-        characterData: true,
-        subtree: true
-    });
+    /* the tap on Start / Pause / any control: the best moment to ask the browser */
+    ['pointerdown', 'touchend', 'click'].forEach(ev => document.addEventListener(ev, () => {
+        if (!active()) return;
+        lockOn();
+        if (!lock) vidOn();
+        setTimeout(sync, 400)
+    }, true));
     const fv = document.getElementById('v-focus');
     if (fv) new MutationObserver(sync).observe(fv, {
         attributes: true,
         attributeFilter: ['class']
     });
-    addEventListener('hashchange', () => setTimeout(sync, 50));
     document.addEventListener('visibilitychange', () => {
         lock = null;
         sync()
     });
     addEventListener('pageshow', sync);
     addEventListener('pagehide', () => {
-        hook = false;
+        want = false;
         lockOff();
-        if (vid) vid.pause()
+        vidOff()
     });
-    /* a real tap helps every browser: ask again on each touch while the timer runs */
-    ['pointerdown', 'touchend', 'click', 'keydown'].forEach(ev => document.addEventListener(ev, () => {
-        if (!active()) return;
-        lockOn();
-        vidOn();
-        setTimeout(badge, 300)
-    }, true));
-    /* watchdog */
+    /* safety net every 3 s while the timer runs */
     setInterval(() => {
-        if (!active()) {
-            badge();
-            return
-        }
-        if (!lock) lockOn();
-        if (vid && vid.paused) vidOn();
-        else if (!vid) vidOn();
-        badge()
-    }, 2500);
-    sync()
+        if (active()) sync()
+    }, 3000)
 })();
