@@ -9685,7 +9685,7 @@
         if (ok) t = ar ? '🔆 الشاشة لن تنطفئ' + (lock ? '' : ' (وضع بديل)') : '🔆 Screen stays on' + (lock ? '' : ' (fallback)');
         else if (lockErr === 'NotAllowedError') t = ar ? '⚠️ المتصفح رفض: أوقف «توفير الطاقة/البطارية» في الجهاز' : '⚠️ Blocked: turn off battery saver';
         else t = ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' + (lockErr ? ' (' + lockErr + ')' : '') : '⚠️ Could not keep screen on' + (lockErr ? ' (' + lockErr + ')' : '');
-        pill.textContent = t
+        pill.textContent = t + ' · v3 · lock:' + (lock ? 1 : 0) + ' video:' + (playing ? 1 : 0) + ' api:' + ('wakeLock' in navigator ? 1 : 0) + (lockErr ? ' err:' + lockErr : '')
     }
 
     function sync() {
