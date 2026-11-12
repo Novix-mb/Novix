@@ -9347,7 +9347,115 @@
         })();
 
 ;
+        (() => {
+            const MP4 = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAM2bW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAmB0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAEAAAABAAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHYbWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABg21pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAAUNzdGJsAAAAu3N0c2QAAAAAAAAAAQAAAKthdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAEAAQABIAAAASAAAAAAAAAABFUxhdmM2MC4zMS4xMDIgbGlieDI2NAAAAAAAAAAAAAAAGP//AAAAMWF2Y0MBQsAK/+EAGGdCwAqmERCbARAAAAMAEAAAAwBA8SJhGAEABmjIQgOSyAAAABBwYXNwAAAAAQAAAAEAAAAUYnRydAAAAAAAAAq0AAAKtAAAABhzdHRzAAAAAAAAAAEAAAAEAAAgAAAAABRzdHNzAAAAAAAAAAEAAAABAAAAHHN0c2MAAAAAAAAAAQAAAAEAAAAEAAAAAQAAACRzdHN6AAAAAAAAAAAAAAAEAAACjQAAAAoAAAALAAAACwAAABRzdGNvAAAAAAAAAAEAAANmAAAAYnVkdGEAAABabWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAbWRpcmFwcGwAAAAAAAAAAAAAAAAtaWxzdAAAACWpdG9vAAAAHWRhdGEAAAABAAAAAExhdmY2MC4xNi4xMDAAAAAIZnJlZQAAArVtZGF0AAACbwYF//9r3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2NCByMzEwOCAzMWUxOWY5IC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyMyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTAgcmVmPTE2IGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMzEgbWU9dW1oIHN1Ym1lPTEwIHBzeT0xIHBzeV9yZD0xLjAwOjAuMDAgbWl4ZWRfcmVmPTEgbWVfcmFuZ2U9MjQgY2hyb21hX21lPTEgdHJlbGxpcz0yIDh4OGRjdD0wIGNxbT0wIGRlYWR6b25lPTIxLDExIGZhc3RfcHNraXA9MSBjaHJvbWFfcXBfb2Zmc2V0PS0yIHRocmVhZHM9MSBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTAgd2VpZ2h0cD0wIGtleWludD00IGtleWludF9taW49MSBzY2VuZWN1dD00MCBpbnRyYV9yZWZyZXNoPTAgcmNfbG9va2FoZWFkPTQgcmM9Y3JmIG1idHJlZT0xIGNyZj00MC4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAFmWIggKeTFAAEge+++uuuuuuuuuuuvAAAAAGQZocBTwjAAAAB0GaKgFPCMAAAAAHQZo7AS8IwA==',
+                WEBM = 'data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAIxEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHYTbuMU6uEElTDZ1OsggEeTbuMU6uEHFO7a1OsggIb7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsirXsYMPQkBNgI1MYXZmNjAuMTYuMTAwV0GNTGF2ZjYwLjE2LjEwMESJiECfQAAAAAAAFlSua8GuAQAAAAAAADjXgQFzxYhIqMh2MtBGnJyBACK1nIN1bmSIgQCGhVZfVlA4g4EBI+ODhB3NZQDgibCBQLqBQJqBAhJUw2f8c3OgY8CAZ8iaRaOHRU5DT0RFUkSHjUxhdmY2MC4xNi4xMDBzc9ZjwItjxYhIqMh2MtBGnGfIoUWjh0VOQ09ERVJEh5RMYXZjNjAuMzEuMTAyIGxpYnZweGfIoUWjiERVUkFUSU9ORIeTMDA6MDA6MDIuMDAwMDAwMDAwAB9DtnX354EAo6qBAACA8AIAnQEqQABAAABHCIWFiIWEiAICAAZwPEJgCrIg9zAA/v+rUICjloEB9ADRAQABEBAAGAAYWC/0AAiOgACjloED6ADRAQABEBAAGAAYWC/0AAiOgACjloEF3ADRAQABEBAAGAAYWC/0AAiOgAAcU7trkbuPs4EAt4r3gQHxggGf8IED';
+            let want = false,
+                lock = null,
+                asking = false,
+                failed = !('wakeLock' in navigator),
+                vid = null,
+                stopT = 0;
 
+            function video() {
+                if (vid) return vid;
+                vid = document.createElement('video');
+                vid.setAttribute('playsinline', '');
+                vid.setAttribute('webkit-playsinline', '');
+                vid.setAttribute('muted', '');
+                vid.setAttribute('aria-hidden', 'true');
+                vid.setAttribute('tabindex', '-1');
+                vid.muted = true;
+                vid.loop = true;
+                vid.defaultMuted = true;
+                vid.disableRemotePlayback = true;
+                vid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:.02;pointer-events:none;z-index:-1';
+                for (const [u, ty] of [
+                        [MP4, 'video/mp4'],
+                        [WEBM, 'video/webm']
+                    ]) {
+                    const s = document.createElement('source');
+                    s.src = u;
+                    s.type = ty;
+                    vid.appendChild(s)
+                }
+                document.body.appendChild(vid);
+                return vid
+            }
+
+            function vidOn() {
+                clearTimeout(stopT);
+                const v = video();
+                if (v.paused) {
+                    const p = v.play();
+                    if (p && p.catch) p.catch(() => {})
+                }
+            }
+
+            function vidOff() {
+                clearTimeout(stopT);
+                stopT = setTimeout(() => {
+                    if (vid && !want) vid.pause()
+                }, 2500)
+            }
+
+            function lockOn() {
+                if (failed || lock || asking || document.hidden) return;
+                asking = true;
+                navigator.wakeLock.request('screen').then(l => {
+                    asking = false;
+                    if (!want) {
+                        l.release().catch(() => {});
+                        return
+                    }
+                    lock = l;
+                    l.addEventListener('release', () => {
+                        if (lock === l) lock = null
+                    })
+                }).catch(() => {
+                    asking = false;
+                    failed = true;
+                    if (want) vidOn()
+                })
+            }
+
+            function lockOff() {
+                if (!lock) return;
+                const l = lock;
+                lock = null;
+                l.release().catch(() => {})
+            }
+
+            function sync() {
+                if (want) {
+                    lockOn();
+                    if (failed) vidOn()
+                } else {
+                    lockOff();
+                    vidOff()
+                }
+            }
+            window.__nxAwake = on => {
+                want = !!on;
+                sync()
+            };
+            document.addEventListener('visibilitychange', () => {
+                if (want && !document.hidden) {
+                    lock = null;
+                    sync();
+                    if (vid && vid.paused && failed) vidOn()
+                }
+            });
+            setInterval(() => {
+                if (!want || document.hidden) return;
+                if (!failed && !lock) lockOn();
+                if (failed && vid && vid.paused) vidOn()
+            }, 4000);
+            addEventListener('pagehide', () => {
+                want = false;
+                lockOff()
+            })
+        })();
 
 ;
 (() => {
@@ -9567,196 +9675,3 @@
 })();
 
 ;
-
-;
-/* keep the screen awake while the Focus timer runs
-   1) Screen Wake Lock API, requested from the tap on Start itself
-   2) backup: a real, visible, silent looping video inside the timer page (browsers keep the screen on while a video plays) */
-(() => {
-    const MP4 = 'data:video/mp4;base64,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';
-    let want = false,
-        lock = null,
-        asking = false,
-        err = '',
-        lockAt = 0,
-        relAt = 0,
-        offInfo = null,
-        offT = 0,
-        vid = null,
-        pill = null;
-    const focusOn = () => !!document.querySelector('#v-focus.on');
-    const active = () => want && !document.hidden && focusOn();
-    const playing = () => !!(vid && !vid.paused && !vid.ended);
-
-    function video() {
-        if (vid) return vid;
-        vid = document.createElement('video');
-        ['playsinline', 'webkit-playsinline'].forEach(a => vid.setAttribute(a, ''));
-        vid.setAttribute('aria-hidden', 'true');
-        vid.setAttribute('tabindex', '-1');
-        vid.loop = true;
-        vid.muted = false;
-        vid.volume = 1;
-        vid.disableRemotePlayback = true;
-        /* fully visible (not transparent) but sits under the timer's own layers, so nobody sees it */
-        vid.style.cssText = 'position:fixed;right:0;bottom:0;width:224px;height:126px;opacity:1;pointer-events:none;z-index:2147483000;mix-blend-mode:screen;background:#000';
-        [[MP4, 'video/mp4']].forEach(([u, t]) => {
-            const e = document.createElement('source');
-            e.src = u;
-            e.type = t;
-            vid.appendChild(e)
-        });
-        ['playing', 'pause', 'error'].forEach(ev => vid.addEventListener(ev, () => setTimeout(badge, 60)));
-        document.body.appendChild(vid);
-        return vid
-    }
-
-    function vidOn() {
-        const v = video();
-        if (v.paused) {
-            const p = v.play();
-            if (p && p.catch) p.catch(() => {})
-        }
-        try {
-            if (navigator.mediaSession) {
-                if (!navigator.mediaSession.metadata && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({
-                    title: 'NOVIX · Focus'
-                });
-                navigator.mediaSession.playbackState = 'playing'
-            }
-        } catch (e) {}
-    }
-
-    function vidOff() {
-        if (vid && !vid.paused) vid.pause();
-        try {
-            if (navigator.mediaSession) navigator.mediaSession.playbackState = 'none'
-        } catch (e) {}
-    }
-
-    function lockOn() {
-        if (lock || asking || !('wakeLock' in navigator) || document.hidden) return;
-        asking = true;
-        navigator.wakeLock.request('screen').then(l => {
-            asking = false;
-            if (!active()) {
-                l.release().catch(() => {});
-                return
-            }
-            lock = l;
-            err = '';
-            lockAt = Date.now();
-            relAt = 0;
-            l.addEventListener('release', () => {
-                if (lock === l) {
-                    lock = null;
-                    relAt = Date.now()
-                }
-                if (active()) setTimeout(sync, 300);
-                badge()
-            });
-            badge()
-        }).catch(e => {
-            asking = false;
-            err = (e && e.name) || 'Error';
-            badge()
-        })
-    }
-
-    function lockOff() {
-        if (!lock) return;
-        const l = lock;
-        lock = null;
-        l.release().catch(() => {})
-    }
-
-    function badge() {
-        const st = document.getElementById('fxStage');
-        if (!st) return;
-        if (!pill) {
-            pill = document.createElement('div');
-            pill.setAttribute('aria-live', 'polite');
-            pill.style.cssText = 'position:absolute;bottom:10px;inset-inline-start:12px;max-width:80%;z-index:5;font:600 12px/1.4 system-ui,sans-serif;padding:7px 11px;border-radius:14px;background:rgba(0,0,0,.5);color:#fff;pointer-events:none;transition:opacity .3s';
-            st.appendChild(pill)
-        }
-        const ar = (document.documentElement.lang || '').toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
-        if (!active()) {
-            pill.style.opacity = '0';
-            return
-        }
-        pill.style.opacity = '1';
-        if (offInfo) {
-            pill.textContent = offInfo;
-            return
-        }
-        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') + (playing() ? ' ✓✓' : '') + ' · v7' :
-            playing() ? (ar ? '🔆 الشاشة لن تنطفئ (وضع بديل)' : '🔆 Screen stays on (backup)') + ' · v7' :
-            (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on') + (err ? ' · ' + err : '') + ' · v7'
-    }
-
-    function sync() {
-        if (active()) {
-            lockOn();
-            vidOn()
-        } else {
-            lockOff();
-            vidOff()
-        }
-        badge()
-    }
-    window.__nxAwake = on => {
-        want = !!on;
-        sync()
-    };
-
-    /* the tap on Start / Pause / any control: the best moment to ask the browser */
-    ['pointerdown', 'touchend', 'click'].forEach(ev => document.addEventListener(ev, () => {
-        if (!active()) return;
-        lockOn();
-        vidOn();
-        setTimeout(sync, 400)
-    }, true));
-    const fv = document.getElementById('v-focus');
-    if (fv) new MutationObserver(sync).observe(fv, {
-        attributes: true,
-        attributeFilter: ['class']
-    });
-    let hidAt = 0,
-        hadLock = false,
-        hadRel = false,
-        hadVid = false;
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            if (want) {
-                hidAt = Date.now();
-                hadLock = !!lock;
-                hadRel = !!relAt;
-                hadVid = playing()
-            }
-        } else if (hidAt && want) {
-            const ar = (document.documentElement.lang || '').toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
-            const sec = lockAt ? Math.round((hidAt - lockAt) / 1000) : 0;
-            const info = ar ? 'انطفأت الشاشة بعد ' + sec + 'ث · القفل ' + (hadLock ? 'كان ممسوكاً' : hadRel ? 'أُفلت قبلها' : 'غير مفعّل') + ' · فيديو ' + (hadVid ? 'يعمل' : 'متوقف') :
-                'Screen went off after ' + sec + 's · lock ' + (hadLock ? 'was held' : hadRel ? 'was released before' : 'not active') + ' · video ' + (hadVid ? 'playing' : 'stopped');
-            offInfo = info + ' · v7';
-            clearTimeout(offT);
-            offT = setTimeout(() => {
-                offInfo = null;
-                badge()
-            }, 25000);
-            hidAt = 0
-        }
-        lockOff();
-        sync()
-    });
-    addEventListener('pageshow', sync);
-    addEventListener('pagehide', () => {
-        want = false;
-        lockOff();
-        vidOff()
-    });
-    /* safety net every 3 s while the timer runs */
-    setInterval(() => {
-        if (active()) sync()
-    }, 3000)
-})();
