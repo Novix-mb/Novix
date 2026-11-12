@@ -9613,10 +9613,21 @@
             const p = v.play();
             if (p && p.catch) p.catch(() => {})
         }
+        try {
+            if (navigator.mediaSession) {
+                if (!navigator.mediaSession.metadata && window.MediaMetadata) navigator.mediaSession.metadata = new MediaMetadata({
+                    title: 'NOVIX · Focus'
+                });
+                navigator.mediaSession.playbackState = 'playing'
+            }
+        } catch (e) {}
     }
 
     function vidOff() {
-        if (vid && !vid.paused) vid.pause()
+        if (vid && !vid.paused) vid.pause();
+        try {
+            if (navigator.mediaSession) navigator.mediaSession.playbackState = 'none'
+        } catch (e) {}
     }
 
     function lockOn() {
@@ -9661,7 +9672,7 @@
         }
         const ar = (document.documentElement.lang || '').toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
         pill.style.opacity = active() ? '1' : '0';
-        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') :
+        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') + (playing() ? ' ✓✓' : '') :
             playing() ? (ar ? '🔆 الشاشة لن تنطفئ (وضع بديل)' : '🔆 Screen stays on (backup)') :
             (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on') + (err ? ' · ' + err : '')
     }
@@ -9669,7 +9680,7 @@
     function sync() {
         if (active()) {
             lockOn();
-            if (!lock) vidOn(); else vidOff()
+            vidOn()
         } else {
             lockOff();
             vidOff()
@@ -9685,7 +9696,7 @@
     ['pointerdown', 'touchend', 'click'].forEach(ev => document.addEventListener(ev, () => {
         if (!active()) return;
         lockOn();
-        if (!lock) vidOn();
+        vidOn();
         setTimeout(sync, 400)
     }, true));
     const fv = document.getElementById('v-focus');
@@ -9694,7 +9705,7 @@
         attributeFilter: ['class']
     });
     document.addEventListener('visibilitychange', () => {
-        lock = null;
+        lockOff();
         sync()
     });
     addEventListener('pageshow', sync);
