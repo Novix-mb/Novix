@@ -320,6 +320,7 @@
             <button id="nr-download" title="Download original file" aria-label="Download original file">↓</button><button id="nr-export" title="Export annotated PDF" aria-label="Export annotated PDF">↓ PDF</button>
         </div>
         <div class="reader-tools" role="toolbar" aria-label="PDF annotation tools">
+            <div class="tools-sc">
             <button data-pdf-tool="pan" class="active" title="Hand" aria-label="Hand"><svg viewBox="0 0 24 24"><path d="M8 11V5a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-5a2 2 0 0 1 4 0v8c0 5-3 8-8 8h-1c-2 0-3-1-4-2l-4-5a2 2 0 0 1 3-3z"/></svg><span class="tool-label">Hand</span></button>
             <button data-pdf-tool="pen" title="Pen" aria-label="Pen"><svg viewBox="0 0 24 24"><path d="m4 20 4-.8L20 7a2.5 2.5 0 0 0-3-3L5 16zM14.5 5.5l4 4"/></svg><span class="tool-label">Pen</span></button>
             <button data-pdf-tool="highlighter" title="Highlighter" aria-label="Highlighter"><svg viewBox="0 0 24 24"><path d="m4 15 8-9 7 7-8 8H4zM12 6l6 6M3 22h18"/></svg><span class="tool-label">Highlight</span></button>
@@ -328,16 +329,19 @@
             <button data-pdf-tool="sticky" title="Sticky note" aria-label="Sticky note"><svg viewBox="0 0 24 24"><path d="M5 3h14v13l-5 5H5zM14 21v-5h5"/></svg><span class="tool-label">Sticky</span></button>
             <button data-pdf-tool="shape" title="Shapes" aria-label="Shapes"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="10" height="10" rx="2"/><circle cx="17" cy="16" r="4"/></svg><span class="tool-label">Shapes</span></button>
             <button data-pdf-tool="laser" title="Laser" aria-label="Laser"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/><path d="M12 3v2.6M12 18.4V21M3 12h2.6M18.4 12H21M5.6 5.6l1.9 1.9M16.5 16.5l1.9 1.9M18.4 5.6l-1.9 1.9M7.5 16.5l-1.9 1.9"/></svg><span class="tool-label">Laser</span></button>
-            <button id="nr-clear" title="Clear annotations" aria-label="Clear annotations">⌫</button>
+            </div>
+            <button id="nr-clear" title="Clear annotations" aria-label="Clear annotations"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></svg><span class="tool-label" id="nr-clear-l">Clear</span></button>
         </div>
-        <div class="reader-shapes" id="nr-shapes">
-            <button data-pdf-shape="rect"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg><span>Rectangle</span></button>
-            <button data-pdf-shape="round"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="6"/></svg><span>Rounded</span></button>
-            <button data-pdf-shape="circle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/></svg><span>Circle</span></button>
-            <button data-pdf-shape="triangle"><svg viewBox="0 0 24 24"><path d="M12 4.5 20.5 19h-17z"/></svg><span>Triangle</span></button>
-            <button data-pdf-shape="speech"><svg viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 16h-8l-4.5 4v-4H5a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 5 5z"/></svg><span>Callout</span></button>
+        <div class="nr-menu" id="nr-menu" role="dialog" aria-label="Tool settings" hidden>
+            <div class="reader-shapes" id="nr-shapes">
+                <button data-pdf-shape="rect"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg><span>Rectangle</span></button>
+                <button data-pdf-shape="round"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="6"/></svg><span>Rounded</span></button>
+                <button data-pdf-shape="circle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/></svg><span>Circle</span></button>
+                <button data-pdf-shape="triangle"><svg viewBox="0 0 24 24"><path d="M12 4.5 20.5 19h-17z"/></svg><span>Triangle</span></button>
+                <button data-pdf-shape="speech"><svg viewBox="0 0 24 24"><path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 16h-8l-4.5 4v-4H5a1.5 1.5 0 0 1-1.5-1.5v-8A1.5 1.5 0 0 1 5 5z"/></svg><span>Callout</span></button>
         </div>
-        <div class="reader-options" id="nr-options" aria-label="Tool settings" hidden></div>
+            <div class="reader-options" id="nr-options" aria-label="Tool settings" hidden></div>
+        </div>
         <div class="reader-note" id="nr-note"></div>
         <div class="reader-scroll" id="nr-pages"></div>
     </div>
