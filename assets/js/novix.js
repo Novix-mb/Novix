@@ -60,6 +60,11 @@
                 'Save note': 'حفظ الملاحظة',
                 'Update note': 'تحديث الملاحظة',
                 'Note saved': 'تم حفظ الملاحظة',
+                'Download note': 'تحميل الملاحظة',
+                'Something went wrong': 'حدث خطأ ما',
+                'Note downloaded': 'تم تحميل الملاحظة',
+                'Unlink task': 'إلغاء ربط المهمة',
+                'Task': 'مهمة',
                 'Note deleted': 'تم حذف الملاحظة',
                 'Delete this note?': 'حذف هذه الملاحظة؟',
                 'Write something first': 'اكتب شيئًا أولًا',
@@ -439,7 +444,7 @@
                 ];
 
             function taskRow(x, full) {
-                return `<div class="task ${x.d?'done':''}" data-id="${x.id}"><button class="chk" role="checkbox" aria-checked="${!!x.d}" aria-label="${esc(tr(x.t))}">${ic('ck')}</button>${x.v&&!full?ic('play'):''}<span class="t">${esc(tr(x.t))}</span><span class="pill ${x.p}">${tr(DIFF[x.p]||x.p)}</span>${full?`<button class="x" data-del="${x.id}" aria-label="${tr('Delete')}">${ic('x')}</button>`:''}</div>`
+                return `<div class="task ${x.d?'done':''}" data-id="${x.id}"><button class="chk" role="checkbox" aria-checked="${!!x.d}" aria-label="${esc(tr(x.t))}">${ic('ck')}</button>${x.v&&!full?ic('play'):''}${x.no?`<span class="tno">#${x.no}</span>`:''}<span class="t">${esc(tr(x.t))}</span><span class="pill ${x.p}">${tr(DIFF[x.p]||x.p)}</span>${full?`<button class="x" data-del="${x.id}" aria-label="${tr('Delete')}">${ic('x')}</button>`:''}</div>`
             }
             const ORD = {
                     Low: 0,
@@ -671,6 +676,7 @@
                 if (!t) return;
                 S.tasks.push({
                     id: S.nid++,
+                    no: S.tasks.reduce((m, x) => Math.max(m, x.no || 0), 0) + 1,
                     t,
                     p: $('#tpr').value,
                     d: 0
@@ -1169,6 +1175,13 @@
             };
             S.notes = S.notes || [];
             S.tt = S.tt || [];
+            /* every task gets a stable number (#1, #2 …) that is shown in the list and in reminders */
+            {
+                let mx = S.tasks.reduce((m, x) => Math.max(m, x.no || 0), 0);
+                S.tasks.slice().sort((a, b) => a.id - b.id).forEach(x => {
+                    if (!x.no) x.no = ++mx
+                })
+            }
             S.notif = S.notif || [];
             S.nfired = S.nfired || {};
             const isAr = () => S.lang === 'ar',
@@ -1342,7 +1355,7 @@
 
             function noteCard(n) {
                 const body = (n.body || '').trim().split('\n').filter(Boolean).slice(0, 6).join('\n');
-                return `<article class="nn-card" tabindex="0" role="button" data-nid="${n.id}" style="background:${cl(n.pc,'#fff3b0')};${tx(n,n.body)}">${n.pin?`<svg class="i nn-pinned"><use href="#i-pin"/></svg>`:''}<h3 dir="auto" style="${tx(tOf(n),n.title)};${tbg(tOf(n))}">${esc(n.title||tr('Untitled'))}</h3><p class="nn-pv" dir="auto">${esc(body)||`<i>${tr('No additional text')}</i>`}</p><small>${fmtD(n.ts)}</small></article>`
+                return `<article class="nn-card" tabindex="0" role="button" data-nid="${n.id}" style="background:${cl(n.pc,'#fff3b0')};${tx(n,n.body)}">${n.pin?`<svg class="i nn-pinned"><use href="#i-pin"/></svg>`:''}<h3 dir="auto" style="${tx(tOf(n),n.title)};${tbg(tOf(n))}">${esc(n.title||tr('Untitled'))}</h3><p class="nn-pv" dir="auto">${esc(body)||`<i>${tr('No additional text')}</i>`}</p><small>${fmtD(n.ts)}</small><button type="button" class="nn-dl" data-dl="${n.id}" aria-label="${tr('Download note')}" title="${tr('Download note')}"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v10M7.5 10 12 14.5 16.5 10M5 19h14"/></svg></button></article>`
             }
 
             function renderNotes() {
@@ -1370,22 +1383,18 @@
             nm.hidden = true;
             nm.id = 'nm';
             nm.innerHTML = `<div class="nm-card" id="nmCard" role="dialog" aria-modal="true" aria-label="Note">
- <div class="nm-top"><button type="button" class="nm-b nm-back" id="nmBack" aria-label="Back"><svg class="i flip"><use href="#i-cl"/></svg></button><span class="nm-date" id="nmDate"></span><span class="nm-sp"></span><button type="button" class="nm-b" id="nmPin" aria-pressed="false"><svg class="i"><use href="#i-pin"/></svg></button><button type="button" class="nm-b" id="nmDel" aria-label="Delete"><svg class="i"><use href="#i-trash"/></svg></button><button type="button" class="nm-ok" id="nmOk"><svg class="i"><use href="#i-ck"/></svg><span id="nmOkL">Save</span></button></div>
+ <div class="nm-top"><button type="button" class="nm-b nm-back" id="nmBack" aria-label="Back"><svg class="i flip"><use href="#i-cl"/></svg></button><span class="nm-date" id="nmDate"></span><span class="nm-sp"></span><button type="button" class="nm-b" id="nmPin" aria-pressed="false"><svg class="i"><use href="#i-pin"/></svg></button><button type="button" class="nm-b" id="nmDl" aria-label="Download note"><svg class="i" viewBox="0 0 24 24"><path d="M12 4v10M7.5 10 12 14.5 16.5 10M5 19h14"/></svg></button><button type="button" class="nm-b" id="nmDel" aria-label="Delete"><svg class="i"><use href="#i-trash"/></svg></button><button type="button" class="nm-ok" id="nmOk"><svg class="i"><use href="#i-ck"/></svg><span id="nmOkL">Save</span></button></div>
  <div class="nm-body" id="nmBody"><input id="nTitle" maxlength="80" dir="auto"><textarea id="nBody" dir="auto"></textarea></div>
  <div class="nm-pop" id="nmPop" hidden></div>
  <div class="nm-tools" id="nmTools">
-  <span class="nm-g" id="nTgt"><button type="button" class="nm-t nm-tg" data-tgt="t"><b>T</b><small></small></button><button type="button" class="nm-t nm-tg" data-tgt="b"><b>Aa</b><small></small></button></span>
-  <select id="nFont" aria-label="Font"></select>
+  <span class="nm-tgtlab" id="nTgtLab" aria-live="polite"></span>
+  <button type="button" class="nm-t nm-font" id="nFontBtn" data-pop="font" aria-label="Font"><span class="nm-fa" id="nFontA">Aa</span><span class="nm-fn" id="nFontN"></span><svg class="i nm-fc" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></svg></button>
   <span class="nm-g"><button type="button" class="nm-t" id="nSm"><b>A</b><small>−</small></button><b class="nm-sz" id="nSizeV">18</b><button type="button" class="nm-t" id="nSp"><b>A</b><small>+</small></button></span>
   <span class="nm-g"><button type="button" class="nm-t" id="nB"><b>B</b></button><button type="button" class="nm-t" id="nI"><i>I</i></button><button type="button" class="nm-t" id="nU"><u>U</u></button></span>
   <span class="nm-g"><button type="button" class="nm-t" data-al="left">⇤</button><button type="button" class="nm-t" data-al="center">≡</button><button type="button" class="nm-t" data-al="right">⇥</button></span>
   <span class="nm-g"><button type="button" class="nm-t nm-c" id="nTxtBtn" data-pop="tc"><b>A</b><i></i></button><button type="button" class="nm-t nm-c" id="nPapBtn" data-pop="pc"><span class="nm-pap"></span></button><button type="button" class="nm-t nm-c" id="nTbgBtn" data-pop="tb" aria-label="Title background" title="Title background"><b style="font-size:13px">T</b><span class="nm-pap nm-tbgdot"></span></button></span>
  </div></div>`;
             document.body.appendChild(nm);
-            {
-                const f = $('#nFont');
-                f.innerHTML = FONTS.map((x, i) => `<option value="${i}" style="font-family:${x[1]}">${x[0]}</option>`).join('')
-            }
             let nmT = 0,
                 nmPopK = '';
 
@@ -1400,15 +1409,21 @@
                 t.style.cssText = `${tx(ne,t.value)};font-size:${ne.size}px;color:${cl(ne.tc,'#1c3a33')}!important;-webkit-text-fill-color:${cl(ne.tc,'#1c3a33')};caret-color:${cl(ne.tc,'#1c3a33')}`;
                 h.style.cssText = `${tx(ne.T,h.value)};font-size:${ne.T.size}px;background:${ne.T.bg?cl(ne.T.bg,'transparent'):'transparent'};${ne.T.bg?'padding:8px 12px;border-radius:12px;':''}color:${cl(ne.T.tc,'#1c3a33')}!important;-webkit-text-fill-color:${cl(ne.T.tc,'#1c3a33')};caret-color:${cl(ne.T.tc,'#1c3a33')}`;
                 $('#nSizeV').textContent = C.size;
-                $('#nFont').value = C.font;
+                {
+                    const fo = FONTS[C.font] || FONTS[0],
+                        parts = fo[0].split('·'),
+                        fa = $('#nFontA');
+                    fa.style.fontFamily = fo[1];
+                    $('#nFontN').textContent = (parts[1] || parts[0]).trim();
+                    $('#nFontBtn').setAttribute('aria-label', tr('Font') + ': ' + fo[0])
+                }
                 $('#nB').setAttribute('aria-pressed', !!C.b);
                 $('#nI').setAttribute('aria-pressed', !!C.i);
                 $('#nU').setAttribute('aria-pressed', !!C.u);
                 $$('#nmTools [data-al]').forEach(b => b.setAttribute('aria-pressed', b.dataset.al === physAl(C.al, ne.tgt === 't' ? $('#nTitle').value : $('#nBody').value)));
-                $$('#nTgt .nm-tg').forEach(b => {
-                    b.setAttribute('aria-pressed', b.dataset.tgt === ne.tgt);
-                    b.querySelector('small').textContent = tr(b.dataset.tgt === 't' ? 'Title' : 'Body')
-                });
+                $('#nTgtLab').textContent = tr(ne.tgt === 't' ? 'Title' : 'Body');
+                $('#nmBody').dataset.tgt = ne.tgt;
+                $('#nTgtLab').dataset.tgt = ne.tgt;
                 $('#nmPin').setAttribute('aria-pressed', !!ne.pin);
                 $('#nmPin').setAttribute('aria-label', tr(ne.pin ? 'Unpin' : 'Pin'));
                 $('#nTxtBtn i').style.background = C.tc;
@@ -1469,11 +1484,39 @@
                 const p = $('#nmPop');
                 if (!k || nmPopK === k) {
                     p.hidden = true;
+                    p.classList.remove('fonts');
                     nmPopK = '';
                     return
                 }
                 nmPopK = k;
                 p.hidden = false;
+                p.classList.toggle('fonts', k === 'font');
+                if (k === 'font') {
+                    const mkF = () => {
+                        p.innerHTML = '';
+                        FONTS.forEach((f, i) => {
+                            const b = document.createElement('button'),
+                                parts = f[0].split('·');
+                            b.type = 'button';
+                            b.className = 'nm-fo' + (cur().font === i ? ' on' : '');
+                            b.innerHTML = `<span class="nm-fs" style="font-family:${f[1]}">أبجد Abc</span><small>${esc(parts[parts.length-1].trim())}</small>`;
+                            b.onclick = () => {
+                                cur().font = i;
+                                nmApply();
+                                nmSched();
+                                SFX.tap();
+                                mkF()
+                            };
+                            p.appendChild(b)
+                        });
+                        const on = p.querySelector('.on');
+                        if (on) on.scrollIntoView({
+                            block: 'nearest'
+                        })
+                    };
+                    mkF();
+                    return
+                }
                 const mk = () => {
                     const o = k === 'tc' ? cur() : k === 'tb' ? ne.T : ne;
                     swatches(p, k === 'tc' ? INK : k === 'tb' ? TBG : PAPER, o[k === 'tb' ? 'bg' : k] || '', (c, live) => {
@@ -1555,15 +1598,21 @@
                 }
             }
             fab.onclick = () => openNote(null);
-            $('#nnPin').addEventListener('click', e => {
+            const cardClick = e => {
+                const d = e.target.closest('[data-dl]');
+                if (d) {
+                    e.stopPropagation();
+                    const n = S.notes.find(x => x.id === +d.dataset.dl);
+                    if (n) downloadNote(n);
+                    return
+                }
                 const c = e.target.closest('[data-nid]');
                 if (c) openNote(+c.dataset.nid)
-            });
-            $('#nnGrid').addEventListener('click', e => {
-                const c = e.target.closest('[data-nid]');
-                if (c) openNote(+c.dataset.nid)
-            });
+            };
+            $('#nnPin').addEventListener('click', cardClick);
+            $('#nnGrid').addEventListener('click', cardClick);
             [$('#nnPin'), $('#nnGrid')].forEach(g => g.addEventListener('keydown', e => {
+                if (e.target.closest('[data-dl]')) return;
                 if (e.key === 'Enter' || e.key === ' ') {
                     const c = e.target.closest('[data-nid]');
                     if (c) {
@@ -1583,19 +1632,24 @@
             });
             $('#nTitle').oninput = $('#nBody').oninput = () => {
                 nmApply();
-                nmSched()
+                nmSched();
+                keepCaret()
             };
-            $('#nFont').onchange = e => {
-                cur().font = +e.target.value;
-                nmApply();
-                nmSched()
-            };
-            $$('#nTgt [data-tgt]').forEach(b => b.onclick = () => {
-                ne.tgt = b.dataset.tgt;
+            /* formatting always applies to the field the user is writing in */
+            $('#nTitle').addEventListener('focus', () => {
+                ne.tgt = 't';
                 nmPop('');
-                nmApply();
-                SFX.tap()
+                nmApply()
             });
+            $('#nBody').addEventListener('focus', () => {
+                ne.tgt = 'b';
+                nmPop('');
+                nmApply()
+            });
+            /* keep the keyboard open and the caret in place while tapping tools */
+            ['#nmTools', '#nmPop'].forEach(q => $(q).addEventListener('mousedown', e => {
+                if (!e.target.closest('input')) e.preventDefault()
+            }));
             $('#nSm').onclick = () => {
                 const c = cur();
                 c.size = Math.max(12, c.size - 2);
@@ -1662,6 +1716,218 @@
                 })
             };
 
+            /* ---------- download a note as an image, laid out exactly like the editor shows it ---------- */
+            async function noteToPng(n) {
+                const W = 1080,
+                    P = 76,
+                    CW = W - P * 2,
+                    K = 2,
+                    T = tOf(n),
+                    fam = o => (FONTS[o.font] || FONTS[0])[1],
+                    fstr = (o, px) => `${o.i?'italic ':''}${o.b?700:400} ${px}px ${fam(o)}`;
+                try {
+                    await Promise.all([document.fonts.load(fstr(T, 40)), document.fonts.load(fstr(n, 32))])
+                } catch (x) {}
+                const g = document.createElement('canvas').getContext('2d');
+                const wrap = (text, o, px, maxW) => {
+                    g.font = fstr(o, px);
+                    const out = [];
+                    String(text || '').split('\n').forEach(par => {
+                        if (!par.trim()) {
+                            out.push({
+                                s: '',
+                                rtl: false
+                            });
+                            return
+                        }
+                        const rtl = textRtl(par);
+                        g.direction = rtl ? 'rtl' : 'ltr';
+                        let line = '';
+                        const push = () => {
+                            if (line) out.push({
+                                s: line,
+                                rtl
+                            });
+                            line = ''
+                        };
+                        par.split(' ').forEach(w => {
+                            let t = line ? line + ' ' + w : w;
+                            if (g.measureText(t).width <= maxW) {
+                                line = t;
+                                return
+                            }
+                            push();
+                            while (g.measureText(w).width > maxW && w.length > 1) {
+                                let k = w.length - 1;
+                                while (k > 1 && g.measureText(w.slice(0, k)).width > maxW) k--;
+                                out.push({
+                                    s: w.slice(0, k),
+                                    rtl
+                                });
+                                w = w.slice(k)
+                            }
+                            line = w
+                        });
+                        push()
+                    });
+                    return out
+                };
+                const tpx = T.size * K,
+                    bpx = n.size * K || 36,
+                    tl = (n.title || '').trim() ? wrap(n.title, T, tpx, CW - (T.bg ? 56 : 0)) : [],
+                    bl = (n.body || '').trim() ? wrap(n.body, n, bpx, CW) : [],
+                    tlh = tpx * 1.3,
+                    blh = bpx * 1.75,
+                    dateH = 70,
+                    tbH = tl.length ? tl.length * tlh + (T.bg ? 40 : 0) : 0,
+                    H = Math.max(560, Math.round(P + dateH + tbH + (tbH ? 36 : 0) + bl.length * blh + P));
+                const cv = document.createElement('canvas');
+                cv.width = W;
+                cv.height = H;
+                const c = cv.getContext('2d');
+                c.fillStyle = cl(n.pc, '#fff3b0');
+                c.fillRect(0, 0, W, H);
+                c.textBaseline = 'middle';
+                const dRtl = document.documentElement.dir === 'rtl';
+                c.font = `600 26px Manrope,Alexandria,sans-serif`;
+                c.fillStyle = cl(n.tc, '#1c3a33');
+                c.globalAlpha = .55;
+                c.direction = dRtl ? 'rtl' : 'ltr';
+                c.textAlign = dRtl ? 'right' : 'left';
+                c.fillText(fmtD(n.ts || Date.now()), dRtl ? W - P : P, P - 6 + 20);
+                c.globalAlpha = 1;
+                const draw = (lines, o, px, lh, top, left, width) => {
+                    c.font = fstr(o, px);
+                    c.fillStyle = cl(o.tc, '#1c3a33');
+                    lines.forEach((ln, i) => {
+                        if (!ln.s) return;
+                        c.direction = ln.rtl ? 'rtl' : 'ltr';
+                        const al = ['left', 'right', 'center'].includes(o.al) ? o.al : physAl(o.al, ln.s),
+                            x = al === 'left' ? left : al === 'right' ? left + width : left + width / 2,
+                            y = top + i * lh + lh / 2;
+                        c.textAlign = al;
+                        c.fillText(ln.s, x, y);
+                        if (o.u) {
+                            const w = c.measureText(ln.s).width,
+                                x0 = al === 'left' ? x : al === 'right' ? x - w : x - w / 2;
+                            c.fillRect(x0, y + px * .42, w, Math.max(2, px / 15))
+                        }
+                    })
+                };
+                let y = P + dateH - 14;
+                if (tl.length) {
+                    if (T.bg) {
+                        c.fillStyle = cl(T.bg, 'transparent');
+                        c.beginPath();
+                        if (c.roundRect) c.roundRect(P, y, CW, tbH, 28);
+                        else c.rect(P, y, CW, tbH);
+                        c.fill()
+                    }
+                    draw(tl, T, tpx, tlh, y + (T.bg ? 20 : 0), P + (T.bg ? 28 : 0), CW - (T.bg ? 56 : 0));
+                    y += tbH + 36
+                }
+                draw(bl, n, bpx, blh, y, P, CW);
+                return new Promise(ok => cv.toBlob(ok, 'image/png'))
+            }
+            async function downloadNote(n) {
+                try {
+                    const blob = await noteToPng(n);
+                    if (!blob) throw 0;
+                    const name = ((n.title || '').trim().slice(0, 40).replace(/[\\/:*?"<>|\n]+/g, ' ').trim() || 'note') + '.png',
+                        a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = name;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(a.href), 4e4);
+                    bigToast('✓ ' + tr('Note downloaded'));
+                    SFX.add()
+                } catch (e) {
+                    toast(tr('Something went wrong'))
+                }
+            }
+            $('#nmDl').onclick = () => {
+                nmCommit();
+                const live = {
+                    title: $('#nTitle').value,
+                    body: $('#nBody').value,
+                    tc: ne.tc,
+                    pc: ne.pc,
+                    font: ne.font,
+                    size: ne.size,
+                    b: ne.b,
+                    i: ne.i,
+                    u: ne.u,
+                    al: ne.al,
+                    T: {
+                        ...ne.T
+                    },
+                    ts: (ne.id && (S.notes.find(x => x.id === ne.id) || {}).ts) || Date.now()
+                };
+                downloadNote(live)
+            };
+
+            /* ---------- keep the writing place above the on-screen keyboard ---------- */
+            function caretLine(ta) {
+                const cs = getComputedStyle(ta),
+                    m = document.createElement('div');
+                ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'lineHeight', 'letterSpacing', 'textAlign', 'direction', 'paddingTop', 'paddingBottom', 'paddingLeft', 'paddingRight', 'wordBreak', 'overflowWrap', 'tabSize'].forEach(k => m.style[k] = cs[k]);
+                m.style.cssText += ';position:absolute;visibility:hidden;left:-9999px;top:0;white-space:pre-wrap;box-sizing:border-box;width:' + ta.clientWidth + 'px';
+                m.textContent = ta.value.slice(0, ta.selectionEnd);
+                const sp = document.createElement('span');
+                sp.textContent = '\u200b';
+                m.appendChild(sp);
+                document.body.appendChild(m);
+                const y = sp.offsetTop,
+                    lh = parseFloat(cs.lineHeight) || 28;
+                m.remove();
+                return {
+                    y,
+                    lh
+                }
+            }
+
+            function keepCaret() {
+                const ta = $('#nBody');
+                if (nm.hidden || document.activeElement !== ta) return;
+                const {
+                    y,
+                    lh
+                } = caretLine(ta), top = ta.scrollTop, vis = ta.clientHeight;
+                if (y < top) ta.scrollTop = Math.max(0, y - lh * .5);
+                else if (y + lh * 1.6 > top + vis) ta.scrollTop = y + lh * 1.6 - vis
+            }
+            document.addEventListener('selectionchange', () => {
+                if (document.activeElement === $('#nBody')) requestAnimationFrame(keepCaret)
+            });
+            if (window.visualViewport) {
+                const vv = window.visualViewport,
+                    root = document.documentElement;
+                let rf = 0;
+                const fit = () => {
+                    cancelAnimationFrame(rf);
+                    rf = requestAnimationFrame(() => {
+                        const open = window.innerHeight - vv.height > 110;
+                        root.classList.toggle('kb-open', open);
+                        root.style.setProperty('--vvh', vv.height + 'px');
+                        root.style.setProperty('--vvt', vv.offsetTop + 'px');
+                        if (!open) return;
+                        const a = document.activeElement;
+                        if (a === $('#nBody')) setTimeout(keepCaret, 60);
+                        else if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest('.sheet,.nm')) setTimeout(() => a.scrollIntoView({
+                            block: 'center',
+                            behavior: 'smooth'
+                        }), 80)
+                    })
+                };
+                vv.addEventListener('resize', fit);
+                vv.addEventListener('scroll', fit);
+                document.addEventListener('focusin', e => {
+                    if (e.target.closest && e.target.closest('.sheet,.nm')) setTimeout(fit, 250)
+                })
+            }
+
             const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             const wkStart = () => 6;
             let wk = 0,
@@ -1700,9 +1966,15 @@
                 return i >= 0 ? i : 0
             };
 
+            function ttChip(e) {
+                const tk = e.task && S.tasks.find(x => x.id === e.task),
+                    no = tk ? tk.no : e.tno;
+                return no ? ` <i class="tno">#${no}</i>` : ''
+            }
+
             function entryHTML(e, k) {
                 const dn = !!(e.done && e.done[k]);
-                return `<div class="tt-e ${dn?'done':''}" style="--c:${cl(e.c,'#5fc2a4')}" data-tedit="${e.id}" role="button" tabindex="0"><span class="tt-tm">${e.time?esc(e.time):'<svg class="i"><use href="#i-cal"/></svg>'}</span><div class="tt-m"><span dir="auto">${esc(e.t)}</span><small>${e.time?'':tr('All day')}${e.rep?(e.time?'':' · ')+'↻':''}</small></div><button type="button" class="tt-ck" data-tck="${e.id}" data-k="${k}" role="checkbox" aria-checked="${dn}" aria-label="${esc(e.t)}">${ic('ck')}</button></div>`
+                return `<div class="tt-e ${dn?'done':''}" style="--c:${cl(e.c,'#5fc2a4')}" data-tedit="${e.id}" role="button" tabindex="0"><span class="tt-tm">${e.time?esc(e.time):'<svg class="i"><use href="#i-cal"/></svg>'}</span><div class="tt-m"><span dir="auto">${esc(e.t)}${ttChip(e)}</span><small>${e.time?'':tr('All day')}${e.rep?(e.time?'':' · ')+'↻':''}</small></div><button type="button" class="tt-ck" data-tck="${e.id}" data-k="${k}" role="checkbox" aria-checked="${dn}" aria-label="${esc(e.t)}">${ic('ck')}</button></div>`
             }
 
             function renderTT() {
@@ -1757,7 +2029,7 @@
             sh.hidden = true;
             sh.id = 'ttSheet';
             sh.innerHTML = `<form class="sheet-card" id="ttF" role="dialog" aria-modal="true"><div class="sheet-h"><h2 id="ttSheetT">Add plan</h2><button type="button" class="x" id="ttX" aria-label="Close">${ic('x')}</button></div>
- <label class="sh-f"><span>${'Title'}</span><input id="ttT" required maxlength="60" autocomplete="off" dir="auto"></label>
+ <label class="sh-f"><span>${'Title'}</span><span class="tt-tw"><input id="ttT" required maxlength="200" autocomplete="off" dir="auto"><button type="button" class="tt-no" id="ttNo" hidden></button></span></label>
  <label class="sh-f"><select id="ttLink" aria-label="Link a task"></select></label>
  <div class="sh-f"><span id="ttDayL">Day</span><div class="sh-days" id="ttDays"></div></div>
  <div class="sh-row"><label class="sh-f"><span id="ttTimeL">Time</span><span class="sh-time"><input id="ttTime" type="time"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></span></label>
@@ -1791,11 +2063,26 @@
                 })
             }
 
+            function paintTtNo() {
+                const b = $('#ttNo');
+                if (!b) return;
+                const tk = ttEd.task && S.tasks.find(x => x.id === ttEd.task),
+                    no = tk ? tk.no : ttEd.tno;
+                b.hidden = !no;
+                if (no) {
+                    b.textContent = '#' + no + ' ×';
+                    b.title = tr('Unlink task');
+                    b.setAttribute('aria-label', tr('Unlink task') + ' #' + no)
+                }
+            }
+
             function openTT(id, day) {
                 const e = id != null ? S.tt.find(x => x.id === id) : null;
                 ttEd = {
                     id: e ? e.id : null,
-                    day: e ? e.day : (day != null ? day : weekDays(wk)[selIdx()].getDay())
+                    day: e ? e.day : (day != null ? day : weekDays(wk)[selIdx()].getDay()),
+                    task: e && e.task || 0,
+                    tno: e && e.tno || 0
                 };
                 $('#ttT').value = e ? e.t : '';
                 $('#ttTime').value = e ? e.time || '' : '';
@@ -1803,8 +2090,9 @@
                 ttc = e ? cl(e.c, TTC[0]) : ttc;
                 $('#ttDel').hidden = !e;
                 $('#ttLink').innerHTML = `<option value="">${tr('Pick from My Tasks')}</option>` + S.tasks.filter(x => !x.d).map(x => `<option value="${x.id}">${esc(tr(x.t))}</option>`).join('');
-                $('#ttLink').parentElement.hidden = !!e;
+                $('#ttLink').parentElement.hidden = false;
                 ttLabels();
+                paintTtNo();
                 paintDays();
                 paintTtSw();
                 sh.hidden = false;
@@ -1838,12 +2126,52 @@
             });
             $('#ttLink').onchange = e => {
                 const t = S.tasks.find(x => x.id === +e.target.value);
-                if (t) $('#ttT').value = tr(t.t);
+                if (t) {
+                    $('#ttT').value = tr(t.t);
+                    ttEd.task = t.id;
+                    ttEd.tno = t.no || 0;
+                    paintTtNo()
+                }
                 e.target.value = ''
+            };
+            $('#ttNo').onclick = () => {
+                ttEd.task = 0;
+                ttEd.tno = 0;
+                paintTtNo();
+                SFX.tap()
             };
             $('#ttNoTime').onclick = () => {
                 $('#ttTime').value = ''
             };
+            /* a plan whose time/day changed is reminded again at the new time */
+            function renotify(en) {
+                const mine = k => /^[bt]:/.test(k) && k.endsWith(':' + en.id);
+                Object.keys(S.nfired).forEach(k => {
+                    if (mine(k)) delete S.nfired[k]
+                });
+                try {
+                    swGet('fired').then(f => {
+                        if (!f) return;
+                        let ch = 0;
+                        Object.keys(f).forEach(k => {
+                            if (mine(k)) {
+                                delete f[k];
+                                ch = 1
+                            }
+                        });
+                        if (ch) swPut('fired', f)
+                    }).catch(() => {})
+                } catch (x) {}
+                if (!en.time) return;
+                const now = new Date(),
+                    k = ymd(now),
+                    on = en.rep ? en.day === now.getDay() : en.date === k,
+                    [h, m] = en.time.split(':').map(Number);
+                if (on && now.getHours() * 60 + now.getMinutes() >= h * 60 + m) {
+                    S.nfired['t:' + k + ':' + en.id] = 1;
+                    S.nfired['b:' + k + ':' + en.id] = 1
+                }
+            }
             const dateFor = (day, rep) => {
                 const t0 = new Date();
                 t0.setHours(0, 0, 0, 0);
@@ -1862,14 +2190,18 @@
                     day = ttEd.day,
                     d = dateFor(day, rep);
                 let en = ttEd.id && S.tt.find(x => x.id === ttEd.id);
+                let timeMoved = false;
                 if (en) {
                     const chg = en.day !== day || en.rep !== rep;
+                    timeMoved = chg || (en.time || '') !== ($('#ttTime').value || '');
                     Object.assign(en, {
                         t,
                         day,
                         time: $('#ttTime').value,
                         rep,
-                        c: ttc
+                        c: ttc,
+                        task: ttEd.task || 0,
+                        tno: ttEd.tno || 0
                     });
                     if (chg) {
                         en.date = ymd(d);
@@ -1884,8 +2216,11 @@
                     date: ymd(d),
                     from: ymd(d),
                     c: ttc,
+                    task: ttEd.task || 0,
+                    tno: ttEd.tno || 0,
                     done: {}
                 });
+                if (timeMoved) renotify(en);
                 const todayK = ymd(new Date());
                 if (ymd(d) === todayK || (rep && day === new Date().getDay())) S.nfired['d:' + todayK] = 1;
                 const ws = weekDays(0)[0];
@@ -2139,6 +2474,20 @@
                 }
             };
 
+            const NOTIF_WORDS = 5;
+            const shortW = (t, n = NOTIF_WORDS) => {
+                const w = String(t || '').trim().split(/\s+/).filter(Boolean);
+                let o = w.slice(0, n).join(' ');
+                if (o.length > 42) o = o.slice(0, 41).trim() + '…';
+                else if (w.length > n) o += '…';
+                return o
+            };
+            const ttLbl = e => {
+                const tk = e.task && S.tasks.find(x => x.id === e.task),
+                    no = tk ? tk.no : e.tno;
+                return shortW(e.t) + (no ? ' · #' + no : '')
+            };
+
             function checkSchedule() {
                 const now = new Date(),
                     k = ymd(now),
@@ -2148,7 +2497,7 @@
                 if (items.length && !S.nfired['d:' + k]) {
                     S.nfired['d:' + k] = 1;
                     ch = 1;
-                    fireN(items.length === 1 ? (ar ? '📌 لديك مهمة مجدولة اليوم: ' : '📌 Scheduled today: ') + items[0].t + (items[0].time ? ' · ' + items[0].time : '') : (ar ? `📌 لديك ${items.length} مهام مجدولة اليوم` : `📌 You have ${items.length} scheduled tasks today`), {
+                    fireN(items.length === 1 ? (ar ? '📌 لديك مهمة مجدولة اليوم: ' : '📌 Scheduled today: ') + ttLbl(items[0]) + (items[0].time ? ' · ' + items[0].time : '') : (ar ? `📌 لديك ${items.length} مهام مجدولة اليوم` : `📌 You have ${items.length} scheduled tasks today`), {
                         k: k,
                         id: items.length === 1 ? items[0].id : null
                     })
@@ -2169,7 +2518,7 @@
                     if (!S.nfired[bk] && !S.nfired[key] && mins >= due - 10 && mins < due) {
                         S.nfired[bk] = 1;
                         ch = 1;
-                        fireN((ar ? `🔜 بعد ${due-mins} دقيقة: ` : `🔜 In ${due-mins} min: `) + e.t, {
+                        fireN((ar ? `🔜 بعد ${due-mins} دقيقة: ` : `🔜 In ${due-mins} min: `) + ttLbl(e), {
                             k: k,
                             id: e.id
                         })
@@ -2178,7 +2527,7 @@
                         S.nfired[key] = 1;
                         ch = 1;
                         const late = mins - due;
-                        if (late <= 720) fireN((late > 30 ? (ar ? '⏰ فاتك موعد: ' : '⏰ Missed: ') : (ar ? '⏰ حان موعد: ' : '⏰ Time for: ')) + e.t, {
+                        if (late <= 720) fireN((late > 30 ? (ar ? '⏰ فاتك موعد: ' : '⏰ Missed: ') : (ar ? '⏰ حان موعد: ' : '⏰ Time for: ')) + ttLbl(e), {
                             k: k,
                             id: e.id
                         }, true)
@@ -2250,7 +2599,7 @@
                                 k,
                                 id: its.length === 1 ? its[0].id : null
                             },
-                            msg: its.length === 1 ? (ar ? '📌 لديك مهمة مجدولة اليوم: ' : '📌 Scheduled today: ') + its[0].t + (its[0].time ? ' · ' + its[0].time : '') : (ar ? `📌 لديك ${its.length} مهام مجدولة اليوم` : `📌 You have ${its.length} scheduled tasks today`)
+                            msg: its.length === 1 ? (ar ? '📌 لديك مهمة مجدولة اليوم: ' : '📌 Scheduled today: ') + ttLbl(its[0]) + (its[0].time ? ' · ' + its[0].time : '') : (ar ? `📌 لديك ${its.length} مهام مجدولة اليوم` : `📌 You have ${its.length} scheduled tasks today`)
                         });
                         its.forEach(e => {
                             if (!e.time || S.nfired['t:' + k + ':' + e.id]) return;
@@ -2264,7 +2613,7 @@
                                     k,
                                     id: e.id
                                 },
-                                msg: (ar ? '🔜 بعد 10 دقائق: ' : '🔜 In 10 min: ') + e.t
+                                msg: (ar ? '🔜 بعد 10 دقائق: ' : '🔜 In 10 min: ') + ttLbl(e)
                             });
                             items.push({
                                 key: 't:' + k + ':' + e.id,
@@ -2276,8 +2625,8 @@
                                     k,
                                     id: e.id
                                 },
-                                msg: (ar ? '⏰ حان موعد: ' : '⏰ Time for: ') + e.t,
-                                msg2: (ar ? '⏰ فاتك موعد: ' : '⏰ Missed: ') + e.t
+                                msg: (ar ? '⏰ حان موعد: ' : '⏰ Time for: ') + ttLbl(e),
+                                msg2: (ar ? '⏰ فاتك موعد: ' : '⏰ Missed: ') + ttLbl(e)
                             })
                         });
                         if (pend && !S.nfired['p:' + k]) items.push({
@@ -4174,6 +4523,11 @@
                     size: 14,
                     textColor: '#2a2a2a'
                 },
+                laser: {
+                    color: '#ff2d3d',
+                    size: 12,
+                    trail: true
+                },
                 shape: {
                     kind: 'rect',
                     stroke: '#278f79',
@@ -4323,7 +4677,7 @@
                 const run = () => {
                     if (fileId == null) return true;
                     const ok = AS.set(fileId, ann);
-                    note(ok ? L('Saved on this device · Export to create an annotated PDF.', 'محفوظ على هذا الجهاز · صدّر ملف PDF لتضمين التعليقات.') : L('Storage is full. Export your annotations before closing.', 'مساحة التخزين ممتلئة. صدّر تعليقاتك قبل الإغلاق.'));
+                    note(ok ? '' : L('Storage is full. Export your annotations before closing.', 'مساحة التخزين ممتلئة. صدّر تعليقاتك قبل الإغلاق.'));
                     return ok
                 };
                 if (now) return run();
@@ -4777,7 +5131,171 @@
             });
             const touchDown = new Set();
 
+            /* ---------- Laser pointer: a glowing dot with a fading trail, never saved ---------- */
+            const laser = {
+                cv: null,
+                pts: [],
+                x: 0,
+                y: 0,
+                down: false,
+                hover: false,
+                pid: null,
+                rel: 0,
+                raf: 0
+            };
+
+            function laserCanvas() {
+                if (!laser.cv) {
+                    const c = document.createElement('canvas');
+                    c.id = 'nr-laser';
+                    c.setAttribute('aria-hidden', 'true');
+                    reader.appendChild(c);
+                    laser.cv = c
+                }
+                return laser.cv
+            }
+
+            function laserFrame() {
+                laser.raf = 0;
+                const c = laserCanvas(),
+                    r = reader.getBoundingClientRect(),
+                    d = Math.min(window.devicePixelRatio || 1, 2),
+                    w = Math.round(r.width * d),
+                    h = Math.round(r.height * d);
+                if (c.width !== w || c.height !== h) {
+                    c.width = w;
+                    c.height = h
+                }
+                const g = c.getContext('2d'),
+                    now = performance.now(),
+                    cf = cfg.laser,
+                    TRAIL = 620,
+                    FADE = 520;
+                g.setTransform(d, 0, 0, d, 0, 0);
+                g.clearRect(0, 0, r.width, r.height);
+                laser.pts = laser.pts.filter(p => now - p.t < TRAIL);
+                const col = cf.color || '#ff2d3d',
+                    R = Math.max(3, cf.size / 2);
+                g.lineCap = 'round';
+                g.lineJoin = 'round';
+                if (cf.trail !== false) {
+                    for (let i = 1; i < laser.pts.length; i++) {
+                        const a = laser.pts[i - 1],
+                            b = laser.pts[i],
+                            k = 1 - (now - b.t) / TRAIL;
+                        if (k <= 0) continue;
+                        g.strokeStyle = col;
+                        g.globalAlpha = Math.min(1, k * .9);
+                        g.shadowColor = col;
+                        g.shadowBlur = 14 * k;
+                        g.lineWidth = R * 1.25 * (.12 + .88 * k);
+                        g.beginPath();
+                        g.moveTo(a.x - r.left, a.y - r.top);
+                        g.lineTo(b.x - r.left, b.y - r.top);
+                        g.stroke()
+                    }
+                }
+                let ha = 0;
+                if (laser.down || laser.hover) ha = 1;
+                else if (laser.rel) ha = Math.max(0, 1 - (now - laser.rel) / FADE);
+                if (ha > 0) {
+                    const x = laser.x - r.left,
+                        y = laser.y - r.top;
+                    g.shadowColor = col;
+                    g.shadowBlur = R * 2.4;
+                    g.globalAlpha = ha;
+                    const gr = g.createRadialGradient(x, y, 0, x, y, R * 2.3);
+                    gr.addColorStop(0, '#ffffff');
+                    gr.addColorStop(.28, col);
+                    gr.addColorStop(.62, col);
+                    gr.addColorStop(1, 'rgba(255,255,255,0)');
+                    g.fillStyle = gr;
+                    g.beginPath();
+                    g.arc(x, y, R * 2.3, 0, Math.PI * 2);
+                    g.fill();
+                    g.shadowBlur = 0;
+                    g.globalAlpha = ha * .95;
+                    g.fillStyle = '#fff';
+                    g.beginPath();
+                    g.arc(x, y, Math.max(1.5, R * .38), 0, Math.PI * 2);
+                    g.fill()
+                }
+                g.globalAlpha = 1;
+                g.shadowBlur = 0;
+                if (laser.pts.length || ha > 0) laser.raf = requestAnimationFrame(laserFrame)
+            }
+
+            function laserKick() {
+                if (!laser.raf) laser.raf = requestAnimationFrame(laserFrame)
+            }
+
+            function laserStop() {
+                laser.down = false;
+                laser.hover = false;
+                laser.pid = null;
+                laser.pts = [];
+                laser.rel = 0;
+                if (laser.raf) cancelAnimationFrame(laser.raf);
+                laser.raf = 0;
+                if (laser.cv) {
+                    const g = laser.cv.getContext('2d');
+                    g.setTransform(1, 0, 0, 1, 0, 0);
+                    g.clearRect(0, 0, laser.cv.width, laser.cv.height)
+                }
+            }
+
+            function laserMove(e) {
+                laser.x = e.clientX;
+                laser.y = e.clientY;
+                laser.pts.push({
+                    x: e.clientX,
+                    y: e.clientY,
+                    t: performance.now()
+                })
+            }
+            reader.addEventListener('pointermove', e => {
+                if (tool !== 'laser') return;
+                if (laser.down && e.pointerId === laser.pid) {
+                    const ce = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+                    (ce.length ? ce : [e]).forEach(q => laserMove(q));
+                    laserKick()
+                } else if (!laser.down && e.pointerType !== 'touch' && e.target.closest && e.target.closest('.reader-scroll')) {
+                    laser.hover = true;
+                    laserMove(e);
+                    laserKick()
+                }
+            });
+            reader.addEventListener('pointerleave', e => {
+                if (e.pointerType !== 'touch') {
+                    laser.hover = false;
+                    laser.rel = performance.now();
+                    laserKick()
+                }
+            });
+            ['pointerup', 'pointercancel'].forEach(k => reader.addEventListener(k, e => {
+                if (laser.down && e.pointerId === laser.pid) {
+                    laser.down = false;
+                    laser.pid = null;
+                    laser.rel = performance.now();
+                    laserKick()
+                }
+            }));
+
+            function startLaser(e, ink) {
+                e.preventDefault();
+                try {
+                    ink.setPointerCapture(e.pointerId)
+                } catch (z) {}
+                laser.down = true;
+                laser.hover = false;
+                laser.pid = e.pointerId;
+                laser.pts = [];
+                laserMove(e);
+                laserKick()
+            }
+
             function abortGesture() {
+                if (laser.down) laserStop();
                 if (strokeDrag) strokeDrag.cancel();
                 if (drawing) {
                     const d = drawing,
@@ -4913,6 +5431,20 @@
                 ta.value = o.text || '';
                 ta.placeholder = o.type === 'sticky' ? L('Add a note…', 'أضف ملاحظة…') : L('Type here…', 'اكتب هنا…');
                 el.append(bar, ta);
+                if (o.type === 'shape') {
+                    const NS = 'http://www.w3.org/2000/svg',
+                        sv = document.createElementNS(NS, 'svg');
+                    sv.setAttribute('class', 'shape-tri');
+                    sv.setAttribute('viewBox', '0 0 100 100');
+                    sv.setAttribute('preserveAspectRatio', 'none');
+                    sv.setAttribute('aria-hidden', 'true');
+                    const pg = document.createElementNS(NS, 'polygon');
+                    pg.setAttribute('points', '50,0 100,100 0,100');
+                    pg.setAttribute('vector-effect', 'non-scaling-stroke');
+                    pg.setAttribute('stroke-linejoin', 'round');
+                    sv.appendChild(pg);
+                    el.insertBefore(sv, bar)
+                }
                 for (const d of ['nw', 'ne', 'sw', 'se']) {
                     const h = document.createElement('div');
                     h.className = 'rz rz-' + d;
@@ -5331,6 +5863,11 @@
                         x = (e.clientX - r.left) / scale,
                         y = (e.clientY - r.top) / scale;
                     if (wasEditing) ae.blur();
+                    if (tool === 'laser') {
+                        clearSel();
+                        startLaser(e, ink);
+                        return
+                    }
                     if (tool === 'text' || tool === 'sticky' || tool === 'shape') {
                         e.preventDefault();
                         if (wasEditing) {
@@ -5706,6 +6243,7 @@
 
             const PAL = {
                 ink: ['#253b34', '#278f79', '#3478c7', '#d4576e', '#e5a02d', '#7a56b8', '#ffffff'],
+                laser: ['#ff2d3d', '#ff8a00', '#ffd400', '#22d36b', '#2a9dff', '#c04bff'],
                 hl: ['#f2c230', '#7ddc6a', '#ff7aa8', '#59c3ff', '#ff9c40'],
                 paper: ['#fff1b3', '#ffd6e0', '#d6ecff', '#d7f5dc', '#ffe0b8', '#e9dcff'],
                 fill: ['#e3f5eb', '#fff1b3', '#d6ecff', '#ffd6e0', '#ffffff']
@@ -5862,13 +6400,18 @@
                     eraser: L('Eraser', 'الممحاة'),
                     text: L('Text', 'النص'),
                     sticky: L('Sticky note', 'الملصق'),
-                    shape: L('Shape', 'الشكل')
+                    shape: L('Shape', 'الشكل'),
+                    laser: L('Laser pointer', 'مؤشر الليزر')
                 };
                 const c = cfg[mode],
                     cur = (key, prop) => o && o[prop] != null ? o[prop] : c[key];
                 box.appendChild(el('span', 'opt-title', (o ? L('Selected · ', 'المحدد · ') : '') + names[mode]));
                 const add = n => box.appendChild(n);
-                if (mode === 'pen') {
+                if (mode === 'laser') {
+                    add(grp(L('Colour', 'اللون'), swatches(PAL.laser, () => c.color, v => setProp('laser', 'color', v))));
+                    add(grp(L('Size', 'الحجم'), range(6, 40, () => c.size, v => setProp('laser', 'size', v))));
+                    add(toggle(L('Trail', 'الأثر'), () => c.trail !== false, v => setProp('laser', 'trail', v)))
+                } else if (mode === 'pen') {
                     add(grp(L('Colour', 'اللون'), swatches(PAL.ink, () => c.color, v => setProp('pen', 'color', v))));
                     add(grp(L('Size', 'الحجم'), range(1, 28, () => c.size, v => setProp('pen', 'size', v))))
                 } else if (mode === 'highlighter') {
@@ -5922,6 +6465,7 @@
                 sel = null;
                 $$('.pdf-obj.sel').forEach(x => x.classList.remove('sel'));
                 reader.dataset.tool = t;
+                if (t !== 'laser') laserStop();
                 brush.style.display = 'none';
                 $$('[data-pdf-tool]').forEach(b => b.classList.toggle('active', b.dataset.pdfTool === t));
                 $('#nr-shapes').classList.toggle('open', t === 'shape');
@@ -5978,7 +6522,8 @@
                     eraser: 'الممحاة',
                     text: 'مربع نص',
                     sticky: 'ملصق',
-                    shape: 'الأشكال'
+                    shape: 'الأشكال',
+                    laser: 'الليزر'
                 } : {
                     pan: 'Hand',
                     pen: 'Pen',
@@ -5986,7 +6531,8 @@
                     eraser: 'Erase',
                     text: 'Text',
                     sticky: 'Sticky',
-                    shape: 'Shapes'
+                    shape: 'Shapes',
+                    laser: 'Laser'
                 };
                 $$('[data-pdf-tool]').forEach(b => {
                     const l = names[b.dataset.pdfTool];
@@ -6006,8 +6552,25 @@
                 $('#nr-export').textContent = L('Export PDF', 'تصدير PDF');
                 $('#nr-close').title = L('Back to library', 'العودة للمكتبة');
                 $('#nr-clear').title = L('Clear this session’s edits', 'مسح تعديلات هذه الجلسة');
-                $$('[data-pdf-shape]').forEach((b, i) => b.textContent = (isAr() ? ['مستطيل', 'مستطيل دائري', 'دائرة', 'فقاعة'] : ['Rectangle', 'Rounded', 'Circle', 'Callout'])[i]);
-                note(L('Annotations are saved on this device. Export a PDF to embed them.', 'التعليقات محفوظة على هذا الجهاز. صدّر PDF لتضمينها داخل الملف.'));
+                const SH = isAr() ? {
+                    rect: 'مستطيل',
+                    round: 'دائري',
+                    circle: 'دائرة',
+                    triangle: 'مثلث',
+                    speech: 'فقاعة'
+                } : {
+                    rect: 'Rectangle',
+                    round: 'Rounded',
+                    circle: 'Circle',
+                    triangle: 'Triangle',
+                    speech: 'Callout'
+                };
+                $$('[data-pdf-shape]').forEach(b => {
+                    const t = SH[b.dataset.pdfShape],
+                        sp = b.querySelector('span');
+                    if (t && sp) sp.textContent = t
+                });
+                note('');
                 buildOptions()
             }
             window.addEventListener('novix:lang', applyLang);
@@ -7321,7 +7884,7 @@
                         }
                         updCurPage();
                         for (let k = Math.max(0, curPage - 1); k < Math.min(views.length, curPage + 1); k++) mountView(views[k]);
-                        note(L('Annotations are saved on this device. Export a PDF to embed them.', 'التعليقات محفوظة على هذا الجهاز. صدّر PDF لتضمينها داخل الملف.'))
+                        note('')
                     } else {
                         scroller.replaceChildren();
                         setTool('pan');
@@ -7411,7 +7974,13 @@
                 ctx.save();
                 if (o.type !== 'textbox') {
                     ctx.beginPath();
-                    if (o.shape === 'circle') ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
+                    if (o.type === 'shape' && o.shape === 'triangle') {
+                        ctx.moveTo(x + w / 2, y);
+                        ctx.lineTo(x + w, y + h);
+                        ctx.lineTo(x, y + h);
+                        ctx.closePath();
+                        ctx.lineJoin = 'round'
+                    } else if (o.shape === 'circle') ctx.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
                     else if (o.type === 'sticky' || o.shape === 'round' || o.shape === 'speech') ctx.roundRect(x, y, w, h, (o.shape === 'round' ? 18 : o.type === 'sticky' ? 8 : 14) * k);
                     else ctx.rect(x, y, w, h);
                     ctx.fillStyle = o.type === 'sticky' ? o.paper : (o.fill || 'rgba(0,0,0,0)');
