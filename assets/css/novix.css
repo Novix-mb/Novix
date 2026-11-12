@@ -8691,3 +8691,61 @@ html.kb-open .nm-pop {
         inset-inline-start: 8px
     }
 }
+
+
+/* ===== Digital timer style (digits) =====
+   Only the clock face and the way the time is set change. The ring keeps its box, so tabs, tools,
+   Reset / Start / Skip, presets and stats stay exactly where they are. */
+.fx-stage[data-skin="digits"] .fx-ring { pointer-events: none; cursor: default; touch-action: auto }
+/* hidden, not removed, so the ring box keeps its exact height and nothing below it moves */
+.fx-stage[data-skin="digits"] .fx-ring svg,
+.fx-stage[data-skin="digits"] .fx-kh-hit { visibility: hidden }
+.fx-stage[data-skin="digits"] .fx-time { pointer-events: none; gap: 10px; text-shadow: 0 6px 40px rgba(0, 0, 0, .28) }
+.fx-stage[data-skin="digits"] .fx-time b {
+    pointer-events: auto; display: flex; align-items: center; justify-content: center; direction: ltr;
+    font: 700 clamp(72px, 16vmin, 150px)/1.1 Poppins, Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+    letter-spacing: -.02em; color: #fff; padding: 0 18px; border-radius: 30px;
+    user-select: none; -webkit-user-select: none; transition: background .3s; animation: none
+}
+.fx-stage[data-skin="digits"] .fx-time > span { font-size: clamp(11px, 1.9vmin, 15px); letter-spacing: .24em; opacity: .7 }
+.fx-stage[data-skin="digits"] .fx-time b span { font-size: inherit; font-weight: inherit; letter-spacing: inherit; text-transform: none; opacity: 1 }
+.fx-stage[data-skin="digits"] .fx-ring.adj .fx-time b { cursor: ns-resize; touch-action: none }
+.fx-stage[data-skin="digits"] .fx-ring.adj .fx-time b:hover,
+.fx-stage[data-skin="digits"] .fx-ring.dgdrag .fx-time b { background: rgba(255, 255, 255, .08) }
+.fx-stage[data-skin="digits"] .fx-dh { bottom: 4% }
+#fxT .dg { position: relative; display: inline-block; flex: none; width: .64em; height: 1.1em; overflow: hidden }
+#fxT .dg i { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; will-change: transform, opacity, filter }
+#fxT .cl { display: inline-block; flex: none; width: .34em; text-align: center; transform: translateY(-.05em) }
+.fx-ring.fx-skin-in { animation: fxSkinIn .35s ease both }
+@keyframes fxSkinIn { from { opacity: 0; transform: scale(.97) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { .fx-ring.fx-skin-in { animation: none } }
+
+/* time is up: the timer shakes */
+.fx-ring.fx-shake { animation: fxShake 1.4s cubic-bezier(.36, .07, .19, .97) both }
+@keyframes fxShake {
+    0%, 100% { transform: translateX(0) rotate(0) }
+    8%, 24%, 40%, 56%, 72% { transform: translateX(-12px) rotate(-1.6deg) }
+    16%, 32%, 48%, 64%, 80% { transform: translateX(12px) rotate(1.6deg) }
+    90% { transform: translateX(-4px) }
+}
+@media (prefers-reduced-motion: reduce) { .fx-ring.fx-shake { animation: none } }
+
+
+/* ===== bigger timer (fits the 180-minute maximum) + a lively "running" state, for both styles ===== */
+.fx-stage .fx-ring {
+    width: clamp(270px, 47vmin, 410px);
+    transition: scale .6s cubic-bezier(.2, .8, .2, 1), margin .6s cubic-bezier(.2, .8, .2, 1)
+}
+.fx-stage:not([data-skin="digits"]) .fx-time b { font-size: clamp(58px, 12vmin, 100px) }
+.fx-stage:not([data-skin="digits"]).fx-l3 .fx-time b { font-size: clamp(46px, 9.6vmin, 80px) }
+.fx-stage[data-skin="digits"].fx-l3 .fx-time b { font-size: clamp(60px, 13.2vmin, 124px) }
+/* running: the timer grows a little and the buttons below are pushed further down */
+.fx-stage.fx-run .fx-ring { scale: 1.08; margin-bottom: 38px }
+.fx-stage.fx-run .fx-time { animation: fxBreath 4.2s ease-in-out infinite }
+.fx-stage.fx-run:not([data-skin="digits"]) .fx-prg { filter: drop-shadow(0 0 9px rgba(255, 214, 170, .6)) }
+.fx-stage.fx-run:not([data-skin="digits"]) .fx-ticks { opacity: 1 }
+@keyframes fxBreath { 0%, 100% { scale: 1 } 50% { scale: 1.03 } }
+@media (prefers-reduced-motion: reduce) {
+    .fx-stage .fx-ring { transition: none }
+    .fx-stage.fx-run .fx-time { animation: none }
+}
