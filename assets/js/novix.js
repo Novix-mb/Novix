@@ -9395,27 +9395,36 @@
             function vidOff() {
                 clearTimeout(stopT);
                 stopT = setTimeout(() => {
-                    if (vid && !want) vid.pause()
+                    if (vid && !active()) vid.pause()
                 }, 2500)
             }
+
+            /* the screen stays awake only while the timer runs AND the Focus page is on screen */
+            const shown = () => !document.hidden && !!document.querySelector('#v-focus.on');
+            const active = () => want && shown();
 
             function lockOn() {
                 if (failed || lock || asking || document.hidden) return;
                 asking = true;
                 navigator.wakeLock.request('screen').then(l => {
                     asking = false;
-                    if (!want) {
+                    if (!active()) {
                         l.release().catch(() => {});
                         return
                     }
                     lock = l;
+                    clearTimeout(stopT);
+                    if (vid) vid.pause();
                     l.addEventListener('release', () => {
-                        if (lock === l) lock = null
+                        if (lock === l) lock = null;
+                        /* the system released it (e.g. the screen was hidden): take it again when back */
+                        if (active() && !document.hidden) setTimeout(sync, 300)
                     })
-                }).catch(() => {
+                }).catch(e => {
                     asking = false;
-                    failed = true;
-                    if (want) vidOn()
+                    /* only a real "not supported" disables the lock for good; other errors are retried */
+                    if (e && e.name === 'NotSupportedError') failed = true;
+                    if (active()) vidOn()
                 })
             }
 
@@ -9427,9 +9436,9 @@
             }
 
             function sync() {
-                if (want) {
+                if (active()) {
                     lockOn();
-                    if (failed) vidOn()
+                    if (failed || !lock) vidOn()
                 } else {
                     lockOff();
                     vidOff()
@@ -9439,17 +9448,22 @@
                 want = !!on;
                 sync()
             };
+            /* re-check when the Focus page is opened or closed */
+            const focusView = document.getElementById('v-focus');
+            if (focusView) new MutationObserver(sync).observe(focusView, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
             document.addEventListener('visibilitychange', () => {
-                if (want && !document.hidden) {
+                if (!document.hidden) {
                     lock = null;
-                    sync();
-                    if (vid && vid.paused && failed) vidOn()
+                    sync()
                 }
             });
             setInterval(() => {
-                if (!want || document.hidden) return;
+                if (!active()) return;
                 if (!failed && !lock) lockOn();
-                if (failed && vid && vid.paused) vidOn()
+                if ((failed || !lock) && vid && vid.paused) vidOn()
             }, 4000);
             addEventListener('pagehide', () => {
                 want = false;
