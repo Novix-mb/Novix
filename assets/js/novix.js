@@ -9672,9 +9672,9 @@
         }
         const ar = (document.documentElement.lang || '').toLowerCase().startsWith('ar') || document.documentElement.dir === 'rtl';
         pill.style.opacity = active() ? '1' : '0';
-        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') + (playing() ? ' ✓✓' : '') :
-            playing() ? (ar ? '🔆 الشاشة لن تنطفئ (وضع بديل)' : '🔆 Screen stays on (backup)') :
-            (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on') + (err ? ' · ' + err : '')
+        pill.textContent = lock ? (ar ? '🔆 الشاشة لن تنطفئ' : '🔆 Screen stays on') + (playing() ? ' ✓✓' : '') + ' · v6' :
+            playing() ? (ar ? '🔆 الشاشة لن تنطفئ (وضع بديل)' : '🔆 Screen stays on (backup)') + ' · v6' :
+            (ar ? '⚠️ تعذّر إبقاء الشاشة مضاءة' : '⚠️ Could not keep screen on') + (err ? ' · ' + err : '') + ' · v6'
     }
 
     function sync() {
