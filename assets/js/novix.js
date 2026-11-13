@@ -169,7 +169,10 @@
                 'Write and pin notes, format your text and keep every idea organised and easy to find.': 'دوّن ملاحظاتك وثبّتها ونسّق نصوصك وأبقِ كل فكرة منظّمة وسهلة الوصول.',
                 'Plan your week with colour-coded sessions, link them to your tasks and get a reminder when it is time.': 'خطّط لأسبوعك بحصص ملوّنة، واربطها بمهامك، واحصل على تذكير عند حلول موعدها.',
                 'Focus and break sessions with soft sounds, calm backgrounds and a screen that stays awake while the timer runs.': 'جلسات تركيز واستراحة بأصوات هادئة وخلفيات مريحة، وتبقى الشاشة مضاءة طوال عمل المؤقت.',
-                'Smart Board and Simulations are on their way.': 'السبورة الذكية والمحاكيات في الطريق إليكم.',
+                'Simulations are on their way.': 'المحاكيات في الطريق إليكم.',
+                'Could not load the board. Check your connection and reload.': 'تعذّر تحميل السبورة. تحقق من الاتصال ثم أعد تحميل الصفحة.',
+                'A smart whiteboard to draw, write and present: pens, highlighter, shapes, text, sticky notes, stickers, images and a laser pointer, with many pages you can save as a PDF.': 'سبورة ذكية للرسم والكتابة والعرض: أقلام وهايلايتر وأشكال ونصوص وملاحظات لاصقة وملصقات وصور ومؤشر ليزر، مع صفحات كثيرة يمكنك حفظها كملف PDF.',
+                'Draw, explain and present on a smart whiteboard.': 'ارسم واشرح وقدّم على سبورة ذكية.',
                 'Your data stays with you': 'بياناتك تبقى معك',
                 'Books, notes and settings are saved on this device only and are never uploaded. Clearing your browser data will remove them.': 'تُحفظ الكتب والملاحظات والإعدادات على هذا الجهاز فقط ولا تُرفع إلى أي مكان. مسح بيانات المتصفح سيحذفها.',
                 'Designed & developed by': 'تصميم وتطوير',
@@ -541,8 +544,7 @@
                 window.nxThemeColor && nxThemeColor()
             }
             const SOONINFO = {
-                sims: ['Simulations', 'flask', 'Interactive experiments you can run and explore. We’re putting the finishing touches on it.'],
-                smartboard: ['Smart Board', 'board', 'Draw, explain and present on a smart whiteboard. We’re putting the finishing touches on it.']
+                sims: ['Simulations', 'flask', 'Interactive experiments you can run and explore. We’re putting the finishing touches on it.']
             };
 
             function fillSoon(id) {
@@ -564,6 +566,12 @@
                 $$('#nav a[data-v]').forEach(a => a.classList.toggle('on', a.dataset.v === id));
                 if (soon) fillSoon(id);
                 if (id === 'focus' && window.NXPRE && NXPRE.loadAudio) NXPRE.loadAudio();
+                if (id === 'smartboard' && window.NXGN) {
+                    const h = $('#gnBoardHost');
+                    NXGN.mountBoard(h).catch(() => {
+                        h.innerHTML = '<div class="gn-boot">' + tr('Could not load the board. Check your connection and reload.') + '</div>'
+                    })
+                }
                 const m = $('.main');
                 if (m) m.scrollTop = 0;
             }
@@ -7022,6 +7030,7 @@
                 buildOptions()
             };
             reader.addEventListener('keydown', e => {
+                if (reader.classList.contains('gn-mode')) return;
                 const inText = e.target && e.target.classList && e.target.classList.contains('pdf-obj-text');
                 if (inText || (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName))) return;
                 if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
@@ -8001,6 +8010,32 @@
             async function closeReader() {
                 if (closing || !reader.classList.contains('open')) return;
                 closing = true;
+                if (window.NXGN && NXGN.active()) {
+                    const gpg = NXGN.closePdf();
+                    try {
+                        const allp = LS.get('novix.pdf.pos.v1', {});
+                        if (fileId != null) {
+                            allp[fileId] = Object.assign({}, allp[fileId], {
+                                page: gpg
+                            });
+                            LS.set('novix.pdf.pos.v1', allp)
+                        }
+                    } catch (e) {}
+                    reader.classList.add('closing');
+                    setTimeout(() => {
+                        reader.classList.remove('open', 'closing', 'nx-loading', 'nx-failed', 'gn-mode');
+                        document.body.style.overflow = '';
+                        window.nxThemeColor && nxThemeColor();
+                        resetViewer();
+                        file = null;
+                        fileId = null;
+                        undo = [];
+                        redo = [];
+                        updHist();
+                        closing = false
+                    }, 230);
+                    return
+                }
                 const ae = document.activeElement;
                 if (ae && ae.classList && ae.classList.contains('pdf-obj-text')) ae.blur();
                 let discard = false;
@@ -8209,6 +8244,8 @@
                 const meta = (LS.get('novix.site.v1', {}).books || []).find(x => x.id === id);
                 if (!meta || !meta.fn) return;
                 resetViewer();
+                if (window.NXGN && NXGN.active()) NXGN.closePdf();
+                reader.classList.remove('gn-mode');
                 undo = [];
                 redo = [];
                 updHist();
@@ -8291,17 +8328,44 @@
                         await new Promise(r => setTimeout(r, 220));
                         if (myTok !== openTok) return;
                         scroller.replaceChildren();
-                        buildViews();
-                        setTool('pan');
-                        reader.classList.remove('nx-loading');
-                        if (pos && pos.page > 1) scrollToPage(pos.page);
-                        else {
-                            scroller.scrollTop = 0;
-                            $('#nr-page').value = 1
+                        let gnOk = false;
+                        if (window.NXGN) {
+                            try {
+                                reader.classList.add('gn-mode');
+                                await NXGN.mountPdf($('#nr-gn'), {
+                                    doc: pdfDoc,
+                                    fileId: fileId,
+                                    title: meta.t || meta.fn,
+                                    startPage: pos && pos.page || 1,
+                                    onBack: closeReader,
+                                    onProgress: fr => P.set(96 + fr * 3, L('Preparing pages…', 'جارٍ تجهيز الصفحات…'))
+                                });
+                                gnOk = true
+                            } catch (gerr) {
+                                console.error(gerr);
+                                reader.classList.remove('gn-mode')
+                            }
+                            if (myTok !== openTok) {
+                                NXGN.closePdf();
+                                return
+                            }
                         }
-                        updCurPage();
-                        for (let k = Math.max(0, curPage - 1); k < Math.min(views.length, curPage + 1); k++) mountView(views[k]);
-                        note('')
+                        if (gnOk) {
+                            reader.classList.remove('nx-loading');
+                            note('')
+                        } else {
+                            buildViews();
+                            setTool('pan');
+                            reader.classList.remove('nx-loading');
+                            if (pos && pos.page > 1) scrollToPage(pos.page);
+                            else {
+                                scroller.scrollTop = 0;
+                                $('#nr-page').value = 1
+                            }
+                            updCurPage();
+                            for (let k = Math.max(0, curPage - 1); k < Math.min(views.length, curPage + 1); k++) mountView(views[k]);
+                            note('')
+                        }
                     } else {
                         scroller.replaceChildren();
                         setTool('pan');
