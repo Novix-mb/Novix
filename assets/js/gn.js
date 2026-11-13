@@ -253,15 +253,10 @@ W.GN=function(root,o){
  const ptrs=new Map();let pd=0,lm=null,twoF=0;
  let dtap=null;
  function pickAt(cx,cy){for(let i=0;i<P.length;i++){const d=els[i];if(!d)continue;const r0=d.getBoundingClientRect();if(cx<r0.left||cx>r0.right||cy<r0.top||cy>r0.bottom)continue;const x=(cx-r0.left)/r0.width*P[i].w,y=(cy-r0.top)/r0.height*P[i].h,tol=8/st.z;for(let k=items[i].length-1;k>=0;k--){const it=items[i][k];if(it.t!=='er'&&hit(it,x,y,tol)){sel={i,ids:[it],free:1};cur=i;live(i);return}}}}
- sc.addEventListener('pointerdown',e=>{if(st.tool!=='hand'||e.button>0||e.target.closest('.gn-sel,.gn-tt,textarea'))return;const n=Date.now();if(dtap&&n-dtap.t<380&&Math.hypot(e.clientX-dtap.x,e.clientY-dtap.y)<26){dtap=null;pickAt(e.clientX,e.clientY)}else dtap={t:n,x:e.clientX,y:e.clientY}},true);
- sc.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===1)twoF=0;if(ptrs.size===2){twoF=1;g2=null;pan=null;if(fl)flipEnd(fl.dx||0);const li=L?L.i:cur;if(L&&L.k==='e'&&!L.it){const q=u.pop();if(q&&L.ch){items[q.i]=q.a;redraw(q.i)}hb()}L=null;ls=null;if(sel){delete sel.drag;delete sel.tmp}redraw(li);pd=dist();lm=null;live(cur)}},true);
- sc.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===2&&pd){const d=dist(),a=[...ptrs.values()],mx=(a[0][0]+a[1][0])/2,my=(a[0][1]+a[1][1])/2;
-  if(!g2)g2={mx0:mx,my0:my,d0:d,m:null,dx:0};
-  if(!g2.m){if(Math.abs(d/g2.d0-1)>.06)g2.m='zoom';else if(Math.hypot(mx-g2.mx0,my-g2.my0)>12)g2.m=(st.view==='one'&&!zoomOver()&&Math.abs(mx-g2.mx0)>Math.abs(my-g2.my0))?'flip':'pan'}
-  if(g2.m==='flip'){flipMove(mx-g2.mx0);lm=[mx,my];pd=d;return}
-  if(lm){sc.scrollLeft-=mx-lm[0];sc.scrollTop-=my-lm[1]}
-  lm=[mx,my];if(g2.m==='zoom')setZ(st.z*d/pd,1);pd=d}},true);
- const pu=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2){pd=0;lm=null;const m=g2;g2=null;if(m&&m.m==='flip')flipEnd(m.dx)}};sc.addEventListener('pointerup',pu,true);sc.addEventListener('pointercancel',pu,true);
+ sc.addEventListener('pointerdown',e=>{if(st.tool!=='hand'||e.button>0||e.target.closest('.gn-sel,.gn-tt,textarea'))return;if(e.pointerType!=='pen'&&(e.pointerType!=='touch'||ptrs.size===0))panStart(e);const n=Date.now();if(dtap&&n-dtap.t<380&&Math.hypot(e.clientX-dtap.x,e.clientY-dtap.y)<26){dtap=null;pickAt(e.clientX,e.clientY)}else dtap={t:n,x:e.clientX,y:e.clientY}},true);
+ sc.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===1)twoF=0;if(ptrs.size===2){twoF=1;pan=null;if(fl)flipEnd(fl.dx||0);const li=L?L.i:cur;if(L&&L.k==='e'&&!L.it){const q=u.pop();if(q&&L.ch){items[q.i]=q.a;redraw(q.i)}hb()}L=null;ls=null;if(sel){delete sel.drag;delete sel.tmp}redraw(li);pd=dist();lm=null;live(cur)}},true);
+ sc.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===2&&pd){const d=dist(),a=[...ptrs.values()],mx=(a[0][0]+a[1][0])/2,my=(a[0][1]+a[1][1])/2;if(lm){sc.scrollLeft-=mx-lm[0];sc.scrollTop-=my-lm[1]}lm=[mx,my];setZ(st.z*d/pd,1);pd=d}},true);
+ const pu=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2){pd=0;lm=null}};sc.addEventListener('pointerup',pu,true);sc.addEventListener('pointercancel',pu,true);
  const dist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1};
  sc.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZ(st.z*(e.deltaY<0?1.08:.92))}},{passive:false});
  function setZ(z,soft){z=Math.max(.1,Math.min(5,z));const cy=(sc.scrollTop+sc.clientHeight/2)/sc.scrollHeight,cx=(sc.scrollLeft+sc.clientWidth/2)/sc.scrollWidth;st.z=z;size();sc.scrollTop=cy*sc.scrollHeight-sc.clientHeight/2;sc.scrollLeft=cx*sc.scrollWidth-sc.clientWidth/2;clearTimeout(rrT);rrT=setTimeout(()=>{for(const i in mounted)mount(+i);for(const i in mounted)redraw(+i)},soft?160:60)}
@@ -274,7 +269,7 @@ W.GN=function(root,o){
  function goto(i,instant){if(!els[i])return;if(st.view==='one'){slideEnd();if(i===cur)return;if(instant){finishSwitch(i);return}const d=i>cur?1:-1,VW=sc.clientWidth+GAP;els[i].classList.add('solo');slide(els[cur],0,-d*VW,els[i],d*VW,0,380,()=>finishSwitch(i));return}sc.scrollTo({top:els[i].offsetTop-14,behavior:'smooth'})}
  function finishSwitch(t){cur=t;els.forEach((d,k)=>{d.style.transform='';d.style.transition='';d.classList.toggle('solo',k===t)});pill.value=t+1;side.querySelectorAll('.gn-th').forEach((a,k)=>a.classList.toggle('cur',k===t))}
  function setView(v){slideEnd();st.view=v;root.dataset.view=v;if(o.fixed)try{localStorage.setItem('gn:pdfview',v)}catch(e){}const b=$('[data-a=view]');if(b)b.innerHTML=ic(v==='one'?'vone':'vall');if(v==='one'){els.forEach((d,k)=>d.classList.toggle('solo',k===cur));fitPage()}else{els.forEach(d=>d.classList.remove('solo'));fit();if(els[cur])sc.scrollTop=els[cur].offsetTop-14}}
- let pan=null,g2=null,fl=null,pendingEnd=null;
+ let pan=null,fl=null,pendingEnd=null;
  const GAP=28,EASE='cubic-bezier(.2,.7,.2,1)';
  const zoomOver=()=>!!els[cur]&&els[cur].offsetWidth>sc.clientWidth-8;
  function slideEnd(){if(pendingEnd){const f=pendingEnd;pendingEnd=null;f()}}
@@ -438,4 +433,4 @@ function drawBorder(x,W,H,b,s){
   x.stroke()}
  x.restore()}
 W.GN.drawBorder=drawBorder;
-})(window); 
+})(window);
