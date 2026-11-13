@@ -174,7 +174,7 @@
     }, 2500);
   }
 
-  async function login(event, overlay) {
+  async function login(event) {
     event.preventDefault();
     if (!auth) return setStatus('Firebase is still connecting. Try again in a moment.', 'error');
     const button = event.currentTarget.querySelector('[type=submit]');
@@ -216,7 +216,7 @@
   }
 
   function loadFirebase() {
-    if (!cfg.apiKey || !cfg.projectId || !cfg.appId) {
+    if (!FIREBASE.apiKey || !FIREBASE.projectId || !FIREBASE.appId) {
       setStatus('Firebase configuration is missing.');
       return;
     }
@@ -234,7 +234,7 @@
       document.head.appendChild(script);
     });
     scripts.reduce((chain, src) => chain.then(() => addScript(src)), Promise.resolve()).then(() => {
-      const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
+      const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(FIREBASE);
       auth = app.auth();
       db = app.firestore();
       auth.onAuthStateChanged(async (user) => {
@@ -242,6 +242,8 @@
         if (!user) {
           const userPanel = document.getElementById('nx-account-user');
           if (userPanel) userPanel.hidden = true;
+          const trigger = document.getElementById('nx-account-trigger');
+          if (trigger) trigger.textContent = 'Account';
           return;
         }
         setSignedIn(user);
