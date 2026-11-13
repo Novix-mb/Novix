@@ -9739,3 +9739,164 @@
 })();
 
 ;
+
+
+;
+(() => {
+    if (!('caches' in window) || !/^https?:$/.test(location.protocol)) return;
+    const T = {
+        'Offline copy': 'النسخة بدون إنترنت',
+        'Update offline copy': 'تحديث النسخة بدون إنترنت',
+        'Updating offline copy…': 'جارٍ تحديث النسخة بدون إنترنت…',
+        'Offline copy is up to date': 'تم تحديث النسخة بدون إنترنت',
+        'Reload': 'إعادة التحميل',
+        'Close': 'إغلاق',
+        'Update failed. Check your connection.': 'فشل التحديث. تأكد من اتصالك بالإنترنت.',
+        'Retry': 'إعادة المحاولة',
+        'files': 'ملف'
+    };
+    const ar = () => document.documentElement.lang === 'ar' || document.documentElement.dir === 'rtl';
+    const tr = k => (ar() && T[k]) || k;
+    const CODE_RE = /\.(?:html|js|css|webmanifest|json)$/i;
+    let busy = false,
+        pop = null;
+
+    const label = () => {
+        const l = document.getElementById('offLbl'),
+            t = document.getElementById('offTxt');
+        if (l) l.textContent = tr('Offline copy');
+        if (t && !busy) t.textContent = tr('Update offline copy');
+    };
+
+    const ui = () => {
+        if (pop) pop.remove();
+        pop = document.createElement('div');
+        pop.id = 'nx-off-pop';
+        pop.setAttribute('role', 'status');
+        pop.innerHTML = '<div class="nx-off-row"><span class="t"></span><b class="p">0%</b></div><div class="nx-off-bar"><i></i></div><div class="nx-off-sub"></div>';
+        document.body.appendChild(pop);
+        return {
+            t: pop.querySelector('.t'),
+            p: pop.querySelector('.p'),
+            i: pop.querySelector('i'),
+            sub: pop.querySelector('.nx-off-sub')
+        };
+    };
+
+    const listFiles = async () => {
+        const r = await fetch('sw.js?t=' + Date.now(), {
+            cache: 'no-store'
+        });
+        if (!r.ok) throw new Error('sw');
+        const m = /const ALL_FILES = (\[[\s\S]*?\]);/.exec(await r.text());
+        if (!m) throw new Error('list');
+        return JSON.parse(m[1]).filter(f => f !== './version.json');
+    };
+
+    const run = async () => {
+        if (busy) return;
+        busy = true;
+        const btn = document.getElementById('offBtn');
+        if (btn) btn.disabled = true;
+        const o = ui();
+        o.t.textContent = tr('Updating offline copy…');
+        try {
+            const files = await listFiles();
+            const code = await caches.open('novix-code');
+            const media = await caches.open('novix-media');
+            const n = files.length;
+            const part = new Array(n).fill(0);
+            let doneN = 0,
+                bytes = 0,
+                next = 0;
+            const draw = () => {
+                const pct = Math.min(100, Math.round(part.reduce((a, b) => a + b, 0) / n * 100));
+                o.p.textContent = pct + '%';
+                o.i.style.width = pct + '%';
+                o.sub.textContent = doneN + ' / ' + n + ' ' + tr('files') + ' · ' + (bytes / 1048576).toFixed(1) + ' MB';
+            };
+            const one = async idx => {
+                const f = files[idx];
+                const res = await fetch(f, {
+                    cache: 'reload'
+                });
+                if (!res.ok) throw new Error(f);
+                const len = Number(res.headers.get('content-length')) || 0;
+                let got = 0;
+                const rd = res.clone().body.getReader();
+                const pump = (async () => {
+                    for (;;) {
+                        const {
+                            done,
+                            value
+                        } = await rd.read();
+                        if (done) break;
+                        got += value.length;
+                        bytes += value.length;
+                        if (len) part[idx] = Math.min(.99, got / len);
+                        draw();
+                    }
+                })();
+                const blob = res.blob();
+                await Promise.all([pump, blob]);
+                await (CODE_RE.test(f) ? code : media).put(new Request(f, {
+                    mode: 'same-origin'
+                }), new Response(await blob, {
+                    status: res.status,
+                    headers: res.headers
+                }));
+                part[idx] = 1;
+                doneN++;
+                draw();
+            };
+            const worker = async () => {
+                while (next < n) await one(next++);
+            };
+            await Promise.all([worker(), worker(), worker(), worker()]);
+            try {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (reg) await reg.update();
+            } catch (e) {}
+            o.t.textContent = tr('Offline copy is up to date');
+            o.p.textContent = '100%';
+            o.i.style.width = '100%';
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;gap:8px;margin-top:10px';
+            row.innerHTML = '<button type="button" class="go">' + tr('Reload') + '</button><button type="button" class="x">' + tr('Close') + '</button>';
+            row.querySelector('.go').onclick = () => location.reload();
+            row.querySelector('.x').onclick = () => {
+                pop.remove();
+                pop = null;
+            };
+            pop.appendChild(row);
+        } catch (e) {
+            o.t.textContent = tr('Update failed. Check your connection.');
+            o.p.textContent = '';
+            o.i.style.background = '#e06c6c';
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;gap:8px;margin-top:10px';
+            row.innerHTML = '<button type="button" class="go">' + tr('Retry') + '</button><button type="button" class="x">' + tr('Close') + '</button>';
+            row.querySelector('.go').onclick = () => {
+                pop.remove();
+                pop = null;
+                busy = false;
+                run();
+            };
+            row.querySelector('.x').onclick = () => {
+                pop.remove();
+                pop = null;
+            };
+            pop.appendChild(row);
+        } finally {
+            busy = false;
+            if (btn) btn.disabled = false;
+            label();
+        }
+    };
+
+    document.addEventListener('click', e => {
+        if (e.target.closest && e.target.closest('#offBtn')) run();
+    });
+    addEventListener('novix:lang', label);
+    label();
+})();
