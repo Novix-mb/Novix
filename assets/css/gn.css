@@ -269,3 +269,12 @@
 .gn-vm button.on{background:var(--acs);color:var(--ac)}
 .gn-pill button{min-width:28px;height:28px;padding:0;border-radius:8px}
 .gn-pill button svg{width:16px;height:16px}
+
+/* smooth page change in single-page mode */
+@keyframes gnInNext{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}
+@keyframes gnInPrev{from{opacity:0;transform:translateX(-36px)}to{opacity:1;transform:none}}
+.gn[data-view=one] .gn-pg.solo.in-next{animation:gnInNext .4s cubic-bezier(.2,.7,.2,1) backwards}
+.gn[data-view=one] .gn-pg.solo.in-prev{animation:gnInPrev .4s cubic-bezier(.2,.7,.2,1) backwards}
+/* hand tool: drag to move the page */
+.gn[data-tool=hand] .gn-sc,.gn[data-tool=hand] .gn-pg canvas{touch-action:none;cursor:grab}
+.gn-sc.panning,.gn-sc.panning *{cursor:grabbing!important;user-select:none}
