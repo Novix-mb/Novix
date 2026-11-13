@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NOVIX Account</title>
+  <link rel="stylesheet" href="assets/css/auth.css" />
+  <script>
+    window.NOVIX_FIREBASE_CONFIG = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID"
+    };
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-wrap">
+        <div class="brand-mark">N</div>
+        <div>
+          <p class="eyebrow">NOVIX</p>
+          <h1>Account access</h1>
+        </div>
+      </div>
+
+      <div class="tab-bar" aria-label="Authentication tabs">
+        <button class="tab-btn active" data-tab="login" type="button">Login</button>
+        <button class="tab-btn" data-tab="signup" type="button">Sign up</button>
+        <button class="tab-btn" data-tab="reset" type="button">Reset</button>
+      </div>
+
+      <div class="status-box" id="statusBox" aria-live="polite">
+        Add your Firebase web config in this file to enable real account authentication.
+      </div>
+
+      <form id="loginForm" class="auth-form active">
+        <label>
+          <span>Email</span>
+          <input id="loginEmail" type="email" placeholder="name@example.com" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="loginPassword" type="password" placeholder="Password" required />
+        </label>
+        <button type="submit" class="primary-btn">Login</button>
+      </form>
+
+      <form id="signupForm" class="auth-form">
+        <label>
+          <span>Full name</span>
+          <input id="signupName" type="text" placeholder="Your name" required />
+        </label>
+        <label>
+          <span>Email</span>
+          <input id="signupEmail" type="email" placeholder="name@example.com" required />
+        </label>
+        <label>
+          <span>Password</span>
+          <input id="signupPassword" type="password" placeholder="Create password" required />
+        </label>
+        <button type="submit" class="primary-btn">Create account</button>
+      </form>
+
+      <form id="resetForm" class="auth-form">
+        <label>
+          <span>Email</span>
+          <input id="resetEmail" type="email" placeholder="name@example.com" required />
+        </label>
+        <button type="submit" class="secondary-btn">Send reset link</button>
+      </form>
+
+      <div class="footer-actions">
+        <button id="logoutBtn" type="button" class="secondary-btn">Logout</button>
+        <button id="guestBtn" type="button" class="ghost-btn">Continue as guest</button>
+      </div>
+
+      <div class="user-panel" id="userPanel" hidden>
+        <div class="user-avatar" id="userAvatar">N</div>
+        <div>
+          <p class="user-label">Signed in as</p>
+          <strong id="userName">Guest</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/auth.js"></script>
+</body>
+</html>
