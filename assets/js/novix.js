@@ -8396,7 +8396,7 @@
                             await new Promise((ok, no) => {
                                 if (window.mammoth) return ok();
                                 const s = document.createElement('script');
-                                s.src = 'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js';
+                                s.src = 'assets/js/vendor/mammoth.browser.min.js';
                                 s.onload = ok;
                                 s.onerror = () => no(new Error('Word engine unavailable'));
                                 document.head.appendChild(s)
@@ -8505,7 +8505,7 @@
                 if (window.PDFLib) return;
                 await new Promise((ok, no) => {
                     const s = document.createElement('script');
-                    s.src = 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+                    s.src = 'assets/js/vendor/pdf-lib.min.js';
                     s.onload = ok;
                     s.onerror = () => no(new Error('pdf-lib unavailable'));
                     document.head.appendChild(s)
