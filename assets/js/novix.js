@@ -9887,9 +9887,9 @@
             }
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;gap:8px;margin-top:10px';
-            row.innerHTML = '<button type="button" class="go">' + tr('Reload') + '</button><button type="button" class="x">' + tr('Close') + '</button>';
-            row.querySelector('.go').onclick = () => location.reload();
-            row.querySelector('.x').onclick = () => {
+            row.innerHTML = '<button type="button" class="nx-off-go">' + tr('Reload') + '</button><button type="button" class="nx-off-x">' + tr('Close') + '</button>';
+            row.querySelector('.nx-off-go').onclick = () => location.reload();
+            row.querySelector('.nx-off-x').onclick = () => {
                 pop.remove();
                 pop = null;
             };
@@ -9900,14 +9900,14 @@
             o.i.style.background = '#e06c6c';
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;gap:8px;margin-top:10px';
-            row.innerHTML = '<button type="button" class="go">' + tr('Retry') + '</button><button type="button" class="x">' + tr('Close') + '</button>';
-            row.querySelector('.go').onclick = () => {
+            row.innerHTML = '<button type="button" class="nx-off-go">' + tr('Retry') + '</button><button type="button" class="nx-off-x">' + tr('Close') + '</button>';
+            row.querySelector('.nx-off-go').onclick = () => {
                 pop.remove();
                 pop = null;
                 busy = false;
                 run();
             };
-            row.querySelector('.x').onclick = () => {
+            row.querySelector('.nx-off-x').onclick = () => {
                 pop.remove();
                 pop = null;
             };
