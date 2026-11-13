@@ -283,3 +283,7 @@
 .gn[data-view=one] .gn-sc{overflow-x:hidden}
 .gn[data-view=one] .gn-pgs{display:grid;grid-template-columns:max-content;justify-content:safe center;justify-items:center;align-items:start;width:100%;min-width:100%;gap:0}
 .gn[data-view=one] .gn-pg{grid-row:1;grid-column:1}
+
+/* all-pages mode: touch scrolls with the browser's native scrolling (same feel as the library reader) */
+.gn[data-tool=hand][data-view=all]:not([data-sf="1"]) .gn-sc,
+.gn[data-tool=hand][data-view=all]:not([data-sf="1"]) .gn-pg canvas{touch-action:pan-x pan-y}
