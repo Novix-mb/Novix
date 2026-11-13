@@ -254,7 +254,7 @@ W.GN=function(root,o){
  const ptrs=new Map();let pd=0,lm=null,twoF=0;
  let dtap=null;
  function pickAt(cx,cy){for(let i=0;i<P.length;i++){const d=els[i];if(!d)continue;const r0=d.getBoundingClientRect();if(cx<r0.left||cx>r0.right||cy<r0.top||cy>r0.bottom)continue;const x=(cx-r0.left)/r0.width*P[i].w,y=(cy-r0.top)/r0.height*P[i].h,tol=8/st.z;for(let k=items[i].length-1;k>=0;k--){const it=items[i][k];if(it.t!=='er'&&hit(it,x,y,tol)){sel={i,ids:[it],free:1};cur=i;live(i);return}}}}
- sc.addEventListener('pointerdown',e=>{if(st.tool!=='hand'||e.button>0||e.target.closest('.gn-sel,.gn-tt,textarea'))return;if(e.pointerType!=='pen'&&(e.pointerType!=='touch'||ptrs.size===0)&&!(e.target.classList&&e.target.classList.contains('lv'))&&!(e.pointerType==='touch'&&st.view!=='one'&&!sel))panStart(e);const n=Date.now();if(dtap&&n-dtap.t<380&&Math.hypot(e.clientX-dtap.x,e.clientY-dtap.y)<26){dtap=null;pickAt(e.clientX,e.clientY)}else dtap={t:n,x:e.clientX,y:e.clientY}},true);
+ sc.addEventListener('pointerdown',e=>{if(st.tool!=='hand'||e.button>0||e.target.closest('.gn-sel,.gn-tt,textarea'))return;if(e.pointerType!=='pen'&&(e.pointerType!=='touch'||ptrs.size===0)&&!(e.target.classList&&e.target.classList.contains('lv'))&&!(e.pointerType==='touch'&&st.view!=='one'&&!sel))panStart(e);const n=Date.now();if(dtap&&n-dtap.t<380&&Math.hypot(e.clientX-dtap.x,e.clientY-dtap.y)<26){dtap=null;clearTimeout(tapTimer);pickAt(e.clientX,e.clientY)}else dtap={t:n,x:e.clientX,y:e.clientY}},true);
  sc.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===1)twoF=0;if(ptrs.size===2){twoF=1;pan=null;if(fl)flipEnd(fl.dx||0);const li=L?L.i:cur;if(L&&L.k==='e'&&!L.it){const q=u.pop();if(q&&L.ch){items[q.i]=q.a;redraw(q.i)}hb()}L=null;ls=null;if(sel){delete sel.drag;delete sel.tmp}redraw(li);pd=dist();lm=null;live(cur)}},true);
  sc.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);if(ptrs.size===2&&pd){const d=dist(),a=[...ptrs.values()],mx=(a[0][0]+a[1][0])/2,my=(a[0][1]+a[1][1])/2;if(lm){sc.scrollLeft-=mx-lm[0];sc.scrollTop-=my-lm[1]}lm=[mx,my];setZ(st.z*d/pd,1);pd=d}},true);
  const pu=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2){pd=0;lm=null}};sc.addEventListener('pointerup',pu,true);sc.addEventListener('pointercancel',pu,true);
@@ -270,7 +270,7 @@ W.GN=function(root,o){
  function goto(i,instant){if(!els[i])return;if(st.view==='one'){slideEnd();if(i===cur)return;if(instant){finishSwitch(i);return}const d=i>cur?1:-1,VW=sc.clientWidth+GAP;els[i].classList.add('solo');slide(els[cur],0,-d*VW,els[i],d*VW,0,380,()=>finishSwitch(i));return}sc.scrollTo({top:els[i].offsetTop-14,behavior:'smooth'})}
  function finishSwitch(t){cur=t;els.forEach((d,k)=>{d.style.transform='';d.style.transition='';d.classList.toggle('solo',k===t)});pill.value=t+1;side.querySelectorAll('.gn-th').forEach((a,k)=>a.classList.toggle('cur',k===t))}
  function setView(v){slideEnd();st.view=v;root.dataset.view=v;{const a=$('[data-a=pv]'),c=$('[data-a=nx]');if(a)a.innerHTML=ic(v==='one'?'pl':'pu');if(c)c.innerHTML=ic(v==='one'?'pr':'pd')}if(o.fixed)try{localStorage.setItem('gn:pdfview',v)}catch(e){}const b=$('[data-a=view]');if(b)b.innerHTML=ic(v==='one'?'vone':'vall');if(v==='one'){els.forEach((d,k)=>d.classList.toggle('solo',k===cur));fitPage()}else{els.forEach(d=>d.classList.remove('solo'));fit();if(els[cur])sc.scrollTop=els[cur].offsetTop-14}}
- let pan=null,fl=null,pendingEnd=null;
+ let pan=null,fl=null,pendingEnd=null,tapTimer=0;
  const GAP=28,EASE='cubic-bezier(.2,.7,.2,1)';
  const zoomOver=()=>!!els[cur]&&els[cur].offsetWidth>sc.clientWidth-8;
  function slideEnd(){if(pendingEnd){const f=pendingEnd;pendingEnd=null;f()}}
@@ -287,7 +287,7 @@ W.GN=function(root,o){
   if(!f.ne){pg.style.transition='transform .25s ease';pg.style.transform='';setTimeout(()=>{pg.style.transition=''},260);return}
   if(Math.abs(dx)>VW*.2)slide(pg,dx,-f.d*VW,f.ne,dx+f.d*VW,0,320,()=>finishSwitch(f.t));
   else slide(pg,dx,0,f.ne,dx+f.d*VW,f.d*VW,260,()=>finishSwitch(cur))}
- function panStart(e){slideEnd();stopInertia();pan={id:e.pointerId,x:e.clientX,y:e.clientY,sl:sc.scrollLeft,st:sc.scrollTop,dx:0,dy:0,m:null,h:[{t:performance.now(),x:e.clientX,y:e.clientY}]};sc.classList.add('panning')}
+ function panStart(e){slideEnd();stopInertia();pan={id:e.pointerId,t0:Date.now(),x:e.clientX,y:e.clientY,sl:sc.scrollLeft,st:sc.scrollTop,dx:0,dy:0,m:null,h:[{t:performance.now(),x:e.clientX,y:e.clientY}]};sc.classList.add('panning')}
  let inertiaId=0;
  function stopInertia(){if(inertiaId){cancelAnimationFrame(inertiaId);inertiaId=0}}
  function startInertia(p){const now=performance.now(),h=p.h;if(h.length<2)return;const L=h[h.length-1];if(now-L.t>90)return;
@@ -306,11 +306,17 @@ W.GN=function(root,o){
  sc.addEventListener('wheel',stopInertia,{passive:true});
  W.addEventListener('pointermove',e=>{if(!pan||e.pointerId!==pan.id)return;pan.dx=e.clientX-pan.x;pan.dy=e.clientY-pan.y;pan.h.push({t:performance.now(),x:e.clientX,y:e.clientY});if(pan.h.length>12)pan.h.shift();
   if(!pan.m){if(Math.hypot(pan.dx,pan.dy)<8)return;pan.m=(st.view==='one'&&!zoomOver()&&Math.abs(pan.dx)>Math.abs(pan.dy))?'flip':'pan'}
-  if(pan.m==='flip')flipMove(pan.dx);else{sc.scrollLeft=pan.sl-pan.dx;sc.scrollTop=pan.st-pan.dy}
+  if(pan.m==='flip')flipMove(pan.dx);else{sc.scrollLeft=pan.sl-pan.dx;if(!lockV())sc.scrollTop=pan.st-pan.dy}
   e.preventDefault()},{passive:false});
- function panEnd(e){if(!pan||(e&&e.pointerId!==pan.id))return;const p=pan;pan=null;sc.classList.remove('panning');if(p.m==='flip')flipEnd(p.dx);else if(p.m==='pan'&&p.h.length>1)startInertia(p)}
+ function panEnd(e){if(!pan||(e&&e.pointerId!==pan.id))return;const p=pan;pan=null;sc.classList.remove('panning');if(p.m==='flip')flipEnd(p.dx);else if(p.m==='pan'&&p.h.length>1)startInertia(p);else if(p.m===null&&e&&e.type==='pointerup'&&st.view==='one'&&st.tool==='hand'&&Date.now()-p.t0<400){const R=sc.getBoundingClientRect(),fx=(p.x-R.left)/R.width;if(fx>.6||fx<.4){clearTimeout(tapTimer);tapTimer=setTimeout(()=>{if(sel||st.view!=='one')return;slideEnd();goto(fx>.6?Math.min(P.length-1,cur+1):Math.max(0,cur-1))},300)}}}
  W.addEventListener('pointerup',panEnd);W.addEventListener('pointercancel',panEnd);
  sc.addEventListener('scroll',()=>{if(st.view==='one')return;const m=sc.scrollTop+sc.clientHeight*.4;let c=0;for(let i=0;i<els.length;i++)if(els[i].offsetTop<=m)c=i;if(c!==cur||pill.dataset.c===undefined){cur=c;pill.value=c+1;pill.dataset.c=c;side.querySelectorAll('.gn-th').forEach((a,k)=>a.classList.toggle('cur',k===c))}},{passive:true});
+ /* single page: no vertical scrolling while the whole page is visible; when zoomed in, only the hidden part scrolls */
+ function lockV(){return st.view==='one'&&!!els[cur]&&els[cur].offsetHeight<=sc.clientHeight-2}
+ let clamping=0;
+ function clampV(){if(st.view!=='one'||!els[cur]||clamping||(pan&&pan.m==='flip')||fl)return;const e=els[cur],H=sc.clientHeight;let t;if(e.offsetHeight<=H-2)t=Math.max(0,e.offsetTop-Math.max(14,(H-e.offsetHeight)/2));else{const mn=Math.max(0,e.offsetTop-14),mx=Math.max(mn,e.offsetTop+e.offsetHeight+14-H);t=Math.min(mx,Math.max(mn,sc.scrollTop))}if(Math.abs(sc.scrollTop-t)>1){clamping=1;sc.scrollTop=t;requestAnimationFrame(()=>{clamping=0})}}
+ sc.addEventListener('scroll',clampV,{passive:true});
+ sc.addEventListener('wheel',e=>{if(e.ctrlKey||st.view!=='one')return;if(lockV()&&Math.abs(e.deltaY)>=Math.abs(e.deltaX))e.preventDefault()},{passive:false});
  pill.onchange=()=>{const n=Math.max(1,Math.min(P.length,+pill.value||1));goto(n-1)};
 
  function sw(list,key,tool){return '<div class="gn-sw">'+list.map(c=>'<i data-c="'+c+'" class="'+(st[key].c===c?'on':'')+'" style="background:'+c+'"></i>').join('')+'<input type="color" data-cc value="'+(/^#[0-9a-f]{6}$/i.test(st[key].c)?st[key].c:'#000000')+'"></div>'}
