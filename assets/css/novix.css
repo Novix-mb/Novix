@@ -8841,3 +8841,29 @@ html.kb-open .nm-pop {
     background: #5fd0b0;
     color: #0b2b25;
 }
+
+
+#nx-off-pop .nx-off-go,
+#nx-off-pop .nx-off-x {
+    box-sizing: border-box;
+    width: auto;
+    height: auto;
+    min-height: 34px;
+    padding: 7px 16px;
+    border: 0;
+    border-radius: 10px;
+    font: 600 14px/1.2 system-ui, sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+    background: #5fd0b0;
+    color: #0b2b25;
+}
+
+#nx-off-pop .nx-off-x {
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+}
+
+#nx-off-pop .nx-off-x:hover {
+    background: rgba(255, 255, 255, .26);
+}
