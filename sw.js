@@ -2,6 +2,44 @@ const CODE = 'novix-code';
 const MEDIA = 'novix-media';
 const FONTS = 'novix-fonts';
 const KEEP = [CODE, MEDIA, FONTS];
+const BUILD = '1794566028';
+const ALL_FILES = [
+"./assets/fonts.css",
+"./assets/audio/fireplace.mp3",
+"./assets/audio/lofi.mp3",
+"./assets/audio/ocean.mp3",
+"./assets/audio/rain.mp3",
+"./assets/audio/space.mp3",
+"./assets/css/gn.css",
+"./assets/css/novix.css",
+"./assets/img/bg-decor.svg",
+"./assets/img/favicon.ico",
+"./assets/img/focus-aurora.webp",
+"./assets/img/focus-dawn.webp",
+"./assets/img/focus-space.webp",
+"./assets/img/focus-sunset.webp",
+"./assets/img/logo.webp",
+"./assets/img/novix-badge-96.png",
+"./assets/img/novix-icon-256.png",
+"./assets/img/novix-icon-512.png",
+"./assets/img/novix-icon-64.png",
+"./assets/img/novix-notif-192.png",
+"./assets/img/novix-tab-32.png",
+"./assets/img/novix-tab-64.png",
+"./assets/img/welcome-bg.webp",
+"./assets/js/boot.js",
+"./assets/js/gn-host.js",
+"./assets/js/gn-stickers.js",
+"./assets/js/gn.js",
+"./assets/js/novix.js",
+"./assets/js/pdf.min.js",
+"./assets/js/pdf.worker.js",
+"./assets/js/vendor/mammoth.browser.min.js",
+"./assets/js/vendor/pdf-lib.min.js",
+"./index.html",
+"./manifest.webmanifest",
+"./version.json"
+];
 const PRECACHE = ['./', './index.html'];
 const MEDIA_RE = /\.(?:mp3|ogg|wav|m4a|webp|png|jpe?g|gif|svg|ico|woff2?|ttf|otf|mp4|webm)$/i;
 const CODE_RE = /\.(?:html|js|css|webmanifest|json)$/i;
@@ -9,7 +47,17 @@ const RECHECK_MS = 12 * 60 * 60 * 1000;
 const NET_TIMEOUT = 5000;
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CODE).then(c => c.addAll(PRECACHE)).catch(() => {}));
+  event.waitUntil((async () => {
+    const code = await caches.open(CODE);
+    const media = await caches.open(MEDIA);
+    await Promise.allSettled(ALL_FILES.map(async f => {
+      if (f === './version.json') return;
+      const res = await fetch(f, { cache: 'reload' });
+      if (!res.ok) return;
+      await (CODE_RE.test(f) ? code : media).put(new Request(f, { mode: 'same-origin' }), res);
+    }));
+    await code.addAll(PRECACHE).catch(() => {});
+  })());
 });
 
 self.addEventListener('activate', event => {
@@ -29,7 +77,7 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') { // legacy, fonts are local now
     event.respondWith(staleWhileRevalidate(req, FONTS, 0));
     return;
   }
