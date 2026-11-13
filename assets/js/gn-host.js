@@ -65,14 +65,48 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
 
 
   /* ---- Smart Board section ---- */
-  var board = null, boardHost = null, boardFull = false;
+  var board = null, boardHost = null, boardFull = false, boardHome = null;
+  /* in-app "expand": the board is moved to <body> so it covers the whole screen.
+     Inside the section it sits under a transformed/animated parent, where position:fixed
+     is relative to that parent instead of the window (that is why it shrank). */
   function setFull(on) {
     boardFull = !!on;
     if (!boardHost) return;
+    if (boardFull) {
+      if (!boardHome && boardHost.parentNode) {
+        boardHome = document.createComment('gn-host');
+        boardHost.parentNode.insertBefore(boardHome, boardHost);
+      }
+      document.body.appendChild(boardHost);
+    } else if (boardHome) {
+      boardHome.parentNode.insertBefore(boardHost, boardHome);
+      boardHome.remove();
+      boardHome = null;
+    }
     boardHost.classList.toggle('gn-full', boardFull);
     document.body.classList.toggle('gn-full-open', boardFull);
     if (board) { board.g.setIcon(boardFull ? 'back' : 'expand'); setTimeout(function () { board.g.fit(); }, 60); }
   }
+
+  /* ---- fullscreen of the board / PDF editor itself: separate from the site's fullscreen ---- */
+  function fsEl() { return document.fullscreenElement || document.webkitFullscreenElement || null; }
+  function elFs(el, fallback) {
+    if (fsEl() === el) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    var req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req) { if (fallback) fallback(); return; }
+    try {
+      var r = req.call(el);
+      if (r && r.catch) r.catch(function () { if (fallback) fallback(); });
+    } catch (e) { if (fallback) fallback(); }
+  }
+  function shown() { return boardFull || fsEl() === boardHost || !!(boardHost && boardHost.offsetParent); }
+  function syncFs() {
+    var f = fsEl();
+    if (board) board.g.setFs(f === boardHost);
+    if (pdf) pdf.g.setFs(f === pdf.host);
+  }
+  document.addEventListener('fullscreenchange', syncFs);
+  document.addEventListener('webkitfullscreenchange', syncFs);
   async function mountBoard(host) {
     boardHost = host;
     if (board && board.root.isConnected) { board.g.fit(); return; }
@@ -90,10 +124,12 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
       board: 1, lang: isAr() ? 'ar' : 'en', title: isAr() ? 'السبورة الذكية' : 'Smart Board',
       pages: p, items: it, base: paper, maxPx: 24e6,
       save: function (items, pages) { kvSet('board', { items: items, pages: pages }); },
-      onBack: function () { setFull(!boardFull); }
+      onBack: function () { setFull(!boardFull); },
+      onFs: function () { elFs(boardHost, function () { setFull(!boardFull); }); }
     });
     g.setTheme(theme());
     board = { g: g, root: root };
+    if (boardFull) g.setIcon('back');
     setTimeout(function () { g.fit(); }, 60);
   }
   function fitBoard() { if (board) setTimeout(function () { board.g.fit(); }, 50); }
@@ -140,7 +176,8 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
       lang: isAr() ? 'ar' : 'en', title: o.title || '', pages: pages, items: items, fixed: 1, maxPx: 16e6,
       base: pdfBaseFor(doc), exportName: (o.title || 'document').replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60),
       save: function (it) { kvSet(key, { items: it, n: n }); },
-      onBack: function () { o.onBack && o.onBack(); }
+      onBack: function () { o.onBack && o.onBack(); },
+      onFs: function () { elFs(host); }
     });
     g.setTheme(theme());
     pdf = { g: g, root: root, host: host, o: o };
@@ -163,11 +200,11 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
     if (board) board.g.setTheme(theme());
     if (pdf) pdf.g.setTheme(theme());
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  addEventListener('resize', function () { if (board && board.root.offsetParent) board.g.fit(); if (pdf) pdf.g.fit(); });
+  addEventListener('resize', function () { if (board && shown()) board.g.fit(); if (pdf) pdf.g.fit(); });
   addEventListener('novix:lang', function () {
     if (board) {
       board.g.flush(); board.g.destroy(); board.root.remove(); board = null;
-      if (boardHost && boardHost.offsetParent) mountBoard(boardHost);
+      if (boardHost && shown()) mountBoard(boardHost);
     }
     if (pdf) {
       var o = pdf.o, host = pdf.host, pg = pdf.g.getPage() + 1;
@@ -177,6 +214,10 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
   });
   addEventListener('keydown', function (e) { if (e.key === 'Escape' && boardFull && !/^(INPUT|TEXTAREA)$/.test((e.target || {}).tagName || '')) setFull(false); });
   addEventListener('pagehide', function () { if (board) board.g.flush(); if (pdf) pdf.g.flush(); });
+
+  addEventListener('hashchange', function () {
+    if (boardFull && location.hash.indexOf('#/smartboard') !== 0) setFull(false);
+  });
 
   W.NXGN = {
     load: load, mountBoard: mountBoard, fitBoard: fitBoard, mountPdf: mountPdf, closePdf: closePdf,
