@@ -9924,4 +9924,4 @@
     });
     addEventListener('novix:lang', label);
     label();
-})();
+})(); 
