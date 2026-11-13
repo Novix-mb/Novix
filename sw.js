@@ -4,7 +4,7 @@ const FONTS = 'novix-fonts';
 const KEEP = [CODE, MEDIA, FONTS];
 const BUILD = '1794566028';
 const ALL_FILES = [
-"./assets/fonts.css",
+"./assets/css/fonts.css",
 "./assets/audio/fireplace.mp3",
 "./assets/audio/lofi.mp3",
 "./assets/audio/ocean.mp3",
