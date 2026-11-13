@@ -289,11 +289,11 @@ W.GN=function(root,o){
  function panStart(e){slideEnd();stopInertia();pan={id:e.pointerId,x:e.clientX,y:e.clientY,sl:sc.scrollLeft,st:sc.scrollTop,dx:0,dy:0,m:null,h:[{t:performance.now(),x:e.clientX,y:e.clientY}]};sc.classList.add('panning')}
  let inertiaId=0;
  function stopInertia(){if(inertiaId){cancelAnimationFrame(inertiaId);inertiaId=0}}
- function startInertia(p){const now=performance.now(),h=p.h.filter(q=>now-q.t<100);if(h.length<2)return;const a=h[0],b=h[h.length-1],dt=Math.max(1,b.t-a.t);
-  let vx=-(b.x-a.x)/dt,vy=-(b.y-a.y)/dt;if(Math.hypot(vx,vy)<.15)return;
+ function startInertia(p){const now=performance.now(),h=p.h.filter(q=>now-q.t<120);if(h.length<2)return;const a=h[0],b=h[h.length-1],dt=Math.max(1,b.t-a.t);
+  let vx=-(b.x-a.x)/dt*1.6,vy=-(b.y-a.y)/dt*1.6;if(Math.hypot(vx,vy)<.15)return;
   let last=now;
   const step=t=>{const k=Math.min(40,t-last);last=t;const x0=sc.scrollLeft,y0=sc.scrollTop;sc.scrollLeft+=vx*k;sc.scrollTop+=vy*k;
-   const f=Math.pow(.955,k/16.7);vx*=f;vy*=f;
+   const f=Math.pow(.965,k/16.7);vx*=f;vy*=f;
    const moved=Math.abs(sc.scrollLeft-x0)+Math.abs(sc.scrollTop-y0);
    if(Math.hypot(vx,vy)<.02||moved<.1){inertiaId=0;return}
    inertiaId=requestAnimationFrame(step)};
@@ -409,7 +409,7 @@ W.GN=function(root,o){
  root.addEventListener('pointerdown',e=>{if(pop.classList.contains('show')&&!e.target.closest('.gn-pop')&&!e.target.closest('.gn-top'))pop.classList.remove('show')});
 
  new MutationObserver(()=>dots()).observe(pop,{attributes:true,attributeFilter:['class']});
- const act={view:()=>{const b=$('[data-a=view]');if(b){const r=b.getBoundingClientRect(),rr=root.getBoundingClientRect(),rtl=getComputedStyle(root).direction==='rtl';vm.style.insetInlineEnd='auto';vm.style.insetInlineStart=(rtl?rr.right-r.right:r.left-rr.left)+'px'}vm.classList.toggle('show')},pv:()=>{slideEnd();goto(Math.max(0,cur-1))},nx:()=>{slideEnd();goto(Math.min(P.length-1,cur+1))},back:()=>o.onBack&&o.onBack(),side:()=>{root.classList.toggle('side');if(root.classList.contains('side'))thAll();setTimeout(()=>fit(),30)},undo,redo,zi:()=>setZ(st.z*1.2),zo:()=>setZ(st.z/1.2),zr:()=>fitPage(),fs:()=>o.onFs?o.onFs():toggleFs(),padd:()=>pageAct('add'),pdup:()=>pageAct('dup'),pdel:()=>pageAct('del'),
+ const act={view:()=>{slideEnd();setView(st.view==='one'?'all':'one')},pv:()=>{slideEnd();goto(Math.max(0,cur-1))},nx:()=>{slideEnd();goto(Math.min(P.length-1,cur+1))},back:()=>o.onBack&&o.onBack(),side:()=>{root.classList.toggle('side');if(root.classList.contains('side'))thAll();setTimeout(()=>fit(),30)},undo,redo,zi:()=>setZ(st.z*1.2),zo:()=>setZ(st.z/1.2),zr:()=>fitPage(),fs:()=>o.onFs?o.onFs():toggleFs(),padd:()=>pageAct('add'),pdup:()=>pageAct('dup'),pdel:()=>pageAct('del'),
   page:b=>{if(pop.classList.contains('show')&&pop.dataset.t==='page')pop.classList.remove('show');else popFor('page',b)},exp,clr:()=>{if(curTa)curTa.blur();if(!items[cur].length){toast(T('Page is already empty','الصفحة فارغة بالفعل'));return}sel=null;chg(cur,()=>[]);toast(T('Page cleared','تم مسح الصفحة'))}};
  async function exp(){const bt=$('[data-a=exp]'),ld=$('.gn-load');bt.disabled=true;ld.classList.add('show');const out=[];
   try{for(let i=0;i<P.length;i++){const c=document.createElement('canvas'),W2=Math.min(1600,Math.round(P[i].w*1.8));c.width=W2;c.height=Math.round(W2*P[i].h/P[i].w);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);try{if(o.base)await o.base(i,c,W2,P[i],2)}catch(er){}const t=document.createElement('canvas');t.width=c.width;t.height=c.height;const tx=t.getContext('2d');for(const it of items[i])dr(tx,it,c.width/P[i].w);x.drawImage(t,0,0);out.push({w:c.width,h:c.height,pw:P[i].pw||P[i].w*.75,ph:P[i].ph||P[i].h*.75,d:await toBytes(c)})}
