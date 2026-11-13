@@ -289,4 +289,4 @@
 .gn[data-tool=hand][data-view=all]:not([data-sf="1"]) .gn-pg canvas{touch-action:pan-x pan-y}
 
 /* single page: no extra empty strip under the paper */
-.gn[data-view=one] .gn-sc{padding-bottom:24px}
+.gn[data-view=one] .gn-sc{padding-bottom:21px}
