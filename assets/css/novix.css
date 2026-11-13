@@ -8749,3 +8749,14 @@ html.kb-open .nm-pop {
     .fx-stage .fx-ring { transition: none }
     .fx-stage.fx-run .fx-time { animation: none }
 }
+
+/* ===== Smart Board section + board editor in the PDF reader ===== */
+.gn-host{position:relative;flex:1 1 auto;min-height:480px;height:clamp(480px,calc(100dvh - 230px),960px);border-radius:20px;overflow:hidden;border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 30px rgba(20,50,45,.12);background:#e8e8ed}
+:root[data-theme="dark"] .gn-host{border-color:rgba(255,255,255,.08);background:#1b1b1d;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.gn-host.gn-full{position:fixed;inset:0;z-index:5000;height:auto;min-height:0;border-radius:0;border:0;padding-top:env(safe-area-inset-top,0px)}
+body.gn-full-open{overflow:hidden}
+.gn-boot{position:absolute;inset:0;display:grid;place-items:center;color:#6b7b78;font-weight:600;text-align:center;padding:20px}
+#v-smartboard.on{display:flex;flex-direction:column;gap:16px}
+#novix-pdf-reader #nr-gn{display:none;position:relative;flex:1 1 auto;min-height:0}
+#novix-pdf-reader.gn-mode #nr-gn{display:block}
+#novix-pdf-reader.gn-mode .reader-head,#novix-pdf-reader.gn-mode .reader-tools,#novix-pdf-reader.gn-mode .nr-menu,#novix-pdf-reader.gn-mode .reader-note,#novix-pdf-reader.gn-mode .reader-scroll,#novix-pdf-reader.gn-mode .reader-options{display:none!important}
