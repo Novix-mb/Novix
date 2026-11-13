@@ -9544,6 +9544,13 @@
         return String(h);
     };
     const fingerprint = async res => hash(await res.clone().text());
+    let pending = false;
+    navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data && e.data.type === 'NOVIX_UPDATE') {
+            pending = true;
+            showBar();
+        }
+    });
 
     const remoteVersion = async () => {
         const r = await fetch('version.json?t=' + Date.now(), {
@@ -9593,20 +9600,23 @@
                     waiting = reg.waiting;
                     return 'update';
                 }
-                const v = await remoteVersion();
-                if (v) {
-                    if (!baseV) {
-                        baseV = v;
-                        return 'same';
+                if (pending) return 'update';
+                const cc = await caches.open('novix-code');
+                for (const u of files()) {
+                    const mine = await cc.match(u, {
+                        ignoreSearch: true
+                    });
+                    if (!mine) continue;
+                    const r = await fetch(u, {
+                        cache: 'no-store'
+                    });
+                    if (!r.ok) throw new Error(u);
+                    if (await fingerprint(r) !== await fingerprint(mine)) {
+                        pending = true;
+                        return 'update';
                     }
-                    return v === baseV ? 'same' : 'update';
                 }
-                const now = await snapshot();
-                if (!base) {
-                    base = now;
-                    return 'same';
-                }
-                return same(base, now) ? 'same' : 'update';
+                return 'same';
             } catch (e) {
                 return 'error';
             } finally {
@@ -9924,4 +9934,4 @@
     });
     addEventListener('novix:lang', label);
     label();
-})(); 
+})();
