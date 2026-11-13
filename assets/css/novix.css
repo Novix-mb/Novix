@@ -8755,6 +8755,8 @@ html.kb-open .nm-pop {
 :root[data-theme="dark"] .gn-host{border-color:rgba(255,255,255,.08);background:#1b1b1d;box-shadow:0 10px 30px rgba(0,0,0,.4)}
 .gn-host.gn-full{position:fixed;inset:0;z-index:5000;height:auto;min-height:0;border-radius:0;border:0;padding-top:env(safe-area-inset-top,0px)}
 body.gn-full-open{overflow:hidden}
+.gn-host.gn-full{transform:none;animation:none;filter:none}
+.gn-host:fullscreen,.gn-host:-webkit-full-screen,#nr-gn:fullscreen,#nr-gn:-webkit-full-screen{width:100%;height:100%;max-height:none;border:0;border-radius:0;transform:none;animation:none}
 .gn-boot{position:absolute;inset:0;display:grid;place-items:center;color:#6b7b78;font-weight:600;text-align:center;padding:20px}
 #v-smartboard.on{display:flex;flex-direction:column;gap:16px}
 #novix-pdf-reader #nr-gn{display:none;position:relative;flex:1 1 auto;min-height:0}
