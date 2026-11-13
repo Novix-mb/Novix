@@ -8985,7 +8985,7 @@
                 MIN = 76,
                 MAX = 214;
             const fsBtn = document.getElementById('fsBtn'),
-                fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+                fsEl = () => (document.fullscreenElement || document.webkitFullscreenElement) === document.documentElement;
             const labels = () => {
                 if (fsBtn) {
                     const a = rtl(),
