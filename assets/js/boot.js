@@ -125,16 +125,46 @@
 })();
 
 ;
-// Load the account modal only after the page markup exists, so it can also
-// attach its login button to the Settings section reliably.
+// Load the account modal after the app markup exists. The Settings entry is
+// created here as a fallback too, so sign-in remains accessible if account.js
+// cannot attach its own Settings row for any reason.
 (() => {
+    const ensureSettingsAccountButton = () => {
+        const settings = document.getElementById('v-settings');
+        const card = settings && settings.querySelector('.card');
+        if (!card || document.getElementById('nx-account-settings-row')) return;
+        const row = document.createElement('div');
+        row.className = 'fld nx-settings-account';
+        row.id = 'nx-account-settings-row';
+        const label = document.createElement('span');
+        label.textContent = 'NOVIX account';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn ghost';
+        button.id = 'nx-account-settings-button';
+        button.textContent = 'Sign in / create account';
+        button.addEventListener('click', () => {
+            const trigger = document.getElementById('nx-account-trigger');
+            if (trigger) trigger.click();
+            else location.href = 'auth.html';
+        });
+        row.append(label, button);
+        card.insertBefore(row, card.firstChild);
+    };
+
     const loadAccount = () => {
-        if (document.querySelector('script[data-novix-account]')) return;
+        if (document.querySelector('script[data-novix-account]')) {
+            ensureSettingsAccountButton();
+            return;
+        }
         const script = document.createElement('script');
         script.src = 'assets/js/account.js';
         script.dataset.novixAccount = 'true';
+        script.onload = ensureSettingsAccountButton;
+        script.onerror = ensureSettingsAccountButton;
         script.async = true;
         document.head.appendChild(script);
+        ensureSettingsAccountButton();
     };
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', loadAccount, { once: true });
