@@ -2,7 +2,7 @@ const CODE = 'novix-code';
 const MEDIA = 'novix-media';
 const FONTS = 'novix-fonts';
 const KEEP = [CODE, MEDIA, FONTS];
-const BUILD = '1794566028';
+const BUILD = '1794566028-account1';
 const ALL_FILES = [
 "./assets/css/fonts.css",
 "./assets/audio/fireplace.mp3",
@@ -10,6 +10,7 @@ const ALL_FILES = [
 "./assets/audio/ocean.mp3",
 "./assets/audio/rain.mp3",
 "./assets/audio/space.mp3",
+"./assets/css/auth.css",
 "./assets/css/gn.css",
 "./assets/css/novix.css",
 "./assets/img/bg-decor.svg",
@@ -27,6 +28,7 @@ const ALL_FILES = [
 "./assets/img/novix-tab-32.png",
 "./assets/img/novix-tab-64.png",
 "./assets/img/welcome-bg.webp",
+"./assets/js/account.js",
 "./assets/js/boot.js",
 "./assets/js/gn-host.js",
 "./assets/js/gn-stickers.js",
@@ -36,6 +38,7 @@ const ALL_FILES = [
 "./assets/js/pdf.worker.js",
 "./assets/js/vendor/mammoth.browser.min.js",
 "./assets/js/vendor/pdf-lib.min.js",
+"./auth.html",
 "./index.html",
 "./manifest.webmanifest",
 "./version.json"
