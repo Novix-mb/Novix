@@ -1696,7 +1696,14 @@
                 nmApply();
                 nmSched()
             });
-            $$('#nmTools [data-pop]').forEach(b => b.onclick = () => nmPop(b.dataset.pop));
+            /* opening a picker (font / colours) closes the keyboard so the user chooses first, then taps the text to write */
+            $$('#nmTools [data-pop]').forEach(b => b.onclick = () => {
+                nmPop(b.dataset.pop);
+                if (nmPopK) {
+                    const ae = document.activeElement;
+                    if (ae && (ae.id === 'nTitle' || ae.id === 'nBody')) ae.blur()
+                }
+            });
             $('#nmPin').onclick = () => {
                 ne.pin = ne.pin ? 0 : 1;
                 nmApply();
