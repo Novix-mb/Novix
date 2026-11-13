@@ -8,6 +8,7 @@
     appId: '1:1068033555371:web:a48711e58dd7613d8db0ee'
   };
   const STATE_KEY = 'novix.site.v1';
+  const SYNCED_KEY = 'novix.account.restore.uid';
   const CLOUD_DOC = 'users';
   let auth = null;
   let db = null;
@@ -40,13 +41,13 @@
     const style = document.createElement('style');
     style.textContent = css;
     document.head.appendChild(style);
-
     const trigger = document.createElement('button');
     trigger.id = 'nx-account-trigger';
     trigger.type = 'button';
     trigger.className = 'nx-account-trigger';
     trigger.textContent = 'Account';
     trigger.setAttribute('aria-haspopup', 'dialog');
+    trigger.setAttribute('aria-label', 'Open account and sign-up options');
     document.querySelector('.top').appendChild(trigger);
 
     const overlay = document.createElement('div');
@@ -58,34 +59,22 @@
         <button class="nx-account-close" type="button" aria-label="Close account window">×</button>
         <h2 id="nx-account-title">Your NOVIX account</h2>
         <p>Sign in to resume your study workspace, or create an account to sync it across devices.</p>
-        <div class="nx-account-tabs" role="tablist">
-          <button type="button" class="active" data-tab="login">Log in</button>
-          <button type="button" data-tab="signup">Sign up</button>
-          <button type="button" data-tab="reset">Reset</button>
+        <div class="nx-account-tabs" role="tablist" aria-label="Account actions">
+          <button type="button" class="active" data-tab="login" role="tab">Log in</button>
+          <button type="button" data-tab="signup" role="tab">Sign up</button>
+          <button type="button" data-tab="reset" role="tab">Reset</button>
         </div>
         <p class="nx-account-status" id="nx-account-status" role="status" aria-live="polite"></p>
-        <form class="nx-account-form active" id="nx-account-login">
-          <label>Email<input id="nx-login-email" type="email" autocomplete="email" required></label>
-          <label>Password<input id="nx-login-password" type="password" autocomplete="current-password" required></label>
-          <button type="submit">Log in</button>
-        </form>
-        <form class="nx-account-form" id="nx-account-signup">
-          <label>Name<input id="nx-signup-name" type="text" autocomplete="name" maxlength="80" required></label>
-          <label>Email<input id="nx-signup-email" type="email" autocomplete="email" required></label>
-          <label>Password (at least 8 characters)<input id="nx-signup-password" type="password" autocomplete="new-password" minlength="8" required></label>
-          <button type="submit">Create account</button>
-        </form>
-        <form class="nx-account-form" id="nx-account-reset">
-          <label>Email<input id="nx-reset-email" type="email" autocomplete="email" required></label>
-          <button type="submit">Send password reset link</button>
-        </form>
+        <form class="nx-account-form active" id="nx-account-login"><label>Email<input id="nx-login-email" type="email" autocomplete="email" required></label><label>Password<input id="nx-login-password" type="password" autocomplete="current-password" required></label><button type="submit">Log in</button></form>
+        <form class="nx-account-form" id="nx-account-signup"><label>Name<input id="nx-signup-name" type="text" autocomplete="name" maxlength="80" required></label><label>Email<input id="nx-signup-email" type="email" autocomplete="email" required></label><label>Password (at least 8 characters)<input id="nx-signup-password" type="password" autocomplete="new-password" minlength="8" required></label><button type="submit">Create account</button></form>
+        <form class="nx-account-form" id="nx-account-reset"><label>Email<input id="nx-reset-email" type="email" autocomplete="email" required></label><button type="submit">Send password reset link</button></form>
         <div class="nx-account-bottom"><button type="button" id="nx-account-guest">Continue as guest</button><button type="button" id="nx-account-logout" hidden>Log out</button></div>
         <div class="nx-account-user" id="nx-account-user" hidden><span class="nx-account-avatar" id="nx-account-avatar">N</span><b id="nx-account-email"></b></div>
       </section>`;
     document.body.appendChild(overlay);
 
     const close = () => { overlay.hidden = true; trigger.focus(); };
-    trigger.addEventListener('click', () => { overlay.hidden = false; overlay.querySelector('input:not([type=hidden])')?.focus(); });
+    trigger.addEventListener('click', () => { overlay.hidden = false; overlay.querySelector('#nx-login-email').focus(); });
     overlay.querySelector('.nx-account-close').addEventListener('click', close);
     overlay.addEventListener('click', (event) => { if (event.target === overlay) close(); });
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !overlay.hidden) close(); });
@@ -93,12 +82,14 @@
       overlay.querySelectorAll('[data-tab]').forEach((item) => item.classList.toggle('active', item === tab));
       overlay.querySelectorAll('.nx-account-form').forEach((form) => form.classList.toggle('active', form.id === 'nx-account-' + tab.dataset.tab));
       setStatus('');
+      overlay.querySelector('#nx-account-' + tab.dataset.tab).querySelector('input').focus();
     }));
     overlay.querySelector('#nx-account-guest').addEventListener('click', close);
-    overlay.querySelector('#nx-account-login').addEventListener('submit', (event) => login(event, overlay));
-    overlay.querySelector('#nx-account-signup').addEventListener('submit', (event) => signup(event, overlay));
-    overlay.querySelector('#nx-account-reset').addEventListener('submit', (event) => resetPassword(event, overlay));
+    overlay.querySelector('#nx-account-login').addEventListener('submit', login);
+    overlay.querySelector('#nx-account-signup').addEventListener('submit', signup);
+    overlay.querySelector('#nx-account-reset').addEventListener('submit', resetPassword);
     overlay.querySelector('#nx-account-logout').addEventListener('click', async () => {
+      if (!auth) return;
       try {
         await auth.signOut();
         localStorage.removeItem(STATE_KEY);
@@ -118,14 +109,19 @@
 
   function setSignedIn(user) {
     const panel = document.getElementById('nx-account-user');
-    if (!panel) return;
     const label = user.displayName || user.email || 'NOVIX account';
-    panel.hidden = false;
-    document.getElementById('nx-account-email').textContent = label;
-    document.getElementById('nx-account-avatar').textContent = label.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
-    document.getElementById('nx-account-logout').hidden = false;
+    if (panel) {
+      panel.hidden = false;
+      document.getElementById('nx-account-email').textContent = label;
+      document.getElementById('nx-account-avatar').textContent = label.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+      document.getElementById('nx-account-logout').hidden = false;
+    }
     const trigger = document.getElementById('nx-account-trigger');
     if (trigger) trigger.textContent = label.split('@')[0];
+    const uname = document.getElementById('uname');
+    const sideName = document.getElementById('sideName');
+    if (uname) uname.textContent = label;
+    if (sideName) sideName.textContent = label;
   }
 
   function localState() {
@@ -136,22 +132,32 @@
   async function restoreWorkspace(user) {
     const ref = db.collection(CLOUD_DOC).doc(user.uid).collection('workspace').doc('main');
     const snap = await ref.get();
-    if (snap.exists && snap.data().siteState) {
-      const cloudState = snap.data().siteState;
-      localStorage.setItem(STATE_KEY, JSON.stringify(cloudState));
-      lastSaved = JSON.stringify(cloudState);
-      restoring = true;
-      location.reload();
+    const cloudState = snap.exists && snap.data() && snap.data().siteState;
+    const current = localState();
+    if (cloudState) {
+      const serializedCloud = JSON.stringify(cloudState);
+      if (JSON.stringify(current) !== serializedCloud) {
+        localStorage.setItem(STATE_KEY, serializedCloud);
+        lastSaved = serializedCloud;
+        if (sessionStorage.getItem(SYNCED_KEY) !== user.uid) {
+          sessionStorage.setItem(SYNCED_KEY, user.uid);
+          location.reload();
+          return;
+        }
+      } else {
+        lastSaved = serializedCloud;
+      }
+      setStatus('Signed in. Your workspace is ready.', 'success');
+      startSync(user);
       return;
     }
-    const current = localState();
     if (current) {
       const serialized = JSON.stringify(current);
       await ref.set({ siteState: current, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       lastSaved = serialized;
-      setStatus('Your current NOVIX workspace was saved to your account.');
+      setStatus('Your current NOVIX workspace was saved to your account.', 'success');
     } else {
-      setStatus('Account connected. Your workspace will sync as you use NOVIX.');
+      setStatus('Account connected. Your workspace will sync as you use NOVIX.', 'success');
     }
     startSync(user);
   }
@@ -217,7 +223,7 @@
 
   function loadFirebase() {
     if (!FIREBASE.apiKey || !FIREBASE.projectId || !FIREBASE.appId) {
-      setStatus('Firebase configuration is missing.');
+      setStatus('Firebase configuration is missing.', 'error');
       return;
     }
     const scripts = [
@@ -258,6 +264,10 @@
     });
   }
 
-  addUI();
-  loadFirebase();
+  function boot() {
+    addUI();
+    loadFirebase();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else boot();
 })();
