@@ -90,7 +90,8 @@ self.addEventListener('fetch', event => {
   }
 
   const isCode = req.mode === 'navigate' || CODE_RE.test(url.pathname) || url.pathname.endsWith('/');
-  if (isCode) event.respondWith(networkFirst(req));
+  const fresh = req.cache === 'no-cache' || req.cache === 'reload' || req.cache === 'no-store';
+  if (isCode) event.respondWith(fresh ? networkFirst(req) : cacheFirst(req));
   else if (MEDIA_RE.test(url.pathname)) event.respondWith(staleWhileRevalidate(req, MEDIA, RECHECK_MS));
   else event.respondWith(networkFirst(req));
 });
@@ -100,6 +101,17 @@ function stamp(res) {
   const headers = new Headers(res.headers);
   headers.set('x-nx-time', String(Date.now()));
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
+async function cacheFirst(req) {
+  const cache = await caches.open(CODE);
+  let hit = await cache.match(req, { ignoreSearch: true });
+  if (!hit && req.mode === 'navigate') hit = await cache.match('./index.html');
+  if (!hit) return networkFirst(req);
+  fetch(req, { cache: 'no-cache' }).then(res => {
+    if (res && res.ok) cache.put(req, res.clone());
+  }).catch(() => {});
+  return hit;
 }
 
 async function networkFirst(req) {
