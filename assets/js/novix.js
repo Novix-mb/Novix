@@ -9800,12 +9800,13 @@
         if (btn) btn.disabled = true;
         const o = ui();
         o.t.textContent = tr('Updating offline copy…');
+        const fail = [];
         try {
             const files = await listFiles();
-            const code = await caches.open('novix-code');
-            const media = await caches.open('novix-media');
             const n = files.length;
+            /* download everything first into a staging list, so a broken connection never leaves a half-empty cache */
             const part = new Array(n).fill(0);
+            const store = new Array(n);
             let doneN = 0,
                 bytes = 0,
                 next = 0;
@@ -9817,34 +9818,38 @@
             };
             const one = async idx => {
                 const f = files[idx];
-                const res = await fetch(f, {
-                    cache: 'reload'
-                });
-                if (!res.ok) throw new Error(f);
-                const len = Number(res.headers.get('content-length')) || 0;
-                let got = 0;
-                const rd = res.clone().body.getReader();
-                const pump = (async () => {
-                    for (;;) {
-                        const {
-                            done,
-                            value
-                        } = await rd.read();
-                        if (done) break;
-                        got += value.length;
-                        bytes += value.length;
-                        if (len) part[idx] = Math.min(.99, got / len);
-                        draw();
-                    }
-                })();
-                const blob = res.blob();
-                await Promise.all([pump, blob]);
-                await (CODE_RE.test(f) ? code : media).put(new Request(f, {
-                    mode: 'same-origin'
-                }), new Response(await blob, {
-                    status: res.status,
-                    headers: res.headers
-                }));
+                try {
+                    const res = await fetch(f, {
+                        cache: 'reload'
+                    });
+                    if (!res.ok) throw new Error(f);
+                    const len = Number(res.headers.get('content-length')) || 0;
+                    let got = 0;
+                    const rd = res.clone().body.getReader();
+                    const pump = (async () => {
+                        for (;;) {
+                            const {
+                                done,
+                                value
+                            } = await rd.read();
+                            if (done) break;
+                            got += value.length;
+                            bytes += value.length;
+                            if (len) part[idx] = Math.min(.99, got / len);
+                            draw();
+                        }
+                    })();
+                    const buf = res.arrayBuffer();
+                    await Promise.all([pump, buf]);
+                    store[idx] = {
+                        f: f,
+                        type: res.headers.get('content-type') || '',
+                        buf: await buf
+                    };
+                } catch (e) {
+                    if (/Failed to fetch|NetworkError|Load failed/i.test(String(e && e.message))) throw e;
+                    fail.push(f);
+                }
                 part[idx] = 1;
                 doneN++;
                 draw();
@@ -9853,13 +9858,33 @@
                 while (next < n) await one(next++);
             };
             await Promise.all([worker(), worker(), worker(), worker()]);
+            if (fail.length > n / 2) throw new Error('many');
+            /* replace the old copy completely, then write the new one (clean headers, no stale leftovers) */
+            await caches.delete('novix-code');
+            await caches.delete('novix-media');
+            const code = await caches.open('novix-code');
+            const media = await caches.open('novix-media');
+            for (const it of store) {
+                if (!it) continue;
+                const r = new Response(it.buf, {
+                    status: 200,
+                    headers: {
+                        'Content-Type': it.type || 'application/octet-stream'
+                    }
+                });
+                await (CODE_RE.test(it.f) ? code : media).put(new URL(it.f, location.href).href, r);
+            }
             try {
-                const reg = await navigator.serviceWorker.getRegistration();
-                if (reg) await reg.update();
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (const r of regs) await r.unregister();
             } catch (e) {}
             o.t.textContent = tr('Offline copy is up to date');
             o.p.textContent = '100%';
             o.i.style.width = '100%';
+            if (fail.length) {
+                o.sub.textContent = (ar() ? 'ملفات غير موجودة على الموقع: ' : 'Missing on the site: ') + fail.slice(0, 4).join(' , ') + (fail.length > 4 ? ' …' : '');
+                o.sub.style.color = '#ffb4a8';
+            }
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;gap:8px;margin-top:10px';
             row.innerHTML = '<button type="button" class="go">' + tr('Reload') + '</button><button type="button" class="x">' + tr('Close') + '</button>';
@@ -9899,4 +9924,4 @@
     });
     addEventListener('novix:lang', label);
     label();
-})(); 
+})();
