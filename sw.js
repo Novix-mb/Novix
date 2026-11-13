@@ -103,13 +103,29 @@ function stamp(res) {
   return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
 }
 
+async function digest(res) {
+  const buf = await res.clone().arrayBuffer();
+  const d = await crypto.subtle.digest('SHA-1', buf);
+  return Array.from(new Uint8Array(d)).join(',');
+}
+
+async function tellClients() {
+  const list = await self.clients.matchAll({ includeUncontrolled: true });
+  list.forEach(c => c.postMessage({ type: 'NOVIX_UPDATE' }));
+}
+
 async function cacheFirst(req) {
   const cache = await caches.open(CODE);
   let hit = await cache.match(req, { ignoreSearch: true });
   if (!hit && req.mode === 'navigate') hit = await cache.match('./index.html');
   if (!hit) return networkFirst(req);
-  fetch(req, { cache: 'no-cache' }).then(res => {
-    if (res && res.ok) cache.put(req, res.clone());
+  const old = hit.clone();
+  fetch(req, { cache: 'no-cache' }).then(async res => {
+    if (!res || !res.ok) return;
+    let changed = false;
+    try { changed = (await digest(res)) !== (await digest(old)); } catch (e) { changed = true; }
+    await cache.put(req, res.clone());
+    if (changed) tellClients();
   }).catch(() => {});
   return hit;
 }
