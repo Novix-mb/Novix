@@ -283,3 +283,4 @@
 .gn[data-view=one] .gn-sc{overflow-x:hidden}
 .gn[data-view=one] .gn-pgs{display:grid;grid-template-columns:max-content;justify-content:safe center;justify-items:center;align-items:start;width:100%;min-width:100%;gap:0}
 .gn[data-view=one] .gn-pg{grid-row:1;grid-column:1}
+ 
