@@ -65,26 +65,15 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
 
 
   /* ---- Smart Board section ---- */
-  var board = null, boardHost = null, boardFull = false, boardHome = null;
-  /* in-app "expand": the board is moved to <body> so it covers the whole screen.
-     Inside the section it sits under a transformed/animated parent, where position:fixed
-     is relative to that parent instead of the window (that is why it shrank). */
+  var board = null, boardHost = null, boardFull = false;
+  /* in-app "expand": the board stays in place. Only the section title is hidden and the
+     board takes the space it leaves; the top bar and side menu stay visible. */
   function setFull(on) {
     boardFull = !!on;
     if (!boardHost) return;
-    if (boardFull) {
-      if (!boardHome && boardHost.parentNode) {
-        boardHome = document.createComment('gn-host');
-        boardHost.parentNode.insertBefore(boardHome, boardHost);
-      }
-      document.body.appendChild(boardHost);
-    } else if (boardHome) {
-      boardHome.parentNode.insertBefore(boardHost, boardHome);
-      boardHome.remove();
-      boardHome = null;
-    }
+    var sec = boardHost.parentNode;
+    if (sec) sec.classList.toggle('board-expanded', boardFull);
     boardHost.classList.toggle('gn-full', boardFull);
-    document.body.classList.toggle('gn-full-open', boardFull);
     if (board) { board.g.setIcon(boardFull ? 'back' : 'expand'); setTimeout(function () { board.g.fit(); }, 60); }
   }
 
