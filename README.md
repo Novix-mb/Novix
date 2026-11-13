@@ -87,7 +87,7 @@ A calm timer for study sessions, with three modes: **Focus**, **Short break** an
 The sound follows the timer: it plays when the timer starts, **pauses** when you pause the timer, and **continues from where it stopped** when you resume. Picking a sound while the timer is stopped plays only a **3-second preview**, and this applies to your own music too. Your own music also has a **repeat** button that keeps replaying the current song.
 
 ### Smart Board
-A whiteboard to draw, explain and present on. You can expand it to fill the screen.
+A full smart whiteboard: pen, highlighter, eraser, shapes, text, sticky notes, emoji and stickers, images, lasso selection, laser pointer and hand, with many pages and paper styles, saved on this device and exportable as PDF. Expand it to fill the screen. The same tools are used to annotate PDF books in the Library reader (files: `assets/js/gn.js`, `gn-host.js`, `gn-stickers.js`, `assets/css/gn.css`).
 
 ### Simulations
 A section for interactive experiments to learn by doing. It is **coming soon**, and for now it shows a page letting you know until the experiments are added.
