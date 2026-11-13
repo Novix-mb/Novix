@@ -1,183 +1,197 @@
 (function () {
+  'use strict';
+
   const cfg = window.NOVIX_FIREBASE_CONFIG || {};
-  const statusBox = document.getElementById('statusBox');
-  const userPanel = document.getElementById('userPanel');
-  const userName = document.getElementById('userName');
-  const userAvatar = document.getElementById('userAvatar');
+  const $ = (id) => document.getElementById(id);
+  const statusBox = $('statusBox');
+  const userPanel = $('userPanel');
+  const userName = $('userName');
+  const userAvatar = $('userAvatar');
   const tabs = [...document.querySelectorAll('.tab-btn')];
   const forms = {
-    login: document.getElementById('loginForm'),
-    signup: document.getElementById('signupForm'),
-    reset: document.getElementById('resetForm')
+    login: $('loginForm'),
+    signup: $('signupForm'),
+    reset: $('resetForm')
   };
+  const SITE_KEY = 'novix.site.v1';
 
-  const isConfigured = !!cfg.apiKey &&
-    cfg.apiKey !== 'YOUR_API_KEY' &&
-    !!cfg.projectId &&
-    cfg.projectId !== 'YOUR_PROJECT_ID';
+  const configured = () => Boolean(
+    cfg.apiKey && cfg.apiKey !== 'YOUR_API_KEY' &&
+    cfg.projectId && cfg.projectId !== 'YOUR_PROJECT_ID' &&
+    cfg.appId && cfg.appId !== 'YOUR_APP_ID' &&
+    window.firebase && window.firebase.auth && window.firebase.firestore
+  );
 
-  function setStatus(message, type) {
+  function status(message, type) {
     statusBox.textContent = message;
-    statusBox.className = 'status-box';
-    if (type) statusBox.classList.add(type);
+    statusBox.className = 'status-box' + (type ? ' ' + type : '');
   }
 
-  function setCurrentTab(tabName) {
-    tabs.forEach((button) => {
-      const isActive = button.dataset.tab === tabName;
-      button.classList.toggle('active', isActive);
+  function switchTab(name) {
+    tabs.forEach((tab) => {
+      const active = tab.dataset.tab === name;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-selected', String(active));
     });
-
-    Object.entries(forms).forEach(([name, form]) => {
-      form.classList.toggle('active', name === tabName);
-    });
+    Object.entries(forms).forEach(([key, form]) => form.classList.toggle('active', key === name));
+    status('', '');
   }
 
-  function getInitials(nameOrEmail) {
-    const value = (nameOrEmail || '').trim();
-    if (!value) return 'N';
-    const parts = value.split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return value.slice(0, 2).toUpperCase();
+  function initials(text) {
+    const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return 'N';
+    return (words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2)).toUpperCase();
   }
 
-  function applySignedInUser(user) {
-    const name = user?.displayName || user?.email || 'User';
+  function showUser(user) {
+    const display = user.displayName || user.email || 'NOVIX user';
     userPanel.hidden = false;
-    userName.textContent = name;
-    userAvatar.textContent = getInitials(name);
+    userName.textContent = display;
+    userAvatar.textContent = initials(display);
+    $('logoutBtn').hidden = false;
   }
 
-  function applyGuestState() {
-    userPanel.hidden = false;
-    userName.textContent = 'Guest';
-    userAvatar.textContent = 'G';
+  function showGuest() {
+    userPanel.hidden = true;
     localStorage.setItem('novix.account.state', 'guest');
+    localStorage.removeItem('novix.account.user');
   }
 
-  function bindTabEvents() {
-    tabs.forEach((button) => {
-      button.addEventListener('click', () => setCurrentTab(button.dataset.tab));
+  function readLocalWorkspace() {
+    try {
+      const raw = localStorage.getItem(SITE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+      console.warn('Could not read the local NOVIX workspace.', error);
+      return null;
+    }
+  }
+
+  async function restoreOrUploadWorkspace(user, db) {
+    const docRef = db.collection('users').doc(user.uid).collection('workspace').doc('main');
+    const snapshot = await docRef.get();
+    if (snapshot.exists && snapshot.data().siteState) {
+      localStorage.setItem(SITE_KEY, JSON.stringify(snapshot.data().siteState));
+      status('Signed in. Your saved workspace is ready on this device. Return to NOVIX to resume.', 'success');
+      return;
+    }
+
+    const localState = readLocalWorkspace();
+    if (localState) {
+      await docRef.set({ siteState: localState, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      status('Signed in. This device’s NOVIX workspace has been saved to your account.', 'success');
+    } else {
+      status('Account ready. Return to NOVIX to start your workspace.', 'success');
+    }
+  }
+
+  async function onLogin(event, auth, db) {
+    event.preventDefault();
+    const button = forms.login.querySelector('[type="submit"]');
+    button.disabled = true;
+    try {
+      const credential = await auth.signInWithEmailAndPassword($('loginEmail').value.trim(), $('loginPassword').value);
+      localStorage.setItem('novix.account.state', 'signed-in');
+      localStorage.setItem('novix.account.user', JSON.stringify({ uid: credential.user.uid, email: credential.user.email }));
+      showUser(credential.user);
+      await restoreOrUploadWorkspace(credential.user, db);
+    } catch (error) {
+      status(error.message || 'Log in failed. Check your email and password.', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function onSignup(event, auth, db) {
+    event.preventDefault();
+    const name = $('signupName').value.trim();
+    const password = $('signupPassword').value;
+    if (password !== $('signupConfirm').value) {
+      status('The passwords do not match.', 'error');
+      $('signupConfirm').focus();
+      return;
+    }
+    const button = forms.signup.querySelector('[type="submit"]');
+    button.disabled = true;
+    try {
+      const credential = await auth.createUserWithEmailAndPassword($('signupEmail').value.trim(), password);
+      await credential.user.updateProfile({ displayName: name });
+      localStorage.setItem('novix.account.state', 'signed-in');
+      localStorage.setItem('novix.account.user', JSON.stringify({ uid: credential.user.uid, email: credential.user.email, name }));
+      showUser(credential.user);
+      await restoreOrUploadWorkspace(credential.user, db);
+    } catch (error) {
+      status(error.message || 'Account creation failed.', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function onReset(event, auth) {
+    event.preventDefault();
+    const button = forms.reset.querySelector('[type="submit"]');
+    button.disabled = true;
+    try {
+      await auth.sendPasswordResetEmail($('resetEmail').value.trim());
+      status('If an account exists for that email, Firebase will send a password reset link.', 'success');
+      forms.reset.reset();
+    } catch (error) {
+      status(error.message || 'Could not send the reset email.', 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function init() {
+    tabs.forEach((tab) => tab.addEventListener('click', () => switchTab(tab.dataset.tab)));
+    switchTab('login');
+    $('guestBtn').addEventListener('click', () => {
+      showGuest();
+      status('Guest mode selected. Your existing local workspace remains on this device.', 'success');
+    });
+
+    if (!configured()) {
+      showGuest();
+      status('Firebase did not load or its web config is incomplete. Check your connection and Firebase settings.', 'error');
+      return;
+    }
+
+    const app = firebase.apps.length ? firebase.app() : firebase.initializeApp(cfg);
+    const auth = app.auth();
+    const db = app.firestore();
+
+    forms.login.addEventListener('submit', (event) => onLogin(event, auth, db));
+    forms.signup.addEventListener('submit', (event) => onSignup(event, auth, db));
+    forms.reset.addEventListener('submit', (event) => onReset(event, auth));
+    $('logoutBtn').addEventListener('click', async () => {
+      try {
+        await auth.signOut();
+        showGuest();
+        status('You have logged out. Your account data remains saved in Firebase.', 'success');
+      } catch (error) {
+        status(error.message || 'Log out failed.', 'error');
+      }
+    });
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        showGuest();
+        return;
+      }
+      localStorage.setItem('novix.account.state', 'signed-in');
+      localStorage.setItem('novix.account.user', JSON.stringify({ uid: user.uid, email: user.email, name: user.displayName || '' }));
+      showUser(user);
+      try {
+        await restoreOrUploadWorkspace(user, db);
+      } catch (error) {
+        console.error('NOVIX workspace sync failed.', error);
+        status('You are signed in, but cloud workspace sync failed. Check Firestore setup and security rules.', 'error');
+      }
     });
   }
 
-  async function onLogin(event) {
-    event.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-
-    if (!isConfigured) {
-      setStatus('Firebase is not configured yet. Add your project keys in auth.html.', 'error');
-      return;
-    }
-
-    try {
-      const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-      localStorage.setItem('novix.account.state', 'signed-in');
-      localStorage.setItem('novix.account.user', JSON.stringify({ email: userCredential.user.email }));
-      setStatus('Logged in successfully.', 'success');
-      applySignedInUser(userCredential.user);
-    } catch (error) {
-      setStatus(error.message || 'Login failed.', 'error');
-    }
-  }
-
-  async function onSignup(event) {
-    event.preventDefault();
-    const name = document.getElementById('signupName').value.trim();
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-
-    if (!isConfigured) {
-      setStatus('Firebase is not configured yet. Add your project keys in auth.html.', 'error');
-      return;
-    }
-
-    try {
-      const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-      if (userCredential.user) {
-        await userCredential.user.updateProfile({ displayName: name || 'NOVIX User' });
-      }
-      localStorage.setItem('novix.account.state', 'signed-in');
-      localStorage.setItem('novix.account.user', JSON.stringify({ email, name }));
-      setStatus('Account created successfully.', 'success');
-      applySignedInUser(userCredential.user);
-    } catch (error) {
-      setStatus(error.message || 'Account creation failed.', 'error');
-    }
-  }
-
-  async function onReset(event) {
-    event.preventDefault();
-    const email = document.getElementById('resetEmail').value.trim();
-
-    if (!isConfigured) {
-      setStatus('Firebase is not configured yet. Add your project keys in auth.html.', 'error');
-      return;
-    }
-
-    try {
-      await firebase.auth().sendPasswordResetEmail(email);
-      setStatus('Password reset email sent successfully.', 'success');
-    } catch (error) {
-      setStatus(error.message || 'Reset email failed.', 'error');
-    }
-  }
-
-  async function onLogout() {
-    try {
-      await firebase.auth().signOut();
-      localStorage.setItem('novix.account.state', 'guest');
-      applyGuestState();
-      setStatus('You are logged out.', 'success');
-    } catch (error) {
-      setStatus(error.message || 'Logout failed.', 'error');
-    }
-  }
-
-  function onGuest() {
-    applyGuestState();
-    setStatus('You are using NOVIX in guest mode.', 'success');
-  }
-
-  function initFirebase() {
-    if (!isConfigured) {
-      setStatus('Add your Firebase web config to the top of auth.html to continue.', 'error');
-      applyGuestState();
-      return;
-    }
-
-    const app = firebase.initializeApp(cfg);
-    const auth = firebase.auth();
-
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        localStorage.setItem('novix.account.state', 'signed-in');
-        applySignedInUser(user);
-        setStatus('Firebase authentication is active.', 'success');
-      } else {
-        applyGuestState();
-        setStatus('Ready for login or sign up.', 'success');
-      }
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', onLogin);
-    document.getElementById('signupForm').addEventListener('submit', onSignup);
-    document.getElementById('resetForm').addEventListener('submit', onReset);
-    document.getElementById('logoutBtn').addEventListener('click', onLogout);
-    document.getElementById('guestBtn').addEventListener('click', onGuest);
-  }
-
-  bindTabEvents();
-  setCurrentTab('login');
-  applyGuestState();
-
-  if (window.firebase && firebase.apps && firebase.apps.length) {
-    initFirebase();
-  } else {
-    setTimeout(() => {
-      if (window.firebase && firebase.apps) initFirebase();
-      else setStatus('Firebase scripts did not load. Check your network or embed config.', 'error');
-    }, 200);
-  }
+  init().catch((error) => {
+    console.error('NOVIX account initialization failed.', error);
+    status('Could not initialize Firebase. Check the Firebase configuration.', 'error');
+  });
 })();
