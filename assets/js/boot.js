@@ -125,3 +125,20 @@
 })();
 
 ;
+// Load the account modal only after the page markup exists, so it can also
+// attach its login button to the Settings section reliably.
+(() => {
+    const loadAccount = () => {
+        if (document.querySelector('script[data-novix-account]')) return;
+        const script = document.createElement('script');
+        script.src = 'assets/js/account.js';
+        script.dataset.novixAccount = 'true';
+        script.async = true;
+        document.head.appendChild(script);
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadAccount, { once: true });
+    } else {
+        loadAccount();
+    }
+})();
