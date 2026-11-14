@@ -7,7 +7,6 @@
 
 ;
 (() => {
-            const SOON = ['sims'];
             let curView = 'home';
             const $ = s => document.querySelector(s),
                 $$ = s => [...document.querySelectorAll(s)],
@@ -95,7 +94,6 @@
                 'Home': 'الرئيسية',
                 'My Tasks': 'مهامي',
                 'Library': 'المكتبة',
-                'Simulations': 'المحاكاة',
                 'Achievements': 'الإنجازات',
                 'Settings': 'الإعدادات',
                 'Light Mode': 'الوضع الفاتح',
@@ -113,8 +111,6 @@
                 'Task completed successfully': 'تم إنجاز المهمة بنجاح',
                 'Keep Going': 'واصل',
                 'Upcoming': 'القادم',
-                'Interactive Simulations': 'محاكاة تفاعلية',
-                'Learn by Doing': 'تعلّم بالتجربة',
                 'Track Your Progress': 'تابع تقدّمك',
                 'Add': 'إضافة',
                 'All': 'الكل',
@@ -122,7 +118,6 @@
                 'Done': 'منجزة',
                 'Add a new task…': 'أضف مهمة جديدة…',
                 'Search anything...  (Ctrl + K)': 'ابحث عن أي شيء...  (Ctrl + K)',
-                'Coming soon': 'قريبًا',
                 'Name': 'الاسم',
                 'Language': 'اللغة',
                 'Sound effects': 'المؤثرات الصوتية',
@@ -165,11 +160,9 @@
                 'NOVIX is your personal study workspace: keep your books, tasks and notes, plan your week and stay focused, all in one calm place.': 'نوفيكس هو مساحتك الدراسية الشخصية: رتّب كتبك ومهامك وملاحظاتك، وخطّط لأسبوعك وحافظ على تركيزك في مكان واحد هادئ.',
                 'Upload your PDF books, read them on this device and write on the pages with a pen, highlighter, text, sticky notes and shapes.': 'ارفع كتبك بصيغة PDF واقرأها على هذا الجهاز، واكتب على صفحاتها بالقلم والتظليل والنصوص والملصقات والأشكال.',
                 'Add tasks by difficulty, easiest first, tick them off and watch your progress grow.': 'أضف مهامك حسب الصعوبة من الأسهل للأصعب، وأنجزها وشاهد تقدّمك ينمو.',
-                'Coming soon': 'قريبًا',
                 'Write and pin notes, format your text and keep every idea organised and easy to find.': 'دوّن ملاحظاتك وثبّتها ونسّق نصوصك وأبقِ كل فكرة منظّمة وسهلة الوصول.',
                 'Plan your week with colour-coded sessions, link them to your tasks and get a reminder when it is time.': 'خطّط لأسبوعك بحصص ملوّنة، واربطها بمهامك، واحصل على تذكير عند حلول موعدها.',
                 'Focus and break sessions with soft sounds, calm backgrounds and a screen that stays awake while the timer runs.': 'جلسات تركيز واستراحة بأصوات هادئة وخلفيات مريحة، وتبقى الشاشة مضاءة طوال عمل المؤقت.',
-                'Simulations are on their way.': 'المحاكيات في الطريق إليكم.',
                 'Could not load the board. Check your connection and reload.': 'تعذّر تحميل السبورة. تحقق من الاتصال ثم أعد تحميل الصفحة.',
                 'A smart whiteboard to draw, write and present: pens, highlighter, shapes, text, sticky notes, stickers, images and a laser pointer, with many pages you can save as a PDF.': 'سبورة ذكية للرسم والكتابة والعرض: أقلام وهايلايتر وأشكال ونصوص وملاحظات لاصقة وملصقات وصور ومؤشر ليزر، مع صفحات كثيرة يمكنك حفظها كملف PDF.',
                 'Draw, explain and present on a smart whiteboard.': 'ارسم واشرح وقدّم على سبورة ذكية.',
@@ -194,7 +187,6 @@
                 'Book added (kept until you close this page)': 'تمت إضافة الكتاب (يبقى حتى تغلق الصفحة)',
                 'YOUR PERSONAL WORKSPACE': 'مساحتك الشخصية',
                 'Small steps every day. Big progress over time.': 'خطوات صغيرة كل يوم، وتقدّم كبير مع الوقت.',
-                'Interactive experiments you can run and explore. We’re putting the finishing touches on it.': 'تجارب تفاعلية يمكنك تشغيلها واستكشافها. نضع اللمسات الأخيرة عليها الآن.',
                 'Badges and milestones that celebrate your progress. We’re putting the finishing touches on it.': 'شارات وإنجازات تحتفي بتقدّمك. نضع اللمسات الأخيرة عليها الآن.'
             };
             Object.assign(AR, {
@@ -234,7 +226,6 @@
                 'Big Dream. Learn More. — NOVIX': 'حلم كبير. تعلّم أكثر. — نوفيكس',
                 'Your books and PDFs, always within reach.': 'كتبك وملفات PDF دائمًا في متناول يدك.',
                 'Capture ideas before they slip away.': 'دوّن أفكارك قبل أن تضيع.',
-                'Learn by experimenting.': 'تعلّم بالتجربة.',
                 'The story behind NOVIX.': 'القصة وراء نوفيكس.',
                 'Make NOVIX feel like yours.': 'اجعل نوفيكس يشبهك.',
                 'YOUR PERSONAL WORKSPACE': 'مساحتك الشخصية',
@@ -531,8 +522,6 @@
                 $$('[data-ph]').forEach(e => e.placeholder = tr(e.dataset.ph));
                 $$('.flip').forEach(e => e.style.transform = ar ? 'scaleX(-1)' : '');
                 $('#langSel').value = S.lang;
-                if (SOON.includes(curView)) fillSoon(curView);
-                $$('#nav a.is-soon').forEach(a => a.title = tr('Coming soon'));
                 dispatchEvent(new CustomEvent('novix:lang', {
                     detail: S.lang
                 }))
@@ -543,28 +532,13 @@
                 document.documentElement.dataset.theme = l ? 'light' : 'dark';
                 window.nxThemeColor && nxThemeColor()
             }
-            const SOONINFO = {
-                sims: ['Simulations', 'flask', 'Interactive experiments you can run and explore. We’re putting the finishing touches on it.']
-            };
-
-            function fillSoon(id) {
-                const i = SOONINFO[id];
-                if (!i) return;
-                $('#soonT').textContent = tr(i[0]);
-                $('#soonP').textContent = tr(i[2]);
-                $('#soonIc,#v-soon .soon-ico use').setAttribute('href', '#i-' + i[1])
-            }
-
             function route() {
                 const v = (location.hash.replace('#/', '') || 'home');
-                const id = (v !== 'soon' && $('#v-' + v)) ? v : 'home';
+                const id = $('#v-' + v) ? v : 'home';
                 curView = id;
                 document.body.dataset.view = id;
-                const soon = SOON.includes(id),
-                    shown = soon ? 'soon' : id;
-                $$('.view').forEach(e => e.classList.toggle('on', e.id === 'v-' + shown));
+                $$('.view').forEach(e => e.classList.toggle('on', e.id === 'v-' + id));
                 $$('#nav a[data-v]').forEach(a => a.classList.toggle('on', a.dataset.v === id));
-                if (soon) fillSoon(id);
                 if (id === 'focus' && window.NXPRE && NXPRE.loadAudio) NXPRE.loadAudio();
                 if (id === 'smartboard' && window.NXGN) {
                     const h = $('#gnBoardHost');
@@ -2769,7 +2743,6 @@
                     timetable: '#/timetable',
                     library: '#/library',
                     notes: '#/notes',
-                    sims: '#/sims',
                     smartboard: '#/smartboard',
                     focus: '#/focus'
                 };
@@ -2780,7 +2753,6 @@
                 const SUB = {
                     library: 'Your books and PDFs, always within reach.',
                     notes: 'Capture ideas before they slip away.',
-                    sims: 'Learn by experimenting.',
                     about: 'The story behind NOVIX.',
                     settings: 'Make NOVIX feel like yours.'
                 };
