@@ -6589,10 +6589,12 @@
                 const inp = el('input');
                 inp.type = 'color';
                 inp.value = toHex(get());
-                inp.oninput = () => {
+                const applyColor = () => {
                     set(inp.value);
                     paint()
                 };
+                inp.oninput = applyColor;
+                inp.onchange = applyColor;
                 inp.title = L('Custom colour', 'لون مخصص');
                 wrap.appendChild(inp);
                 paint();
@@ -6888,6 +6890,7 @@
             reader.addEventListener('pointerdown', e => {
                 if (!menuFor) return;
                 if (e.target.closest('#nr-menu,[data-pdf-tool]')) return;
+                if (menuEl.querySelector('input[type=color]:focus')) return;
                 closeMenu()
             }, true);
             reader.addEventListener('keydown', e => {
