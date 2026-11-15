@@ -23,6 +23,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Stamp build (so every deploy updates the whole app, including Smart Board and file editor)
+        run: |
+          python3 - <<'PY'
+          import os, re, json, hashlib
+
+          SKIP_DIRS = {'.git', '.github', 'node_modules'}
+          SKIP_FILES = {'sw.js', 'README.md', 'robots.txt', 'sitemap.xml', 'version.json', '.nojekyll', 'CNAME'}
+          files = []
+          for root, dirs, names in os.walk('.'):
+              dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+              for n in names:
+                  if n in SKIP_FILES or re.match(r'google[0-9a-f]+\.html$', n):
+                      continue
+                  files.append(os.path.join(root, n)[2:].replace(os.sep, '/'))
+          files.sort()
+
+          h = hashlib.sha1()
+          for f in files:
+              h.update(f.encode())
+              with open(f, 'rb') as fh:
+                  h.update(fh.read())
+          build = h.hexdigest()[:12]
+
+          listing = ',\n'.join(json.dumps('./' + f) for f in files + ['version.json'])
+          with open('sw.js', encoding='utf-8') as fh:
+              sw = fh.read()
+          sw, n1 = re.subn(r"const BUILD = '[^']*';", "const BUILD = '" + build + "';", sw, count=1)
+          sw, n2 = re.subn(r'const ALL_FILES = \[[\s\S]*?\];', lambda m: 'const ALL_FILES = [\n' + listing + '\n];', sw, count=1)
+          assert n1 == 1 and n2 == 1, 'sw.js markers not found'
+          with open('sw.js', 'w', encoding='utf-8') as fh:
+              fh.write(sw)
+          with open('version.json', 'w', encoding='utf-8') as fh:
+              json.dump({'v': build}, fh)
+          print('Stamped build', build, 'with', len(files), 'files')
+          PY
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
