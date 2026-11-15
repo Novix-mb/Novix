@@ -1,8 +1,6 @@
-
 const CODE = 'novix-code';
 const MEDIA = 'novix-media';
-const FONTS = 'novix-fonts';
-const KEEP = [CODE, MEDIA, FONTS];
+const KEEP = [CODE, MEDIA];
 const BUILD = '1794566028';
 const ALL_FILES = [
 "./assets/css/fonts.css",
@@ -50,6 +48,27 @@ const NET_TIMEOUT = 5000;
    They are always refreshed together, so no section is left running an older version than the rest of the app. */
 const CODE_FILES = Array.from(new Set(ALL_FILES.concat(PRECACHE))).filter(f => f === './' || (f !== './version.json' && CODE_RE.test(f)));
 
+/* ---------- Cache cleanup ----------
+   Only touches Cache Storage (the app's own downloaded copy). It never touches the user's files:
+   books, notes, tasks, sounds and backgrounds live in IndexedDB / localStorage, which are not read here. */
+const SCOPE = self.registration.scope;
+const ALLOWED = new Set(ALL_FILES.concat(['./', './index.html']).map(f => new URL(f, SCOPE).pathname));
+const stripQuery = u => { const x = new URL(u); x.search = ''; x.hash = ''; return x.href; };
+
+/* deletes every cached file that is no longer part of the current version
+   (removed/renamed files, and old copies saved under an old ?v=… address). Returns how many it removed. */
+async function pruneCaches() {
+  let removed = 0;
+  for (const name of KEEP) {
+    const cache = await caches.open(name);
+    for (const k of await cache.keys()) {
+      const u = new URL(k.url);
+      if (u.search || !ALLOWED.has(u.pathname)) { if (await cache.delete(k)) removed++; }
+    }
+  }
+  return removed;
+}
+
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const code = await caches.open(CODE);
@@ -69,6 +88,7 @@ self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(keys.filter(k => !KEEP.includes(k)).map(k => caches.delete(k)));
+    await pruneCaches().catch(() => {});
     await self.clients.claim();
   })());
 });
@@ -76,6 +96,10 @@ self.addEventListener('activate', event => {
 self.addEventListener('message', event => {
   const d = event.data || {};
   if (d.type === 'SKIP_WAITING') self.skipWaiting();
+  else if (d.type === 'PRUNE') {
+    const port = event.ports && event.ports[0];
+    event.waitUntil(pruneCaches().then(n => { if (port) port.postMessage({ removed: n }); }).catch(() => { if (port) port.postMessage({ removed: 0 }); }));
+  }
   else if (d.type === 'CHECK_ALL') {
     const port = event.ports && event.ports[0];
     event.waitUntil(sweepAll().then(changed => {
@@ -90,10 +114,6 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') { // legacy, fonts are local now
-    event.respondWith(staleWhileRevalidate(req, FONTS, 0));
-    return;
-  }
   if (url.origin !== self.location.origin) return;
   if (url.pathname.endsWith('/version.json')) return;
 
@@ -144,7 +164,8 @@ function sweepAll() {
       if (old) { try { diff = (await digest(res)) !== (await digest(old)); } catch (e) { diff = true; } }
       if (diff) updates.push([req, res]);
     }));
-    await Promise.all(updates.map(u => cache.put(u[0], u[1])));
+    await Promise.all(updates.map(u => cache.put(stripQuery(u[0].url), u[1])));
+    await pruneCaches().catch(() => {});
     return updates.length > 0;
   })().finally(() => { sweeping = null; });
   return sweeping;
@@ -160,7 +181,7 @@ async function cacheFirst(req, event) {
     if (!res || !res.ok) return;
     let changed = false;
     try { changed = (await digest(res)) !== (await digest(old)); } catch (e) { changed = true; }
-    await cache.put(req, res.clone());
+    await cache.put(stripQuery(req.url), res.clone());
     if (changed) {
       await sweepAll().catch(() => {});
       tellClients();
@@ -174,7 +195,7 @@ async function networkFirst(req) {
   const cache = await caches.open(CODE);
   const hit = await cache.match(req, { ignoreSearch: true });
   const net = fetch(req, { cache: 'no-cache' }).then(res => {
-    if (res && res.ok) cache.put(req, res.clone());
+    if (res && res.ok) cache.put(stripQuery(req.url), res.clone());
     return res;
   });
   if (!hit) {
@@ -199,13 +220,13 @@ async function networkFirst(req) {
 
 async function staleWhileRevalidate(req, name, maxAge) {
   const cache = await caches.open(name);
-  const hit = await cache.match(req);
+  const hit = await cache.match(stripQuery(req.url));
   if (hit) {
     const t = Number(hit.headers.get('x-nx-time') || 0);
     if (!maxAge || Date.now() - t < maxAge) return hit;
   }
   const net = fetch(req, maxAge ? { cache: 'no-cache' } : undefined).then(res => {
-    if (res && (res.ok || res.type === 'opaque')) cache.put(req, maxAge ? stamp(res.clone()) : res.clone());
+    if (res && (res.ok || res.type === 'opaque')) cache.put(stripQuery(req.url), maxAge ? stamp(res.clone()) : res.clone());
     return res;
   }).catch(() => hit);
   return hit || net;
@@ -213,7 +234,7 @@ async function staleWhileRevalidate(req, name, maxAge) {
 
 async function rangeResponse(req) {
   const cache = await caches.open(MEDIA);
-  const hit = await cache.match(req.url);
+  const hit = await cache.match(stripQuery(req.url));
   const m = /bytes=(\d*)-(\d*)/.exec(req.headers.get('range') || '');
   if (!hit || !m) return fetch(req);
   const buf = await hit.arrayBuffer();
