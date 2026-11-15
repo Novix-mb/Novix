@@ -1,4 +1,3 @@
-
 ;
         if (window.pdfjsLib) {
             try {
@@ -2484,7 +2483,7 @@
                     p = has ? Notification.permission : 'none',
                     ar = isAr();
                 $('#permTxt').textContent = !has ? (ar ? '🔔 ستظهر التذكيرات داخل نوفيكس (أيقونة الجرس) أثناء فتح التطبيق.' : '🔔 Reminders appear inside NOVIX (bell icon) while the app is open.') :
-                    p === 'granted' ? (ar ? '🔔 الإشعارات مفعّلة — سيتم تذكيرك في يوم كل مهمة مجدولة.' : '🔔 Notifications are on — you’ll be reminded on the day of each scheduled task.') :
+                    p === 'granted' ? (ar ? '🔔 الإشعارات مفعّلة. للتنبيه والتطبيق مغلق ثبّت نوفيكس على الشاشة الرئيسية، وقد يتأخر التنبيه أحياناً حسب إعدادات الهاتف.' : '🔔 Notifications are on. To be reminded while the app is closed, install NOVIX to your home screen; alerts may arrive late depending on your phone’s settings.') :
                     p === 'denied' ? (ar ? 'إشعارات المتصفح محظورة. ستظل التذكيرات تظهر داخل نوفيكس (أيقونة الجرس).' : 'Browser notifications are blocked. Reminders will still appear inside NOVIX (bell icon).') :
                     (ar ? 'فعّل الإشعارات ليصلك تذكير في يوم كل مهمة مجدولة.' : 'Turn on notifications to get a reminder on the day of each scheduled task.');
                 $('#permBtn').hidden = !(has && p === 'default');
@@ -2689,10 +2688,14 @@
                     if (!('serviceWorker' in navigator) || !/^https?:$/.test(location.protocol)) return;
                     const reg = await navigator.serviceWorker.register('sw.js');
                     await navigator.serviceWorker.ready;
+                    try {
+                        navigator.storage && navigator.storage.persist && navigator.storage.persist()
+                    } catch (e) {}
                     await schedSync();
                     if ('Notification' in window && Notification.permission === 'granted' && 'periodicSync' in reg) {
                         try {
-                            await reg.periodicSync.register('novix-check', {
+                            const tags = reg.periodicSync.getTags ? await reg.periodicSync.getTags() : [];
+                            if (!tags.includes('novix-check')) await reg.periodicSync.register('novix-check', {
                                 minInterval: 15 * 6e4
                             })
                         } catch (e) {}
@@ -2719,6 +2722,14 @@
                     setupBG()
                 })()
             }
+            /* screen rotation always follows the device (auto-rotate on/off); the app never locks it */
+            const freeRot = () => {
+                try {
+                    if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock()
+                } catch (e) {}
+            };
+            freeRot();
+            document.addEventListener('fullscreenchange', freeRot);
             setInterval(checkSchedule, 30000);
             addEventListener('focus', checkSchedule);
             addEventListener('pageshow', checkSchedule);
@@ -2727,8 +2738,14 @@
                 setupBG()
             });
             queueSync();
+            let bgAt = 0;
             document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) checkSchedule()
+                if (document.hidden) return;
+                checkSchedule();
+                if (Date.now() - bgAt > 6e4) {
+                    bgAt = Date.now();
+                    setupBG()
+                }
             });
             setTimeout(checkSchedule, 1200);
             addEventListener('novix:lang', () => {
@@ -9769,7 +9786,8 @@
         'Close': 'إغلاق',
         'Update failed. Check your connection.': 'فشل التحديث. تأكد من اتصالك بالإنترنت.',
         'Retry': 'إعادة المحاولة',
-        'files': 'ملف'
+        'files': 'ملف',
+        'Old files removed': 'تم حذف ملفات قديمة'
     };
     const ar = () => document.documentElement.lang === 'ar' || document.documentElement.dir === 'rtl';
     const tr = k => (ar() && T[k]) || k;
@@ -9875,9 +9893,9 @@
             };
             await Promise.all([worker(), worker(), worker(), worker()]);
             if (fail.length > n / 2) throw new Error('many');
-            /* replace the old copy completely, then write the new one (clean headers, no stale leftovers) */
-            await caches.delete('novix-code');
-            await caches.delete('novix-media');
+            /* write the new copy first (a failed download never leaves the app empty), then delete the old files.
+               This only touches the app's downloaded copy (Cache Storage). Books, notes, tasks, sounds and
+               backgrounds are stored somewhere else and are not touched. */
             const code = await caches.open('novix-code');
             const media = await caches.open('novix-media');
             for (const it of store) {
@@ -9890,13 +9908,32 @@
                 });
                 await (CODE_RE.test(it.f) ? code : media).put(new URL(it.f, location.href).href, r);
             }
+            const keep = new Set(files.concat(['./', './index.html']).map(f => new URL(f, location.href).href));
+            let freedN = 0,
+                freedB = 0;
+            for (const c of [code, media]) {
+                for (const k of await c.keys()) {
+                    if (keep.has(k.url)) continue;
+                    try {
+                        const old = await c.match(k);
+                        if (old) freedB += (await old.blob()).size;
+                    } catch (e) {}
+                    if (await c.delete(k)) freedN++;
+                }
+            }
+            try {
+                for (const n of await caches.keys())
+                    if (n !== 'novix-code' && n !== 'novix-media') await caches.delete(n);
+            } catch (e) {}
             try {
                 const regs = await navigator.serviceWorker.getRegistrations();
                 for (const r of regs) await r.unregister();
+                await navigator.serviceWorker.register('sw.js')
             } catch (e) {}
             o.t.textContent = tr('Offline copy is up to date');
             o.p.textContent = '100%';
             o.i.style.width = '100%';
+            if (freedN) o.sub.textContent += ' · ' + tr('Old files removed') + ': ' + freedN + ' (' + (freedB / 1048576).toFixed(1) + ' MB)';
             if (fail.length) {
                 o.sub.textContent = (ar() ? 'ملفات غير موجودة على الموقع: ' : 'Missing on the site: ') + fail.slice(0, 4).join(' , ') + (fail.length > 4 ? ' …' : '');
                 o.sub.style.color = '#ffb4a8';
