@@ -45,6 +45,9 @@ const MEDIA_RE = /\.(?:mp3|ogg|wav|m4a|webp|png|jpe?g|gif|svg|ico|woff2?|ttf|otf
 const CODE_RE = /\.(?:html|js|css|webmanifest|json)$/i;
 const RECHECK_MS = 12 * 60 * 60 * 1000;
 const NET_TIMEOUT = 5000;
+/* every code file the app can load (including the ones loaded later, like the Smart Board and the PDF/file editor).
+   They are always refreshed together, so no section is left running an older version than the rest of the app. */
+const CODE_FILES = Array.from(new Set(ALL_FILES.concat(PRECACHE))).filter(f => f === './' || (f !== './version.json' && CODE_RE.test(f)));
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -52,6 +55,7 @@ self.addEventListener('install', event => {
     const media = await caches.open(MEDIA);
     await Promise.allSettled(ALL_FILES.map(async f => {
       if (f === './version.json') return;
+      if (!CODE_RE.test(f) && await media.match(new Request(f, { mode: 'same-origin' }))) return;
       const res = await fetch(f, { cache: 'reload' });
       if (!res.ok) return;
       await (CODE_RE.test(f) ? code : media).put(new Request(f, { mode: 'same-origin' }), res);
@@ -69,7 +73,15 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+  const d = event.data || {};
+  if (d.type === 'SKIP_WAITING') self.skipWaiting();
+  else if (d.type === 'CHECK_ALL') {
+    const port = event.ports && event.ports[0];
+    event.waitUntil(sweepAll().then(changed => {
+      if (changed) tellClients();
+      if (port) port.postMessage({ changed });
+    }).catch(() => { if (port) port.postMessage({ changed: false }); }));
+  }
 });
 
 self.addEventListener('fetch', event => {
@@ -91,7 +103,7 @@ self.addEventListener('fetch', event => {
 
   const isCode = req.mode === 'navigate' || CODE_RE.test(url.pathname) || url.pathname.endsWith('/');
   const fresh = req.cache === 'no-cache' || req.cache === 'reload' || req.cache === 'no-store';
-  if (isCode) event.respondWith(fresh ? networkFirst(req) : cacheFirst(req));
+  if (isCode) event.respondWith(fresh ? networkFirst(req) : cacheFirst(req, event));
   else if (MEDIA_RE.test(url.pathname)) event.respondWith(staleWhileRevalidate(req, MEDIA, RECHECK_MS));
   else event.respondWith(networkFirst(req));
 });
@@ -114,19 +126,46 @@ async function tellClients() {
   list.forEach(c => c.postMessage({ type: 'NOVIX_UPDATE' }));
 }
 
-async function cacheFirst(req) {
+/* Checks every code file against the server and refreshes the cache for all of them at once.
+   Resolves to true when anything was different. Only one check runs at a time. */
+let sweeping = null;
+function sweepAll() {
+  if (sweeping) return sweeping;
+  sweeping = (async () => {
+    const cache = await caches.open(CODE);
+    const updates = [];
+    await Promise.allSettled(CODE_FILES.map(async f => {
+      const req = new Request(f, { mode: 'same-origin' });
+      const res = await fetch(req, { cache: 'no-cache' });
+      if (!res || !res.ok) return;
+      const old = await cache.match(req, { ignoreSearch: true });
+      let diff = true;
+      if (old) { try { diff = (await digest(res)) !== (await digest(old)); } catch (e) { diff = true; } }
+      if (diff) updates.push([req, res]);
+    }));
+    await Promise.all(updates.map(u => cache.put(u[0], u[1])));
+    return updates.length > 0;
+  })().finally(() => { sweeping = null; });
+  return sweeping;
+}
+
+async function cacheFirst(req, event) {
   const cache = await caches.open(CODE);
   let hit = await cache.match(req, { ignoreSearch: true });
   if (!hit && req.mode === 'navigate') hit = await cache.match('./index.html');
   if (!hit) return networkFirst(req);
   const old = hit.clone();
-  fetch(req, { cache: 'no-cache' }).then(async res => {
+  const task = fetch(req, { cache: 'no-cache' }).then(async res => {
     if (!res || !res.ok) return;
     let changed = false;
     try { changed = (await digest(res)) !== (await digest(old)); } catch (e) { changed = true; }
     await cache.put(req, res.clone());
-    if (changed) tellClients();
+    if (changed) {
+      await sweepAll().catch(() => {});
+      tellClients();
+    }
   }).catch(() => {});
+  if (event && event.waitUntil) event.waitUntil(task);
   return hit;
 }
 
