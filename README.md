@@ -44,9 +44,6 @@ NOVIX هو مساحتك الشخصية للدراسة: مكان هادئ تحت�
 ### السبورة الذكية
 سبورة بيضاء ترسم وتشرح وتعرض عليها. يمكنك تكبيرها لتملأ الشاشة.
 
-### المحاكاة
-قسم للتجارب التفاعلية التي تتعلم منها بالممارسة. هو **قادم قريباً**، وتظهر فيه صفحة تعلمك بذلك إلى أن تُضاف التجارب.
-
 ### الإعدادات
 خصّص الموقع: اسمك وصورتك الشخصية، واللغة (العربية أو English)، والوضع الفاتح، وتأثيرات الصوت ومستواها، وزر لإعادة الإعدادات إلى وضعها الأصلي.
 
@@ -87,10 +84,7 @@ A calm timer for study sessions, with three modes: **Focus**, **Short break** an
 The sound follows the timer: it plays when the timer starts, **pauses** when you pause the timer, and **continues from where it stopped** when you resume. Picking a sound while the timer is stopped plays only a **3-second preview**, and this applies to your own music too. Your own music also has a **repeat** button that keeps replaying the current song.
 
 ### Smart Board
-A full smart whiteboard: pen, highlighter, eraser, shapes, text, sticky notes, emoji and stickers, images, lasso selection, laser pointer and hand, with many pages and paper styles, saved on this device and exportable as PDF. Expand it to fill the screen. The same tools are used to annotate PDF books in the Library reader (files: `assets/js/gn.js`, `gn-host.js`, `gn-stickers.js`, `assets/css/gn.css`).
-
-### Simulations
-A section for interactive experiments to learn by doing. It is **coming soon**, and for now it shows a page letting you know until the experiments are added.
+A full smart whiteboard: pen, highlighter, eraser, shapes, text, sticky notes, emoji and stickers, images, lasso selection, laser pointer and hand, with many pages and paper styles, saved on this device and exportable as PDF. Expand it to fill the screen. The same tools are used to annotate PDF books in the Library reader (files: `assets/js/gn.js`, `gn-host.js`, `gn-stickers.js`, 
 
 ### Settings
 Personalise the site: your name and profile picture, language (English or العربية), light mode, sound effects and their volume, and a button to reset the settings to default.
