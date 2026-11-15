@@ -2055,13 +2055,78 @@
  <label class="sh-f"><span>${'Title'}</span><span class="tt-tw"><input id="ttT" required maxlength="200" autocomplete="off" dir="auto"><button type="button" class="tt-no" id="ttNo" hidden></button></span></label>
  <label class="sh-f"><select id="ttLink" aria-label="Link a task"></select></label>
  <div class="sh-f"><span id="ttDayL">Day</span><div class="sh-days" id="ttDays"></div></div>
- <div class="sh-row"><label class="sh-f"><span id="ttTimeL">Time</span><span class="sh-time"><input id="ttTime" type="time"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></span></label>
+ <div class="sh-row"><div class="sh-f"><span id="ttTimeL">Time</span><span class="sh-time"><span class="tp" dir="ltr"><select id="ttH" aria-label="Hour"></select><b>:</b><select id="ttM" aria-label="Minute"></select><select id="ttAP" aria-label="AM / PM"></select></span><input id="ttTime" type="hidden"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></span></div>
   <div class="sh-f"><span id="ttColL">Colour</span><span class="nt-sw" id="ttSw"></span></div></div>
  <label class="nt-chk"><input type="checkbox" id="ttRep" checked><span id="ttRepL">Repeat every week</span></label>
  <div class="sheet-act"><button class="btn" type="submit"><span id="ttSaveL">Save plan</span></button><button class="btn ghost" type="button" id="ttDel" hidden><span id="ttDelL">Delete</span></button></div></form>`;
             document.body.appendChild(sh);
 
+            /* time picker: hour / minute / AM-PM. The value stays 'HH:MM' (24h) in the hidden #ttTime,
+               so saving, editing and reminders work exactly as before. */
+            const tIn = $('#ttTime'),
+                tH = $('#ttH'),
+                tM = $('#ttM'),
+                tA = $('#ttAP'),
+                vDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value'),
+                p2 = n => String(n).padStart(2, '0');
+
+            function tpFill() {
+                const ar = S.lang === 'ar',
+                    keep = [tH.value, tM.value, tA.value];
+                tH.innerHTML = '<option value="">--</option>' + Array.from({
+                    length: 12
+                }, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('');
+                tM.innerHTML = '<option value="">--</option>' + Array.from({
+                    length: 60
+                }, (_, i) => `<option value="${i}">${p2(i)}</option>`).join('');
+                tA.innerHTML = `<option value="">--</option><option value="am">${ar?'ص':'AM'}</option><option value="pm">${ar?'م':'PM'}</option>`;
+                tH.value = keep[0];
+                tM.value = keep[1];
+                tA.value = keep[2];
+                tH.setAttribute('aria-label', ar ? 'الساعة' : 'Hour');
+                tM.setAttribute('aria-label', ar ? 'الدقيقة' : 'Minute');
+                tA.setAttribute('aria-label', ar ? 'صباحاً / مساءً' : 'AM / PM')
+            }
+
+            function tpShow(v) {
+                const m = /^(\d{1,2}):(\d{2})$/.exec(v || '');
+                if (!m) {
+                    tH.value = tM.value = tA.value = '';
+                    return
+                }
+                const h = +m[1];
+                tH.value = String(h % 12 || 12);
+                tM.value = String(+m[2]);
+                tA.value = h >= 12 ? 'pm' : 'am'
+            }
+
+            function tpRead() {
+                if (!tH.value && !tM.value && !tA.value) {
+                    vDesc.set.call(tIn, '');
+                    return
+                }
+                const now = new Date();
+                /* if only part is chosen, fill the rest with a sensible default so the time is never half-saved */
+                if (!tH.value) tH.value = String(now.getHours() % 12 || 12);
+                if (!tM.value) tM.value = '0';
+                if (!tA.value) tA.value = now.getHours() >= 12 ? 'pm' : 'am';
+                vDesc.set.call(tIn, p2((+tH.value % 12) + (tA.value === 'pm' ? 12 : 0)) + ':' + p2(+tM.value))
+            }
+            Object.defineProperty(tIn, 'value', {
+                configurable: true,
+                get() {
+                    return vDesc.get.call(this)
+                },
+                set(v) {
+                    vDesc.set.call(this, v);
+                    tpShow(v)
+                }
+            });
+            [tH, tM, tA].forEach(el => el.addEventListener('change', tpRead));
+            tpFill();
+
             function ttLabels() {
+                tpFill();
                 $('#ttSheetT').textContent = tr(ttEd.id ? 'Edit plan' : 'Add plan');
                 $('#ttT').placeholder = tr('Task or event…');
                 $('#ttSaveL').textContent = tr('Save plan');
