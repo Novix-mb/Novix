@@ -2483,7 +2483,7 @@
                     p = has ? Notification.permission : 'none',
                     ar = isAr();
                 $('#permTxt').textContent = !has ? (ar ? '🔔 ستظهر التذكيرات داخل نوفيكس (أيقونة الجرس) أثناء فتح التطبيق.' : '🔔 Reminders appear inside NOVIX (bell icon) while the app is open.') :
-                    p === 'granted' ? (ar ? '🔔 الإشعارات مفعّلة. للتنبيه والتطبيق مغلق ثبّت نوفيكس على الشاشة الرئيسية، وقد يتأخر التنبيه أحياناً حسب إعدادات الهاتف.' : '🔔 Notifications are on. To be reminded while the app is closed, install NOVIX to your home screen; alerts may arrive late depending on your phone’s settings.') :
+                    p === 'granted' ? (pushUrl() ? (ar ? '🔔 الإشعارات مفعّلة — ستصلك تذكيرات مهامك حتى لو كان الموقع مغلقاً.' : '🔔 Notifications are on — reminders reach you even when the site is closed.') : (ar ? '🔔 الإشعارات مفعّلة. للتنبيه والتطبيق مغلق ثبّت نوفيكس على الشاشة الرئيسية، وقد يتأخر التنبيه أحياناً حسب إعدادات الهاتف.' : '🔔 Notifications are on. To be reminded while the app is closed, install NOVIX to your home screen; alerts may arrive late depending on your phone’s settings.')) :
                     p === 'denied' ? (ar ? 'إشعارات المتصفح محظورة. ستظل التذكيرات تظهر داخل نوفيكس (أيقونة الجرس).' : 'Browser notifications are blocked. Reminders will still appear inside NOVIX (bell icon).') :
                     (ar ? 'فعّل الإشعارات ليصلك تذكير في يوم كل مهمة مجدولة.' : 'Turn on notifications to get a reminder on the day of each scheduled task.');
                 $('#permBtn').hidden = !(has && p === 'default');
@@ -2596,7 +2596,86 @@
                     })
                 } catch (e) {}
             };
-            let syncT;
+            /* ---- Push: reminders that arrive even when the site is closed.
+               Active only when assets/js/push-config.js has the push worker's address. ---- */
+            function pushUrl() {
+                return String(window.NOVIX_PUSH_URL || '').trim().replace(/\/+$/, '')
+            }
+            const b64dec = x => {
+                x = String(x).replace(/-/g, '+').replace(/_/g, '/');
+                x += '='.repeat((4 - x.length % 4) % 4);
+                return Uint8Array.from(atob(x), c => c.charCodeAt(0))
+            };
+            let pushSub = null,
+                pushH = '';
+            try {
+                pushH = localStorage.getItem('novix.push.h') || ''
+            } catch (e) {}
+            async function pushEnsure(reg) {
+                const base = pushUrl();
+                if (!base || !reg || !reg.pushManager || !('Notification' in window) || Notification.permission !== 'granted') return null;
+                try {
+                    const r = await fetch(base + '/vapid', {
+                        cache: 'no-store'
+                    });
+                    if (!r.ok) return null;
+                    const key = b64dec((await r.json()).key);
+                    let sub = await reg.pushManager.getSubscription();
+                    if (sub) {
+                        const cur = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+                        if (!cur || cur.length !== key.length || cur.some((v, i) => v !== key[i])) {
+                            await sub.unsubscribe().catch(() => {});
+                            sub = null;
+                            pushH = ''
+                        }
+                    }
+                    if (!sub) {
+                        sub = await reg.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: key
+                        });
+                        pushH = ''
+                    }
+                    return pushSub = sub
+                } catch (e) {
+                    return null
+                }
+            }
+            async function pushSend(items) {
+                const base = pushUrl();
+                if (!base || !pushSub || !items) return;
+                const body = JSON.stringify({
+                    sub: pushSub.toJSON(),
+                    items,
+                    lang: S.lang
+                });
+                let h = 5381;
+                const keyStr = JSON.stringify({
+                    e: pushSub.endpoint,
+                    items,
+                    lang: S.lang
+                });
+                for (let i = 0; i < keyStr.length; i++) h = ((h << 5) + h + keyStr.charCodeAt(i)) | 0;
+                h = String(h);
+                if (h === pushH) return;
+                try {
+                    const r = await fetch(base + '/sync', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        },
+                        body
+                    });
+                    if (r.ok) {
+                        pushH = h;
+                        try {
+                            localStorage.setItem('novix.push.h', h)
+                        } catch (e) {}
+                    }
+                } catch (e) {}
+            }
+            let lastSched = null,
+                syncT;
 
             function queueSync() {
                 clearTimeout(syncT);
@@ -2668,7 +2747,9 @@
                         items,
                         lang: S.lang,
                         at: Date.now()
-                    })
+                    });
+                    lastSched = items;
+                    pushSend(items)
                 } catch (e) {}
             }
             let nextT;
@@ -2700,6 +2781,7 @@
                             })
                         } catch (e) {}
                     }
+                    if (await pushEnsure(reg) && lastSched) pushSend(lastSched)
                 } catch (e) {}
             }
             if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
