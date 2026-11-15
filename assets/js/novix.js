@@ -9534,6 +9534,25 @@
         }
     });
 
+    const sweep = () => new Promise(res => {
+        const c = navigator.serviceWorker.controller;
+        if (!c) return res(false);
+        const ch = new MessageChannel();
+        const t = setTimeout(() => res(false), 15000);
+        ch.port1.onmessage = e => {
+            clearTimeout(t);
+            res(!!(e.data && e.data.changed));
+        };
+        try {
+            c.postMessage({
+                type: 'CHECK_ALL'
+            }, [ch.port2]);
+        } catch (e) {
+            clearTimeout(t);
+            res(false);
+        }
+    });
+
     const remoteVersion = async () => {
         const r = await fetch('version.json?t=' + Date.now(), {
             cache: 'no-store'
@@ -9583,6 +9602,10 @@
                     return 'update';
                 }
                 if (pending) return 'update';
+                if (await sweep()) {
+                    pending = true;
+                    return 'update';
+                }
                 const cc = await caches.open('novix-code');
                 for (const u of files()) {
                     const mine = await cc.match(u, {
@@ -9714,7 +9737,7 @@
             location.reload();
         });
 
-        check();
+        setTimeout(auto, 2500);
         document.addEventListener('visibilitychange', () => {
             if (document.hidden || Date.now() - lastAuto < 60000) return;
             lastAuto = Date.now();
