@@ -32,6 +32,7 @@ const ALL_FILES = [
 "./assets/js/gn.js",
 "./assets/js/novix.js",
 "./assets/js/pdf.min.js",
+"./assets/js/push-config.js",
 "./assets/js/pdf.worker.js",
 "./assets/js/vendor/mammoth.browser.min.js",
 "./assets/js/vendor/pdf-lib.min.js",
@@ -311,6 +312,34 @@ async function showDueReminders() {
 
 self.addEventListener('periodicsync', event => {
   if (event.tag === 'novix-check') event.waitUntil(showDueReminders());
+});
+
+/* Push message from the NOVIX push worker (arrives even when the site is closed).
+   If the app is open on screen it shows its own reminders, so nothing is shown twice. */
+self.addEventListener('push', event => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) { d = {}; }
+  event.waitUntil((async () => {
+    if (d.key) {
+      const f = (await kvGet('fired')) || {};
+      f[d.key] = 1;
+      await kvPut('fired', f);
+    }
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (wins.some(c => c.visibilityState === 'visible')) return;
+    await self.registration.showNotification('NOVIX', {
+      body: d.body || 'NOVIX',
+      tag: d.tag || 'novix-push',
+      icon: NOTIF_ICON,
+      badge: NOTIF_BADGE,
+      lang: d.lang || 'en',
+      dir: d.lang === 'ar' ? 'rtl' : 'ltr',
+      vibrate: [200, 100, 200],
+      renotify: true,
+      requireInteraction: !!d.ri,
+      data: { go: d.go || null }
+    });
+  })());
 });
 
 self.addEventListener('notificationclick', event => {
