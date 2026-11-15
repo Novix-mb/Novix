@@ -5596,6 +5596,24 @@
             flex: 1
         }
 
+        .tp {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            min-width: 0
+        }
+
+        .tp select {
+            flex: 1;
+            min-width: 0;
+            padding-inline: 6px
+        }
+
+        .tp b {
+            opacity: .6
+        }
+
         .sheet-act {
             display: flex;
             gap: 10px;
