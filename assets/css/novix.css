@@ -5646,11 +5646,54 @@
         }
 
         .np-clr {
-            border: 0;
-            background: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 36px;
+            padding: 0 14px;
+            border: 1px solid var(--line);
+            border-radius: 99px;
+            background: var(--bg2);
             color: var(--acc);
             font-weight: 800;
-            font-size: 12px
+            font-size: 13px;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: background .15s, transform .12s
+        }
+
+        .np-clr .i {
+            width: 16px;
+            height: 16px
+        }
+
+        .np-clr:active {
+            transform: scale(.95)
+        }
+
+        .np-undo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 4px 4px 0;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: var(--act);
+            font-size: 13px;
+            font-weight: 700
+        }
+
+        .np-ub {
+            min-height: 34px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 99px;
+            background: var(--btn);
+            color: #fff;
+            font-weight: 800;
+            font-size: 12.5px;
+            cursor: pointer
         }
 
         .np-i {
@@ -8931,27 +8974,32 @@ html.kb-open .nm-pop {
     box-shadow: 0 2px 8px rgba(0, 0, 0, .05)
 }
 
-.tp select {
+.tp input {
     -webkit-appearance: none;
     appearance: none;
-    height: 52px !important;
-    width: 66px;
+    height: 56px !important;
+    width: 70px;
     min-width: 0;
     border: 0 !important;
     background: transparent !important;
-    font-size: 28px !important;
+    font-size: 30px !important;
     font-weight: 800 !important;
     text-align: center;
-    text-align-last: center;
     padding: 0 4px !important;
     color: var(--text);
-    cursor: pointer;
-    border-radius: 12px !important
+    border-radius: 12px !important;
+    font-variant-numeric: tabular-nums;
+    caret-color: var(--acc)
 }
 
-.tp select:focus-visible {
-    outline: 2px solid var(--acc);
-    outline-offset: -2px
+.tp input::placeholder {
+    color: var(--muted);
+    opacity: .45
+}
+
+.tp:focus-within {
+    border-color: var(--acc);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--acc) 22%, transparent), 0 2px 8px rgba(0, 0, 0, .05)
 }
 
 .tp b {
@@ -8989,57 +9037,22 @@ html.kb-open .nm-pop {
     box-shadow: 0 3px 10px rgba(0, 0, 0, .18)
 }
 
-.tp-quick {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px
-}
-
-.tp-quick button {
-    height: 32px;
-    padding: 0 12px;
-    border-radius: 99px;
-    border: 1px solid var(--line);
-    background: var(--card);
-    color: var(--text);
-    font-size: 12.5px;
-    font-weight: 700;
-    cursor: pointer
-}
-
-.tp-quick button.on {
-    background: var(--acc);
-    border-color: var(--acc);
-    color: #fff
-}
-
 .tt-sw {
-    gap: 10px;
-    min-height: 0
+    gap: 12px;
+    min-height: 0;
+    align-items: center
 }
 
-.tt-sw .nt-dot {
-    width: 36px;
-    height: 36px;
-    position: relative
+.tt-sw .tt-col {
+    width: 46px !important;
+    height: 46px !important
 }
 
-.tt-sw .nt-dot.on::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 46%;
-    width: 8px;
-    height: 15px;
-    border: solid #fff;
-    border-width: 0 3px 3px 0;
-    transform: translate(-50%, -55%) rotate(45deg);
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .35))
-}
-
-.tt-sw .nt-col {
-    width: 36px !important;
-    height: 36px !important
+.tt-cname {
+    font: 700 14px/1 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: .06em;
+    color: var(--muted);
+    direction: ltr
 }
 
 .tt-prev {
