@@ -33,6 +33,7 @@ const ALL_FILES = [
 "./assets/js/novix.js",
 "./assets/js/pdf.min.js",
 "./assets/js/push-config.js",
+"./assets/js/colorpick.js",
 "./assets/js/pdf.worker.js",
 "./assets/js/vendor/mammoth.browser.min.js",
 "./assets/js/vendor/pdf-lib.min.js",
