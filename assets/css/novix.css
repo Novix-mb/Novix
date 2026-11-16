@@ -2132,6 +2132,9 @@
             font-weight: 700;
             font-size: 14px;
             line-height: 1.5;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
             animation: nxbIn .26s cubic-bezier(.2, .8, .2, 1)
         }
 
@@ -2153,18 +2156,33 @@
 
         .nx-b-x {
             flex: none;
-            width: 30px;
-            height: 30px;
+            width: 42px;
+            height: 42px;
+            margin-block: -6px;
             border: 0;
             border-radius: 50%;
             background: color-mix(in srgb, currentColor 12%, transparent);
             color: inherit;
-            font-size: 20px;
-            line-height: 1;
             cursor: pointer;
             display: grid;
             place-items: center;
-            padding: 0
+            padding: 0;
+            touch-action: manipulation;
+            transition: background .15s, transform .12s
+        }
+
+        .nx-b-x .i {
+            width: 18px;
+            height: 18px
+        }
+
+        .nx-b-x:active {
+            transform: scale(.9)
+        }
+
+        .nx-b-x:focus-visible {
+            outline: 2px solid var(--acc, #2fa68a);
+            outline-offset: 2px
         }
 
         .nx-b-x:hover {
@@ -5646,54 +5664,11 @@
         }
 
         .np-clr {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            min-height: 36px;
-            padding: 0 14px;
-            border: 1px solid var(--line);
-            border-radius: 99px;
-            background: var(--bg2);
+            border: 0;
+            background: none;
             color: var(--acc);
             font-weight: 800;
-            font-size: 13px;
-            cursor: pointer;
-            touch-action: manipulation;
-            transition: background .15s, transform .12s
-        }
-
-        .np-clr .i {
-            width: 16px;
-            height: 16px
-        }
-
-        .np-clr:active {
-            transform: scale(.95)
-        }
-
-        .np-undo {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin: 4px 4px 0;
-            padding: 10px 12px;
-            border-radius: 12px;
-            background: var(--act);
-            font-size: 13px;
-            font-weight: 700
-        }
-
-        .np-ub {
-            min-height: 34px;
-            padding: 0 14px;
-            border: 0;
-            border-radius: 99px;
-            background: var(--btn);
-            color: #fff;
-            font-weight: 800;
-            font-size: 12.5px;
-            cursor: pointer
+            font-size: 12px
         }
 
         .np-i {
@@ -8959,8 +8934,14 @@ html.kb-open .nm-pop {
 .tt-time {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap
+}
+
+.tt-time .x {
+    width: 32px;
+    height: 32px;
+    flex: none
 }
 
 .tp {
@@ -8978,7 +8959,7 @@ html.kb-open .nm-pop {
     -webkit-appearance: none;
     appearance: none;
     height: 56px !important;
-    width: 70px;
+    width: 52px;
     min-width: 0;
     border: 0 !important;
     background: transparent !important;
@@ -9020,7 +9001,7 @@ html.kb-open .nm-pop {
 
 .tp-seg button {
     height: 44px;
-    min-width: 50px;
+    min-width: 40px;
     border: 0;
     border-radius: 11px;
     background: transparent;
@@ -9038,21 +9019,13 @@ html.kb-open .nm-pop {
 }
 
 .tt-sw {
-    gap: 12px;
-    min-height: 0;
+    display: inline-flex;
     align-items: center
 }
 
 .tt-sw .tt-col {
-    width: 46px !important;
-    height: 46px !important
-}
-
-.tt-cname {
-    font: 700 14px/1 ui-monospace, Menlo, Consolas, monospace;
-    letter-spacing: .06em;
-    color: var(--muted);
-    direction: ltr
+    width: 42px !important;
+    height: 42px !important
 }
 
 .tt-prev {
