@@ -81,8 +81,6 @@
                 'Enable notifications': 'تفعيل الإشعارات',
                 'Notifications': 'الإشعارات',
                 'Clear all': 'مسح الكل',
-                'Notifications cleared': 'تم مسح الإشعارات',
-                'Undo': 'تراجع',
                 'No notifications yet': 'لا توجد إشعارات بعد',
                 'Added to timetable': 'تمت الإضافة للجدول',
                 'Removed': 'تم الحذف',
@@ -1229,6 +1227,16 @@
                 };
                 box.appendChild(i)
             }
+            /* closes the matching notification in the phone's notification shade */
+            function closeSys(go) {
+                try {
+                    const tag = 'novix-' + ((go && (go.k || 'x')) || 'x') + '-' + ((go && go.id) || (go && go.tasks ? 'tasks' : 'd'));
+                    navigator.serviceWorker.getRegistration().then(r => r && r.getNotifications({
+                        tag
+                    }).then(l => l.forEach(n => n.close()))).catch(() => {})
+                } catch (e) {}
+            }
+
             function taskBanner(msg, go) {
                 let box = document.getElementById('nx-banners');
                 if (!box) {
@@ -1246,20 +1254,67 @@
                 const x = document.createElement('button');
                 x.type = 'button';
                 x.className = 'nx-b-x';
-                x.textContent = '×';
+                x.innerHTML = ic('x');
                 x.setAttribute('aria-label', tr('Hide'));
                 x.title = tr('Hide');
-                x.onclick = () => {
-                    b.classList.add('out');
-                    setTimeout(() => b.remove(), 180)
+                let moved = false;
+                const dismiss = () => {
+                    if (b.dataset.gone) return;
+                    b.dataset.gone = '1';
+                    b.style.pointerEvents = 'none';
+                    b.style.transition = 'opacity .18s, transform .18s';
+                    b.style.opacity = '0';
+                    if (!b.style.transform) b.style.transform = 'translateY(-8px)';
+                    setTimeout(() => b.remove(), 190);
+                    closeSys(go)
                 };
+                x.onclick = e => {
+                    e.stopPropagation();
+                    dismiss()
+                };
+                /* swipe the banner up or sideways to dismiss it */
+                b.addEventListener('pointerdown', e => {
+                    if (e.target.closest('.nx-b-x') || (e.pointerType === 'mouse' && e.button !== 0)) return;
+                    const sx = e.clientX,
+                        sy = e.clientY;
+                    let dx = 0,
+                        dy = 0;
+                    moved = false;
+                    const mv = ev => {
+                        dx = ev.clientX - sx;
+                        dy = ev.clientY - sy;
+                        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
+                        if (!moved) return;
+                        b.style.transition = 'none';
+                        b.style.transform = `translate(${dx}px, ${Math.min(0, dy)}px)`;
+                        b.style.opacity = String(Math.max(.25, 1 - Math.abs(dx) / 260 - Math.max(0, -dy) / 140))
+                    };
+                    const up = () => {
+                        window.removeEventListener('pointermove', mv);
+                        window.removeEventListener('pointerup', up);
+                        window.removeEventListener('pointercancel', up);
+                        if (Math.abs(dx) > 90 || dy < -45) dismiss();
+                        else {
+                            b.style.transition = 'opacity .18s, transform .18s';
+                            b.style.transform = '';
+                            b.style.opacity = '';
+                            setTimeout(() => {
+                                moved = false
+                            }, 0)
+                        }
+                    };
+                    window.addEventListener('pointermove', mv);
+                    window.addEventListener('pointerup', up);
+                    window.addEventListener('pointercancel', up)
+                });
                 if (go) {
                     t.style.cursor = 'pointer';
                     t.setAttribute('role', 'button');
                     t.tabIndex = 0;
                     t.onclick = () => {
+                        if (moved) return;
                         goNotif(go);
-                        x.click()
+                        dismiss()
                     };
                     t.onkeydown = e => {
                         if (e.key === 'Enter' || e.key === ' ') {
@@ -2057,8 +2112,7 @@
  <label class="sh-f"><span>${'Title'}</span><span class="tt-tw"><input id="ttT" required maxlength="200" autocomplete="off" dir="auto"><button type="button" class="tt-no" id="ttNo" hidden></button></span></label>
  <label class="sh-f"><select id="ttLink" aria-label="Link a task"></select></label>
  <div class="sh-f"><span id="ttDayL">Day</span><div class="sh-days" id="ttDays"></div></div>
- <div class="sh-f tt-box"><span id="ttTimeL">Time</span><div class="tt-time" dir="ltr"><span class="tp"><input id="ttH" inputmode="numeric" maxlength="2" placeholder="--" autocomplete="off" enterkeyhint="next" aria-label="Hour"><b>:</b><input id="ttM" inputmode="numeric" maxlength="2" placeholder="--" autocomplete="off" aria-label="Minute"></span><span class="tp-seg" id="ttSeg" role="group"><button type="button" data-ap="am">AM</button><button type="button" data-ap="pm">PM</button></span><select id="ttAP" hidden><option value=""></option><option value="am"></option><option value="pm"></option></select><input id="ttTime" type="hidden"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></div></div>
-  <div class="sh-f tt-box"><span id="ttColL">Colour</span><span class="nt-sw tt-sw" id="ttSw"></span></div>
+ <div class="sh-f tt-box"><span id="ttTimeL">Time</span><div class="tt-time" dir="ltr"><span class="tp"><input id="ttH" inputmode="numeric" maxlength="2" placeholder="--" autocomplete="off" enterkeyhint="next" aria-label="Hour"><b>:</b><input id="ttM" inputmode="numeric" maxlength="2" placeholder="--" autocomplete="off" aria-label="Minute"></span><span class="tp-seg" id="ttSeg" role="group"><button type="button" data-ap="am">AM</button><button type="button" data-ap="pm">PM</button></span><span class="tt-sw" id="ttSw"></span><select id="ttAP" hidden><option value=""></option><option value="am"></option><option value="pm"></option></select><input id="ttTime" type="hidden"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></div></div>
   <div class="tt-prev" id="ttPrev" aria-hidden="true"><span class="tt-pt"></span><b class="tt-ptm"></b></div>
  <label class="nt-chk"><input type="checkbox" id="ttRep" checked><span id="ttRepL">Repeat every week</span></label>
  <div class="sheet-act"><button class="btn" type="submit"><span id="ttSaveL">Save plan</span></button><button class="btn ghost" type="button" id="ttDel" hidden><span id="ttDelL">Delete</span></button></div></form>`;
@@ -2200,7 +2254,6 @@
                 $('#ttDelL').textContent = tr('Delete');
                 $('#ttDayL').textContent = tr('Day');
                 $('#ttTimeL').textContent = tr('Time');
-                $('#ttColL').textContent = tr('Colour');
                 $('#ttRepL').textContent = tr('Repeat every week');
                 $('#ttNoTime').setAttribute('aria-label', tr('Clear time'));
                 $('#ttX').setAttribute('aria-label', tr('Cancel'));
@@ -2219,15 +2272,12 @@
                 i.className = 'nt-col tt-col';
                 i.value = cl(ttc, TTC[0]);
                 i.setAttribute('aria-label', tr('Custom colour'));
-                const nm = document.createElement('span');
-                nm.className = 'tt-cname';
-                nm.textContent = i.value.toUpperCase();
+                i.title = tr('Custom colour');
                 i.oninput = () => {
                     ttc = i.value;
-                    nm.textContent = i.value.toUpperCase();
                     ttPrevUpd()
                 };
-                box.append(i, nm);
+                box.append(i);
                 ttPrevUpd()
             }
 
@@ -2461,7 +2511,6 @@
                 }
             });
 
-            let npUndo = null;
             const np = document.createElement('div');
             np.className = 'np';
             np.hidden = true;
@@ -2474,7 +2523,7 @@
 
             function renderNP() {
                 const L = S.notif.slice().reverse();
-                np.innerHTML = `<div class="np-h"><b>${tr('Notifications')}</b><button type="button" class="np-clr" ${L.length?'':'hidden'}>${ic('trash')}<span>${tr('Clear all')}</span></button></div>` + (!L.length && npUndo ? `<div class="np-undo"><span>${tr('Notifications cleared')}</span><button type="button" class="np-ub">${tr('Undo')}</button></div>` : '') + (L.length ? L.map(n => `<div class="np-i go ${n.read?'':'new'}" data-nid2="${n.id}" role="button" tabindex="0"><span>${esc(n.msg)}</span><small>${new Date(n.ts).toLocaleString(loc(),{weekday:'short',hour:'2-digit',minute:'2-digit'})}</small></div>`).join('') : `<p class="np-e">${tr('No notifications yet')}</p>`)
+                np.innerHTML = `<div class="np-h"><b>${tr('Notifications')}</b><button type="button" class="np-clr" ${L.length?'':'hidden'}>${tr('Clear all')}</button></div>` + (L.length ? L.map(n => `<div class="np-i go ${n.read?'':'new'}" data-nid2="${n.id}" role="button" tabindex="0"><span>${esc(n.msg)}</span><small>${new Date(n.ts).toLocaleString(loc(),{weekday:'short',hour:'2-digit',minute:'2-digit'})}</small></div>`).join('') : `<p class="np-e">${tr('No notifications yet')}</p>`)
             }
 
             function toggleNP() {
@@ -2483,7 +2532,6 @@
                     return
                 }
                 S.notif.forEach(n => n.read = 1);
-                npUndo = null;
                 save();
                 updateDot();
                 renderNP();
@@ -2493,28 +2541,14 @@
                 np.style.top = (r.bottom + 8) + 'px';
                 np.style.left = Math.max(8, Math.min(innerWidth - w - 8, isAr() ? r.left : r.right - w)) + 'px'
             }
-            /* "Clear all" / "Undo" are handled here first, so the panel stays open and nothing else reacts to the click */
-            np.addEventListener('click', e => {
-                const c = e.target.closest('.np-clr'),
-                    u = e.target.closest('.np-ub');
-                if (!c && !u) return;
-                e.stopPropagation();
-                if (c) {
-                    npUndo = S.notif.length ? S.notif.slice() : null;
-                    S.notif = [];
-                    document.querySelectorAll('#nx-banners .nx-banner').forEach(b => b.remove());
-                    try {
-                        navigator.serviceWorker.getRegistration().then(r => r && r.getNotifications().then(l => l.forEach(n => n.close()))).catch(() => {})
-                    } catch (x) {}
-                } else if (npUndo) {
-                    S.notif = npUndo;
-                    npUndo = null
-                }
-                save();
-                renderNP();
-                updateDot()
-            }, true);
             document.addEventListener('click', e => {
+                if (e.target.closest('.np-clr')) {
+                    S.notif = [];
+                    save();
+                    renderNP();
+                    updateDot();
+                    return
+                }
                 if (!np.hidden && !np.contains(e.target) && !e.target.closest('#bell')) np.hidden = true
             });
             document.addEventListener('keydown', e => {
