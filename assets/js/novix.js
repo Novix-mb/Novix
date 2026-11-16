@@ -1,3 +1,4 @@
+
 ;
         if (window.pdfjsLib) {
             try {
@@ -1200,7 +1201,7 @@
             const TBG = ['', '#fff3b0', '#ffd9e0', '#d6f5ea', '#d9e8ff', '#e9dcff', '#1c3a33', '#000000'];
             const INK = ['#1c3a33', '#000000', '#ffffff', '#1d4ed8', '#b91c1c', '#15803d', '#7c3aed', '#c2410c'];
             const PAPER = ['#fff3b0', '#ffd9e0', '#d6f5ea', '#d9e8ff', '#e9dcff', '#ffe5c7', '#ffffff', '#2b3a36'];
-            const TTC = ['#5fc2a4', '#6aa7e0', '#f6c453', '#ef8a8a', '#b78be0', '#ff9a4d'];
+            const TTC = ['#5fc2a4', '#6aa7e0', '#f6c453', '#ef8a8a', '#b78be0', '#ff9a4d', '#4fc3dc', '#f48fb1', '#8bc34a', '#9aa7b2'];
 
             function swatches(box, list, cur, onPick) {
                 box.innerHTML = '';
@@ -2055,20 +2056,44 @@
  <label class="sh-f"><span>${'Title'}</span><span class="tt-tw"><input id="ttT" required maxlength="200" autocomplete="off" dir="auto"><button type="button" class="tt-no" id="ttNo" hidden></button></span></label>
  <label class="sh-f"><select id="ttLink" aria-label="Link a task"></select></label>
  <div class="sh-f"><span id="ttDayL">Day</span><div class="sh-days" id="ttDays"></div></div>
- <div class="sh-row"><div class="sh-f"><span id="ttTimeL">Time</span><span class="sh-time"><span class="tp" dir="ltr"><select id="ttH" aria-label="Hour"></select><b>:</b><select id="ttM" aria-label="Minute"></select><select id="ttAP" aria-label="AM / PM"></select></span><input id="ttTime" type="hidden"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></span></div>
-  <div class="sh-f"><span id="ttColL">Colour</span><span class="nt-sw" id="ttSw"></span></div></div>
+ <div class="sh-f tt-box"><span id="ttTimeL">Time</span><div class="tt-time" dir="ltr"><span class="tp"><select id="ttH" aria-label="Hour"></select><b>:</b><select id="ttM" aria-label="Minute"></select></span><span class="tp-seg" id="ttSeg" role="group"><button type="button" data-ap="am">AM</button><button type="button" data-ap="pm">PM</button></span><select id="ttAP" hidden></select><input id="ttTime" type="hidden"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></div><div class="tp-quick" id="ttQuick" dir="ltr"></div></div>
+  <div class="sh-f tt-box"><span id="ttColL">Colour</span><span class="nt-sw tt-sw" id="ttSw"></span></div>
+  <div class="tt-prev" id="ttPrev" aria-hidden="true"><span class="tt-pt"></span><b class="tt-ptm"></b></div>
  <label class="nt-chk"><input type="checkbox" id="ttRep" checked><span id="ttRepL">Repeat every week</span></label>
  <div class="sheet-act"><button class="btn" type="submit"><span id="ttSaveL">Save plan</span></button><button class="btn ghost" type="button" id="ttDel" hidden><span id="ttDelL">Delete</span></button></div></form>`;
             document.body.appendChild(sh);
 
-            /* time picker: hour / minute / AM-PM. The value stays 'HH:MM' (24h) in the hidden #ttTime,
+            /* time picker: hour : minute + AM/PM buttons + quick times. The value stays 'HH:MM' (24h) in the hidden #ttTime,
                so saving, editing and reminders work exactly as before. */
             const tIn = $('#ttTime'),
                 tH = $('#ttH'),
                 tM = $('#ttM'),
                 tA = $('#ttAP'),
                 vDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value'),
-                p2 = n => String(n).padStart(2, '0');
+                p2 = n => String(n).padStart(2, '0'),
+                QUICK = ['07:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+
+            function fmt12(v) {
+                const m = /^(\d{1,2}):(\d{2})$/.exec(v || '');
+                if (!m) return '';
+                const h = +m[1];
+                return (h % 12 || 12) + ':' + m[2] + ' ' + (S.lang === 'ar' ? (h >= 12 ? 'م' : 'ص') : (h >= 12 ? 'PM' : 'AM'))
+            }
+
+            function ttPrevUpd() {
+                const b = $('#ttPrev');
+                if (!b) return;
+                b.style.setProperty('--c', ttc);
+                b.querySelector('.tt-pt').textContent = ($('#ttT') && $('#ttT').value.trim()) || (S.lang === 'ar' ? 'عنوان الخطة' : 'Plan title');
+                b.querySelector('.tt-ptm').textContent = fmt12(vDesc.get.call(tIn))
+            }
+
+            function tpSync() {
+                const v = vDesc.get.call(tIn);
+                $('#ttSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', !!tA.value && b.dataset.ap === tA.value));
+                $('#ttQuick').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === v));
+                ttPrevUpd()
+            }
 
             function tpFill() {
                 const ar = S.lang === 'ar',
@@ -2079,30 +2104,37 @@
                 tM.innerHTML = '<option value="">--</option>' + Array.from({
                     length: 60
                 }, (_, i) => `<option value="${i}">${p2(i)}</option>`).join('');
-                tA.innerHTML = `<option value="">--</option><option value="am">${ar?'ص':'AM'}</option><option value="pm">${ar?'م':'PM'}</option>`;
+                tA.innerHTML = `<option value="">--</option><option value="am">AM</option><option value="pm">PM</option>`;
                 tH.value = keep[0];
                 tM.value = keep[1];
                 tA.value = keep[2];
                 tH.setAttribute('aria-label', ar ? 'الساعة' : 'Hour');
                 tM.setAttribute('aria-label', ar ? 'الدقيقة' : 'Minute');
-                tA.setAttribute('aria-label', ar ? 'صباحاً / مساءً' : 'AM / PM')
+                const sg = $('#ttSeg').querySelectorAll('button');
+                sg[0].textContent = ar ? 'ص' : 'AM';
+                sg[1].textContent = ar ? 'م' : 'PM';
+                $('#ttQuick').innerHTML = QUICK.map(t => `<button type="button" data-t="${t}">${fmt12(t)}</button>`).join('');
+                tpSync()
             }
 
             function tpShow(v) {
                 const m = /^(\d{1,2}):(\d{2})$/.exec(v || '');
                 if (!m) {
                     tH.value = tM.value = tA.value = '';
+                    tpSync();
                     return
                 }
                 const h = +m[1];
                 tH.value = String(h % 12 || 12);
                 tM.value = String(+m[2]);
-                tA.value = h >= 12 ? 'pm' : 'am'
+                tA.value = h >= 12 ? 'pm' : 'am';
+                tpSync()
             }
 
             function tpRead() {
                 if (!tH.value && !tM.value && !tA.value) {
                     vDesc.set.call(tIn, '');
+                    tpSync();
                     return
                 }
                 const now = new Date();
@@ -2110,7 +2142,8 @@
                 if (!tH.value) tH.value = String(now.getHours() % 12 || 12);
                 if (!tM.value) tM.value = '0';
                 if (!tA.value) tA.value = now.getHours() >= 12 ? 'pm' : 'am';
-                vDesc.set.call(tIn, p2((+tH.value % 12) + (tA.value === 'pm' ? 12 : 0)) + ':' + p2(+tM.value))
+                vDesc.set.call(tIn, p2((+tH.value % 12) + (tA.value === 'pm' ? 12 : 0)) + ':' + p2(+tM.value));
+                tpSync()
             }
             Object.defineProperty(tIn, 'value', {
                 configurable: true,
@@ -2123,6 +2156,20 @@
                 }
             });
             [tH, tM, tA].forEach(el => el.addEventListener('change', tpRead));
+            $('#ttSeg').addEventListener('click', e => {
+                const b = e.target.closest('button[data-ap]');
+                if (!b) return;
+                tA.value = b.dataset.ap;
+                tpRead();
+                SFX.tap()
+            });
+            $('#ttQuick').addEventListener('click', e => {
+                const b = e.target.closest('button[data-t]');
+                if (!b) return;
+                tIn.value = b.dataset.t;
+                SFX.tap()
+            });
+            $('#ttT').addEventListener('input', ttPrevUpd);
             tpFill();
 
             function ttLabels() {
@@ -2147,8 +2194,10 @@
             function paintTtSw() {
                 swatches($('#ttSw'), TTC, ttc, (c, live) => {
                     ttc = c;
+                    ttPrevUpd();
                     if (!live) paintTtSw()
-                })
+                });
+                ttPrevUpd()
             }
 
             function paintTtNo() {
