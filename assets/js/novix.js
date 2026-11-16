@@ -1,4 +1,3 @@
-
 ;
         if (window.pdfjsLib) {
             try {
@@ -82,6 +81,8 @@
                 'Enable notifications': 'تفعيل الإشعارات',
                 'Notifications': 'الإشعارات',
                 'Clear all': 'مسح الكل',
+                'Notifications cleared': 'تم مسح الإشعارات',
+                'Undo': 'تراجع',
                 'No notifications yet': 'لا توجد إشعارات بعد',
                 'Added to timetable': 'تمت الإضافة للجدول',
                 'Removed': 'تم الحذف',
@@ -2056,14 +2057,15 @@
  <label class="sh-f"><span>${'Title'}</span><span class="tt-tw"><input id="ttT" required maxlength="200" autocomplete="off" dir="auto"><button type="button" class="tt-no" id="ttNo" hidden></button></span></label>
  <label class="sh-f"><select id="ttLink" aria-label="Link a task"></select></label>
  <div class="sh-f"><span id="ttDayL">Day</span><div class="sh-days" id="ttDays"></div></div>
- <div class="sh-f tt-box"><span id="ttTimeL">Time</span><div class="tt-time" dir="ltr"><span class="tp"><select id="ttH" aria-label="Hour"></select><b>:</b><select id="ttM" aria-label="Minute"></select></span><span class="tp-seg" id="ttSeg" role="group"><button type="button" data-ap="am">AM</button><button type="button" data-ap="pm">PM</button></span><select id="ttAP" hidden></select><input id="ttTime" type="hidden"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></div><div class="tp-quick" id="ttQuick" dir="ltr"></div></div>
+ <div class="sh-f tt-box"><span id="ttTimeL">Time</span><div class="tt-time" dir="ltr"><span class="tp"><input id="ttH" inputmode="numeric" maxlength="2" placeholder="--" autocomplete="off" enterkeyhint="next" aria-label="Hour"><b>:</b><input id="ttM" inputmode="numeric" maxlength="2" placeholder="--" autocomplete="off" aria-label="Minute"></span><span class="tp-seg" id="ttSeg" role="group"><button type="button" data-ap="am">AM</button><button type="button" data-ap="pm">PM</button></span><select id="ttAP" hidden><option value=""></option><option value="am"></option><option value="pm"></option></select><input id="ttTime" type="hidden"><button type="button" class="x" id="ttNoTime" aria-label="Clear time">${ic('x')}</button></div></div>
   <div class="sh-f tt-box"><span id="ttColL">Colour</span><span class="nt-sw tt-sw" id="ttSw"></span></div>
   <div class="tt-prev" id="ttPrev" aria-hidden="true"><span class="tt-pt"></span><b class="tt-ptm"></b></div>
  <label class="nt-chk"><input type="checkbox" id="ttRep" checked><span id="ttRepL">Repeat every week</span></label>
  <div class="sheet-act"><button class="btn" type="submit"><span id="ttSaveL">Save plan</span></button><button class="btn ghost" type="button" id="ttDel" hidden><span id="ttDelL">Delete</span></button></div></form>`;
             document.body.appendChild(sh);
 
-            /* time picker: hour : minute + AM/PM buttons + quick times. The value stays 'HH:MM' (24h) in the hidden #ttTime,
+            /* time picker: type the hour and the minute (numbers only), choose AM/PM with the two buttons.
+               Typing 13-23 also works (it is turned into PM). The value stays 'HH:MM' (24h) in the hidden #ttTime,
                so saving, editing and reminders work exactly as before. */
             const tIn = $('#ttTime'),
                 tH = $('#ttH'),
@@ -2071,49 +2073,35 @@
                 tA = $('#ttAP'),
                 vDesc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value'),
                 p2 = n => String(n).padStart(2, '0'),
-                QUICK = ['07:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+                dg = x => String(x).replace(/[\u0660-\u0669]/g, d => d.charCodeAt(0) - 1632).replace(/[\u06F0-\u06F9]/g, d => d.charCodeAt(0) - 1776).replace(/\D/g, '').slice(0, 2);
 
             function fmt12(v) {
                 const m = /^(\d{1,2}):(\d{2})$/.exec(v || '');
                 if (!m) return '';
                 const h = +m[1];
-                return (h % 12 || 12) + ':' + m[2] + ' ' + (S.lang === 'ar' ? (h >= 12 ? 'م' : 'ص') : (h >= 12 ? 'PM' : 'AM'))
+                return (h % 12 || 12) + ':' + m[2] + ' ' + (S.lang === 'ar' ? (h >= 12 ? '\u0645' : '\u0635') : (h >= 12 ? 'PM' : 'AM'))
             }
 
             function ttPrevUpd() {
                 const b = $('#ttPrev');
                 if (!b) return;
                 b.style.setProperty('--c', ttc);
-                b.querySelector('.tt-pt').textContent = ($('#ttT') && $('#ttT').value.trim()) || (S.lang === 'ar' ? 'عنوان الخطة' : 'Plan title');
+                b.querySelector('.tt-pt').textContent = ($('#ttT') && $('#ttT').value.trim()) || (S.lang === 'ar' ? '\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062e\u0637\u0629' : 'Plan title');
                 b.querySelector('.tt-ptm').textContent = fmt12(vDesc.get.call(tIn))
             }
 
             function tpSync() {
-                const v = vDesc.get.call(tIn);
                 $('#ttSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', !!tA.value && b.dataset.ap === tA.value));
-                $('#ttQuick').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === v));
                 ttPrevUpd()
             }
 
             function tpFill() {
                 const ar = S.lang === 'ar',
-                    keep = [tH.value, tM.value, tA.value];
-                tH.innerHTML = '<option value="">--</option>' + Array.from({
-                    length: 12
-                }, (_, i) => `<option value="${i+1}">${i+1}</option>`).join('');
-                tM.innerHTML = '<option value="">--</option>' + Array.from({
-                    length: 60
-                }, (_, i) => `<option value="${i}">${p2(i)}</option>`).join('');
-                tA.innerHTML = `<option value="">--</option><option value="am">AM</option><option value="pm">PM</option>`;
-                tH.value = keep[0];
-                tM.value = keep[1];
-                tA.value = keep[2];
-                tH.setAttribute('aria-label', ar ? 'الساعة' : 'Hour');
-                tM.setAttribute('aria-label', ar ? 'الدقيقة' : 'Minute');
-                const sg = $('#ttSeg').querySelectorAll('button');
-                sg[0].textContent = ar ? 'ص' : 'AM';
-                sg[1].textContent = ar ? 'م' : 'PM';
-                $('#ttQuick').innerHTML = QUICK.map(t => `<button type="button" data-t="${t}">${fmt12(t)}</button>`).join('');
+                    sg = $('#ttSeg').querySelectorAll('button');
+                tH.setAttribute('aria-label', ar ? '\u0627\u0644\u0633\u0627\u0639\u0629' : 'Hour');
+                tM.setAttribute('aria-label', ar ? '\u0627\u0644\u062f\u0642\u064a\u0642\u0629' : 'Minute');
+                sg[0].textContent = ar ? '\u0635' : 'AM';
+                sg[1].textContent = ar ? '\u0645' : 'PM';
                 tpSync()
             }
 
@@ -2126,23 +2114,39 @@
                 }
                 const h = +m[1];
                 tH.value = String(h % 12 || 12);
-                tM.value = String(+m[2]);
+                tM.value = p2(+m[2]);
                 tA.value = h >= 12 ? 'pm' : 'am';
                 tpSync()
             }
 
-            function tpRead() {
-                if (!tH.value && !tM.value && !tA.value) {
+            function tpRead(norm) {
+                const hs = tH.value,
+                    ms = tM.value;
+                if (!hs && !ms) {
                     vDesc.set.call(tIn, '');
                     tpSync();
                     return
                 }
                 const now = new Date();
-                /* if only part is chosen, fill the rest with a sensible default so the time is never half-saved */
-                if (!tH.value) tH.value = String(now.getHours() % 12 || 12);
-                if (!tM.value) tM.value = '0';
-                if (!tA.value) tA.value = now.getHours() >= 12 ? 'pm' : 'am';
-                vDesc.set.call(tIn, p2((+tH.value % 12) + (tA.value === 'pm' ? 12 : 0)) + ':' + p2(+tM.value));
+                let h = hs === '' ? (now.getHours() % 12 || 12) : Math.min(+hs, 23),
+                    ap = tA.value;
+                if (hs !== '') {
+                    if (h > 12) {
+                        h -= 12;
+                        ap = 'pm'
+                    } else if (h === 0) {
+                        h = 12;
+                        ap = 'am'
+                    }
+                }
+                const m = ms === '' ? 0 : Math.min(+ms, 59);
+                if (!ap) ap = now.getHours() >= 12 ? 'pm' : 'am';
+                tA.value = ap;
+                if (norm) {
+                    tH.value = String(h);
+                    tM.value = p2(m)
+                }
+                vDesc.set.call(tIn, p2((h % 12) + (ap === 'pm' ? 12 : 0)) + ':' + p2(m));
                 tpSync()
             }
             Object.defineProperty(tIn, 'value', {
@@ -2155,18 +2159,34 @@
                     tpShow(v)
                 }
             });
-            [tH, tM, tA].forEach(el => el.addEventListener('change', tpRead));
+            tH.addEventListener('input', () => {
+                tH.value = dg(tH.value);
+                const n = tH.value;
+                if (n.length === 2 || (n.length === 1 && +n >= 3)) {
+                    tpRead(true);
+                    tM.focus()
+                } else tpRead(false)
+            });
+            tM.addEventListener('input', () => {
+                tM.value = dg(tM.value);
+                tpRead(tM.value.length === 2)
+            });
+            tM.addEventListener('keydown', e => {
+                if (e.key === 'Backspace' && !tM.value) tH.focus()
+            });
+            [tH, tM].forEach(el => {
+                el.addEventListener('blur', () => tpRead(true));
+                el.addEventListener('focus', () => setTimeout(() => {
+                    try {
+                        el.select()
+                    } catch (x) {}
+                }, 0))
+            });
             $('#ttSeg').addEventListener('click', e => {
                 const b = e.target.closest('button[data-ap]');
                 if (!b) return;
                 tA.value = b.dataset.ap;
-                tpRead();
-                SFX.tap()
-            });
-            $('#ttQuick').addEventListener('click', e => {
-                const b = e.target.closest('button[data-t]');
-                if (!b) return;
-                tIn.value = b.dataset.t;
+                tpRead(true);
                 SFX.tap()
             });
             $('#ttT').addEventListener('input', ttPrevUpd);
@@ -2192,11 +2212,22 @@
             }
 
             function paintTtSw() {
-                swatches($('#ttSw'), TTC, ttc, (c, live) => {
-                    ttc = c;
-                    ttPrevUpd();
-                    if (!live) paintTtSw()
-                });
+                const box = $('#ttSw');
+                box.innerHTML = '';
+                const i = document.createElement('input');
+                i.type = 'color';
+                i.className = 'nt-col tt-col';
+                i.value = cl(ttc, TTC[0]);
+                i.setAttribute('aria-label', tr('Custom colour'));
+                const nm = document.createElement('span');
+                nm.className = 'tt-cname';
+                nm.textContent = i.value.toUpperCase();
+                i.oninput = () => {
+                    ttc = i.value;
+                    nm.textContent = i.value.toUpperCase();
+                    ttPrevUpd()
+                };
+                box.append(i, nm);
                 ttPrevUpd()
             }
 
@@ -2430,6 +2461,7 @@
                 }
             });
 
+            let npUndo = null;
             const np = document.createElement('div');
             np.className = 'np';
             np.hidden = true;
@@ -2442,7 +2474,7 @@
 
             function renderNP() {
                 const L = S.notif.slice().reverse();
-                np.innerHTML = `<div class="np-h"><b>${tr('Notifications')}</b><button type="button" class="np-clr" ${L.length?'':'hidden'}>${tr('Clear all')}</button></div>` + (L.length ? L.map(n => `<div class="np-i go ${n.read?'':'new'}" data-nid2="${n.id}" role="button" tabindex="0"><span>${esc(n.msg)}</span><small>${new Date(n.ts).toLocaleString(loc(),{weekday:'short',hour:'2-digit',minute:'2-digit'})}</small></div>`).join('') : `<p class="np-e">${tr('No notifications yet')}</p>`)
+                np.innerHTML = `<div class="np-h"><b>${tr('Notifications')}</b><button type="button" class="np-clr" ${L.length?'':'hidden'}>${ic('trash')}<span>${tr('Clear all')}</span></button></div>` + (!L.length && npUndo ? `<div class="np-undo"><span>${tr('Notifications cleared')}</span><button type="button" class="np-ub">${tr('Undo')}</button></div>` : '') + (L.length ? L.map(n => `<div class="np-i go ${n.read?'':'new'}" data-nid2="${n.id}" role="button" tabindex="0"><span>${esc(n.msg)}</span><small>${new Date(n.ts).toLocaleString(loc(),{weekday:'short',hour:'2-digit',minute:'2-digit'})}</small></div>`).join('') : `<p class="np-e">${tr('No notifications yet')}</p>`)
             }
 
             function toggleNP() {
@@ -2451,6 +2483,7 @@
                     return
                 }
                 S.notif.forEach(n => n.read = 1);
+                npUndo = null;
                 save();
                 updateDot();
                 renderNP();
@@ -2460,14 +2493,28 @@
                 np.style.top = (r.bottom + 8) + 'px';
                 np.style.left = Math.max(8, Math.min(innerWidth - w - 8, isAr() ? r.left : r.right - w)) + 'px'
             }
-            document.addEventListener('click', e => {
-                if (e.target.closest('.np-clr')) {
+            /* "Clear all" / "Undo" are handled here first, so the panel stays open and nothing else reacts to the click */
+            np.addEventListener('click', e => {
+                const c = e.target.closest('.np-clr'),
+                    u = e.target.closest('.np-ub');
+                if (!c && !u) return;
+                e.stopPropagation();
+                if (c) {
+                    npUndo = S.notif.length ? S.notif.slice() : null;
                     S.notif = [];
-                    save();
-                    renderNP();
-                    updateDot();
-                    return
+                    document.querySelectorAll('#nx-banners .nx-banner').forEach(b => b.remove());
+                    try {
+                        navigator.serviceWorker.getRegistration().then(r => r && r.getNotifications().then(l => l.forEach(n => n.close()))).catch(() => {})
+                    } catch (x) {}
+                } else if (npUndo) {
+                    S.notif = npUndo;
+                    npUndo = null
                 }
+                save();
+                renderNP();
+                updateDot()
+            }, true);
+            document.addEventListener('click', e => {
                 if (!np.hidden && !np.contains(e.target) && !e.target.closest('#bell')) np.hidden = true
             });
             document.addEventListener('keydown', e => {
