@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="assets/css/fonts.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="assets/css/fonts.css"></noscript>
     <link rel="stylesheet" href="assets/css/novix.css">
+    <link rel="stylesheet" href="assets/css/dict.css?v=1">
 </head>
 
 <body>
@@ -69,6 +70,7 @@
     </div>
 
     <svg class="sprite" aria-hidden="true"><defs>
+<symbol id="i-dict" viewBox="0 0 24 24"><path d="M5 4.5A2.5 2.5 0 0 1 7.5 2H19v15H7.5A2.5 2.5 0 0 0 5 19.5z"/><path d="M5 19.5A2.5 2.5 0 0 0 7.5 22H19v-5M9.6 11.6l2.1-5.2 2.1 5.2M10.3 9.9h2.8"/></symbol>
 <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></symbol>
 <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 12l3 3 5-6"/></symbol>
 <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></symbol>
@@ -103,6 +105,7 @@
 
                 <a href="#/focus" data-v="focus"><svg class="i"><use href="#i-timer"/></svg><span data-t>Focus Timer</span></a>
                 <a href="#/smartboard" data-v="smartboard"><svg class="i"><use href="#i-board"/></svg><span data-t>Smart Board</span></a>
+                <a href="#/dict" data-v="dict"><svg class="i"><use href="#i-dict"/></svg><span data-t>Dictionary</span></a>
                 <a href="#/about" data-v="about"><svg class="i"><use href="#i-info"/></svg><span data-t>About</span></a>
                 <a href="#/settings" data-v="settings"><svg class="i"><use href="#i-gear"/></svg><span data-t>Settings</span></a>
             </nav>
@@ -253,6 +256,28 @@
                     <div class="tt-grid" id="ttGrid"></div>
                 </div>
             </section>
+            <section class="view" id="v-dict">
+                <div class="section-banner tasks-banner has-art dc-banner">
+                    <div class="banner-orbit" aria-hidden="true"></div>
+                    <div class="banner-copy"><span class="eyebrow" id="dcEyebrow">OFFLINE DICTIONARY</span><h1 class="pg" id="dcTitle">Dictionary</h1>
+                        <p id="dcSub">Meanings, examples, synonyms and antonyms, with no internet needed.</p>
+                    </div>
+                    <div class="banner-art-wrap" aria-hidden="true">
+                        <svg class="banner-art" viewBox="0 0 220 200"><defs><linearGradient id="dcG1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe0c6"/><stop offset="1" stop-color="#1f8f7c"/></linearGradient><linearGradient id="dcG2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fb8ff"/><stop offset="1" stop-color="#5b3fd0"/></linearGradient></defs>
+                            <ellipse cx="110" cy="176" rx="76" ry="9" fill="rgba(31,143,124,.18)"/>
+                            <rect x="52" y="30" width="116" height="140" rx="16" fill="url(#dcG1)"/>
+                            <rect x="64" y="30" width="104" height="140" rx="12" fill="#fff" opacity=".94"/>
+                            <path d="M52 46a16 16 0 0 1 16-16v140a16 16 0 0 1-16-16z" fill="#1f8f7c"/>
+                            <text x="116" y="92" font-family="Manrope,sans-serif" font-weight="800" font-size="40" text-anchor="middle" fill="#2f9c86">A</text>
+                            <text x="116" y="140" font-family="Alexandria,Manrope,sans-serif" font-weight="800" font-size="34" text-anchor="middle" fill="#5b3fd0">ع</text>
+                            <path d="M98 104h36" stroke="#cfe6e0" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="166" cy="54" r="15" fill="url(#dcG2)"/><path d="M160 54l4.5 4.5L172 50" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="dc" id="dcRoot"><div class="dc-load"><span class="dc-spin"></span></div></div>
+            </section>
+
             <section class="view" id="v-about">
                 <h1 class="pg" data-t>About NOVIX</h1>
                 <div class="card about-hero">
@@ -344,5 +369,6 @@
     <script defer src="assets/js/pdf.min.js"></script>
     <script defer src="assets/js/gn-host.js"></script>
     <script defer src="assets/js/novix.js"></script>
+    <script defer src="assets/js/dict.js?v=1"></script>
 </body>
 </html>

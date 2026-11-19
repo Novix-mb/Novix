@@ -3103,6 +3103,9 @@
                 }
             })();
             Object.assign(AR, {
+                'Dictionary': 'القاموس'
+            });
+            Object.assign(AR, {
                 'Smart Board': 'السبورة الذكية',
                 'Draw, Explain, Present': 'ارسم واشرح وقدّم',
                 'Draw, explain and present on a smart whiteboard. We’re putting the finishing touches on it.': 'ارسم واشرح وقدّم على سبورة ذكية. نضع اللمسات الأخيرة عليها.'

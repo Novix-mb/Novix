@@ -1,0 +1,173 @@
+/* NOVIX - Dictionary (offline English <-> Arabic) */
+.dc { display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr) 320px; align-items: start }
+.dc-main { display: grid; gap: 18px; min-width: 0 }
+.dc-side { display: grid; gap: 18px; position: sticky; top: 8px; min-width: 0 }
+@media (max-width: 980px) { .dc { grid-template-columns: 1fr } .dc-side { position: static } }
+
+.dc-load { grid-column: 1/-1; display: grid; place-items: center; padding: 60px 0 }
+.dc-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--acc); animation: dcSpin .8s linear infinite }
+@keyframes dcSpin { to { transform: rotate(360deg) } }
+
+/* search card */
+.dc-search { padding: 18px; display: grid; gap: 14px; position: relative; z-index: 5 }
+.dc-tabs { display: flex; gap: 6px; padding: 5px; border-radius: 16px; background: var(--bg2); overflow-x: auto; scrollbar-width: none }
+.dc-tabs::-webkit-scrollbar { display: none }
+.dc-tab { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-weight: 800; font-size: 13.5px; cursor: pointer; transition: background .2s, color .2s, box-shadow .2s, transform .15s; white-space: nowrap }
+.dc-tab:hover { color: var(--text) }
+.dc-tab:active { transform: scale(.97) }
+.dc-tab.on { background: var(--card); color: var(--primary); box-shadow: 0 4px 14px rgba(53, 89, 77, .12) }
+.dc-tab .i { width: 18px; height: 18px }
+.dc-soon { font-size: 10px; letter-spacing: .04em; font-weight: 800; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; background: linear-gradient(120deg, #8aa6ff, #5b3fd0); color: #fff }
+
+.dc-row { display: flex; align-items: stretch; gap: 10px }
+.dc-dir { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 16px; background: var(--bg2); flex: none }
+.dc-lang { min-width: 66px; text-align: center; font-weight: 800; font-size: 13px; padding: 0 10px; color: var(--text); transition: opacity .25s, transform .25s }
+.dc-swap { width: 38px; height: 38px; border-radius: 12px; border: 0; background: var(--card); color: var(--primary); box-shadow: 0 3px 10px rgba(53, 89, 77, .12); cursor: pointer; display: grid; place-items: center; transition: transform .35s cubic-bezier(.3, 1.4, .5, 1) }
+.dc-swap:hover { transform: rotate(180deg) }
+.dc-swap .i { width: 18px; height: 18px }
+
+.dc-field { position: relative; flex: 1; min-width: 0 }
+.dc-field input, .dc-ta { width: 100%; height: 54px; padding: 0 48px; border: 2px solid transparent; border-radius: 16px; background: var(--bg2); color: var(--text); font: inherit; font-size: 17px; font-weight: 600; outline: none; transition: border-color .2s, background .2s, box-shadow .2s }
+.dc-field input::placeholder, .dc-ta::placeholder { color: var(--muted); font-weight: 500 }
+.dc-field input:focus, .dc-ta:focus { border-color: var(--acc); background: var(--card); box-shadow: 0 0 0 4px color-mix(in srgb, var(--acc) 18%, transparent) }
+.dc-ico { position: absolute; inset-inline-start: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; width: 20px; height: 20px }
+.dc-clear { position: absolute; inset-inline-end: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--line); color: var(--muted); cursor: pointer; display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity .15s }
+.dc-clear.on { opacity: 1; pointer-events: auto }
+.dc-clear .i { width: 14px; height: 14px }
+
+.dc-sug { position: absolute; inset-inline: 0; top: calc(100% + 8px); z-index: 20; padding: 6px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 18px 44px rgba(30, 70, 60, .22); max-height: 320px; overflow: auto; animation: dcPop .16s ease-out }
+.dc-sug[hidden] { display: none }
+.dc-sug button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; color: var(--text); font: inherit; text-align: start; cursor: pointer }
+.dc-sug button.on, .dc-sug button:hover { background: var(--act) }
+.dc-sug b { font-weight: 800 }
+.dc-sug b mark { background: transparent; color: var(--acc) }
+.dc-sug small { color: var(--muted); font-size: 12.5px; margin-inline-start: auto; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dc-sug em { font-style: normal; font-size: 10.5px; font-weight: 800; text-transform: uppercase; color: var(--primary); background: var(--act); padding: 2px 8px; border-radius: 99px }
+@keyframes dcPop { from { opacity: 0; transform: translateY(-6px) } }
+
+.dc-quick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.dc-quick > span { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-inline-end: 2px }
+.dc-pill { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; transition: transform .15s, background .2s, border-color .2s, box-shadow .2s }
+.dc-pill:hover { background: var(--act); border-color: var(--acc); transform: translateY(-1px) }
+.dc-pill:active { transform: scale(.96) }
+.dc-pill.syn { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)) }
+.dc-pill.ant { border-color: color-mix(in srgb, #e58a8a 65%, var(--line)) }
+
+/* result card */
+.dc-res { padding: 0; overflow: hidden; animation: dcIn .4s cubic-bezier(.2, .8, .2, 1) both }
+@keyframes dcIn { from { opacity: 0; transform: translateY(14px) } }
+.dc-head { position: relative; padding: 24px 26px 20px; background: linear-gradient(120deg, color-mix(in srgb, var(--mint) 55%, var(--card)), color-mix(in srgb, var(--mist) 60%, var(--card))); display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap }
+.dc-word { margin: 0; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; font-weight: 800; letter-spacing: -.01em; color: var(--text); overflow-wrap: anywhere }
+.dc-sub { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap }
+.dc-ipa { font-family: "Segoe UI", system-ui, sans-serif; color: var(--muted); font-size: 16px; direction: ltr; unicode-bidi: isolate }
+.dc-pos { font-size: 12px; font-weight: 800; padding: 4px 12px; border-radius: 99px; background: var(--primary); color: var(--card); text-transform: capitalize }
+.dc-tools { margin-inline-start: auto; display: flex; gap: 8px }
+.dc-ib { width: 44px; height: 44px; border-radius: 14px; border: 0; background: var(--card); color: var(--primary); box-shadow: 0 4px 14px rgba(53, 89, 77, .14); cursor: pointer; display: grid; place-items: center; transition: transform .15s, background .2s, color .2s }
+.dc-ib:hover { transform: translateY(-2px) }
+.dc-ib:active { transform: scale(.93) }
+.dc-ib .i { width: 20px; height: 20px }
+.dc-ib.on { background: #f6c453; color: #5a4300 }
+.dc-ib.on .i { fill: currentColor }
+.dc-ib.speaking { animation: dcPulse .9s ease-in-out infinite }
+@keyframes dcPulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--acc) 22%, transparent) } }
+
+.dc-body { padding: 22px 26px 26px; display: grid; gap: 24px }
+.dc-sec h3 { margin: 0 0 12px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px }
+.dc-sec h3::after { content: ""; flex: 1; height: 1px; background: var(--line) }
+[lang=ar] .dc-sec h3 { letter-spacing: 0; font-size: 13px }
+.dc-means { display: flex; flex-wrap: wrap; gap: 10px }
+.dc-mean { display: inline-flex; align-items: center; gap: 10px; padding: 10px 18px; border-radius: 16px; background: var(--act); color: var(--text); font-size: 21px; font-weight: 800; animation: dcIn .45s both; animation-delay: calc(var(--n, 0) * 70ms); font-family: Alexandria, Manrope, system-ui, sans-serif }
+.dc-mean:first-child { background: var(--primary); color: var(--card) }
+.dc-mean i { font-style: normal; font-size: 11px; font-weight: 800; opacity: .7; font-family: Manrope, sans-serif }
+.dc-ex { display: grid; gap: 10px }
+.dc-ex-i { padding: 14px 16px; border-radius: 16px; background: var(--bg2); border-inline-start: 4px solid var(--acc); display: grid; gap: 4px; animation: dcIn .45s both; animation-delay: calc(var(--n, 0) * 80ms) }
+.dc-ex-i p { margin: 0 }
+.dc-ex-en { font-weight: 700; direction: ltr; text-align: start; unicode-bidi: isolate }
+[dir=rtl] .dc-ex-en { text-align: right }
+.dc-ex-en mark { background: color-mix(in srgb, #f6c453 55%, transparent); color: inherit; border-radius: 4px; padding: 0 3px }
+.dc-ex-ar { color: var(--muted); font-family: Alexandria, Manrope, sans-serif; font-size: 14.5px }
+.dc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px }
+@media (max-width: 640px) { .dc-two { grid-template-columns: 1fr } .dc-head, .dc-body { padding-inline: 18px } .dc-lang { min-width: 52px } }
+.dc-chips { display: flex; flex-wrap: wrap; gap: 8px }
+.dc-none { color: var(--muted); font-size: 14px; margin: 0 }
+.dc-prep { display: flex; flex-wrap: wrap; gap: 8px }
+.dc-prep span { padding: 7px 14px; border-radius: 12px; background: color-mix(in srgb, #8aa6ff 18%, var(--card)); font-weight: 800; font-size: 14px; color: var(--text); direction: ltr; unicode-bidi: isolate }
+.dc-forms { display: flex; flex-wrap: wrap; gap: 8px; direction: ltr; justify-content: flex-start }
+.dc-forms div { padding: 8px 14px; border-radius: 12px; background: var(--bg2); font-weight: 800; font-size: 14px; text-align: center }
+.dc-forms small { display: block; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 1px }
+
+/* arabic -> english list */
+.dc-list { display: grid; gap: 12px }
+.dc-li { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 20px; background: var(--card); box-shadow: var(--sh); border: 0; width: 100%; text-align: start; font: inherit; color: var(--text); cursor: pointer; animation: dcIn .4s both; animation-delay: calc(var(--n, 0) * 60ms); transition: transform .18s }
+.dc-li:hover { transform: translateY(-2px) }
+.dc-li b { font-size: 22px; font-weight: 800; direction: ltr }
+.dc-li .dc-ipa { font-size: 14px }
+.dc-li span.m { margin-inline-start: auto; color: var(--muted); font-family: Alexandria, Manrope, sans-serif; font-size: 14px; text-align: end }
+
+/* empty + welcome */
+.dc-empty { padding: 34px 26px; text-align: center; display: grid; gap: 10px; justify-items: center }
+.dc-empty .big { width: 84px; height: 84px; border-radius: 28px; display: grid; place-items: center; background: linear-gradient(135deg, var(--mint), var(--mist)); color: var(--primary); font-size: 34px; animation: novixFloat 5s ease-in-out infinite }
+.dc-empty .big .i { width: 38px; height: 38px }
+.dc-empty h2 { margin: 6px 0 0; font-size: 20px }
+.dc-empty p { margin: 0; color: var(--muted); max-width: 420px; line-height: 1.7 }
+
+/* word of the day */
+.dc-wotd { padding: 20px; background: linear-gradient(135deg, #35594d, #2f9c86); color: #fff; position: relative; overflow: hidden; cursor: pointer; border: 0; text-align: start; font: inherit; width: 100%; border-radius: 24px; box-shadow: var(--sh); transition: transform .2s }
+.dc-wotd:hover { transform: translateY(-2px) }
+.dc-wotd::after { content: ""; position: absolute; inset-inline-end: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255, 255, 255, .12) }
+.dc-wotd small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; opacity: .8 }
+[lang=ar] .dc-wotd small { letter-spacing: 0; font-size: 12.5px }
+.dc-wotd b { display: block; margin: 8px 0 2px; font-size: 28px; font-weight: 800 }
+.dc-wotd span { font-family: Alexandria, Manrope, sans-serif; opacity: .92; font-size: 16px }
+
+/* side lists */
+.dc-lists { padding: 16px }
+.dc-lt { display: flex; gap: 6px; margin-bottom: 12px }
+.dc-lt button { flex: 1; height: 36px; border: 0; border-radius: 12px; background: var(--bg2); color: var(--muted); font: inherit; font-weight: 800; font-size: 13px; cursor: pointer; transition: background .2s, color .2s }
+.dc-lt button.on { background: var(--primary); color: var(--card) }
+.dc-ls { display: grid; gap: 4px; max-height: 340px; overflow: auto }
+.dc-ls button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 0; border-radius: 12px; background: transparent; color: var(--text); font: inherit; text-align: start; cursor: pointer }
+.dc-ls button:hover { background: var(--act) }
+.dc-ls b { font-weight: 800 }
+.dc-ls small { margin-inline-start: auto; color: var(--muted); font-family: Alexandria, Manrope, sans-serif }
+.dc-ls .dc-clr { margin-top: 8px; justify-content: center; height: 34px; padding: 0; border: 1px dashed var(--line); border-radius: 12px; background: transparent; color: var(--muted); font-weight: 700; font-size: 12.5px }
+.dc-ls .dc-clr:hover { color: var(--text); border-color: var(--muted); background: transparent }
+.dc-stat { display: grid; grid-template-columns: 1fr 1fr; gap: 10px }
+.dc-stat div { padding: 14px; border-radius: 18px; background: var(--card); box-shadow: var(--sh); text-align: center }
+.dc-stat b { display: block; font-size: 24px; font-weight: 800; color: var(--primary) }
+.dc-stat span { font-size: 12px; font-weight: 700; color: var(--muted) }
+
+/* sentence mode */
+.dc-sent { padding: 20px; display: grid; gap: 14px }
+.dc-ta { height: 132px; padding: 16px 18px; resize: vertical; line-height: 1.6; font-size: 16px }
+.dc-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center }
+.dc-go { height: 46px; padding: 0 26px; border: 0; border-radius: 14px; background: var(--btn); color: #fff; font: inherit; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: transform .15s, box-shadow .2s }
+.dc-go:hover { box-shadow: 0 8px 20px rgba(53, 89, 77, .3); transform: translateY(-1px) }
+.dc-go:active { transform: scale(.97) }
+.dc-ghost { height: 46px; padding: 0 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-weight: 700; cursor: pointer }
+.dc-tokens { display: flex; flex-wrap: wrap; gap: 10px; direction: ltr }
+[dir=rtl] .dc-tokens.ar { direction: rtl }
+.dc-tk { display: grid; gap: 4px; padding: 10px 14px; border-radius: 14px; background: var(--bg2); border: 0; font: inherit; color: var(--text); cursor: pointer; text-align: center; animation: dcIn .4s both; animation-delay: calc(var(--n, 0) * 35ms); transition: transform .15s, background .2s }
+.dc-tk:hover { background: var(--act); transform: translateY(-2px) }
+.dc-tk b { font-weight: 800; font-size: 15px }
+.dc-tk i { font-style: normal; font-size: 13.5px; color: var(--acc); font-weight: 700; font-family: Alexandria, Manrope, sans-serif }
+.dc-tk.miss i { color: var(--muted); font-weight: 500 }
+.dc-note { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 16px; background: color-mix(in srgb, #8aa6ff 16%, var(--card)); font-size: 13.5px; line-height: 1.65; color: var(--text) }
+.dc-note .i { flex: none; width: 20px; height: 20px; margin-top: 2px; color: #5b3fd0 }
+.dc-gloss { padding: 16px 18px; border-radius: 16px; background: var(--act); font-weight: 700; font-size: 17px; line-height: 1.9; font-family: Alexandria, Manrope, sans-serif }
+
+/* grammar (soon) */
+.dc-gram { padding: 40px 26px; text-align: center; display: grid; justify-items: center; gap: 12px; position: relative; overflow: hidden }
+.dc-gram .orb { width: 110px; height: 110px; border-radius: 36px; display: grid; place-items: center; background: linear-gradient(135deg, #8aa6ff, #5b3fd0); color: #fff; box-shadow: 0 18px 40px rgba(91, 63, 208, .35); animation: novixFloat 4.5s ease-in-out infinite }
+.dc-gram .orb .i { width: 50px; height: 50px }
+.dc-gram h2 { margin: 8px 0 0; font-size: 24px }
+.dc-gram p { margin: 0; color: var(--muted); max-width: 440px; line-height: 1.75 }
+.dc-gram ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; text-align: start }
+.dc-gram li { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text) }
+.dc-gram li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--acc) }
+
+@media (max-width: 640px) { .dc-row { flex-wrap: wrap } .dc-dir { width: 100%; justify-content: space-between } .dc-lang { flex: 1 } .dc-field { flex: 1 0 100% } .dc-tab { padding: 0 12px } }
+:root[data-theme="dark"] .dc-head { background: linear-gradient(120deg, #1d3d35, #1a3140) }
+:root[data-theme="dark"] .dc-mean:first-child { color: #0e1916 }
+:root[data-theme="dark"] .dc-note { background: color-mix(in srgb, #8aa6ff 14%, var(--card)) }
+@media (prefers-reduced-motion: reduce) { .dc *, .dc *::before, .dc *::after { animation: none !important; transition: none !important } }
