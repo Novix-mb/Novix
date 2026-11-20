@@ -7,12 +7,12 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var isAr = function () { return document.documentElement.lang === 'ar'; };
   var L = function (en, ar) { return isAr() ? ar : en; };
-  var V = '?v=2', KEY = 'novix.dict.v1';
-  var INDEX_URL = 'assets/dict/index.json' + V, AR_URL = 'assets/dict/ar-en.json' + V, SHARD = function (c) { return 'assets/dict/en/' + c + '.json' + V; };
+  var V = '?v=3', KEY = 'novix.dict.v1';
+  var META_URL = 'assets/dict/meta.json' + V, AR_URL = 'assets/dict/ar-en.json' + V, IX_URL = function (c) { return 'assets/dict/ix/' + c + '.json' + V; }, SHARD = function (k) { return 'assets/dict/en/' + k + '.json' + V; };
 
   /* ---------- state ---------- */
   var st = { dir: 'en-ar', mode: 'word', list: 'hist', hist: [], saved: [], cur: null, q: '' };
-  var IX = [], EN = {}, IRR = {}, SH = {}, ARX = null, ARK = null, arP = null;
+  var META = null, IXL = {}, IRR = {}, SH = {}, ARX = null, ARK = null, arP = null, sugTok = 0;
   var root = null, inited = false, sugSel = -1, sugItems = [], timer = 0, tok = 0;
 
   function load() {
@@ -29,17 +29,23 @@
 
   /* ---------- data layer ---------- */
   function getJSON(url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }); }
-  function loadIndex() {
-    return getJSON(INDEX_URL).then(function (d) {
-      IX = d.w; IRR = d.irr || {}; EN = {};
-      IX.forEach(function (x, i) { EN[x[0]] = i; });
-    });
+  function loadMeta() { return getJSON(META_URL).then(function (d) { META = d; IRR = d.irr || {}; }); }
+  var okLetter = function (c) { return /^[a-z]$/.test(c || ''); };
+  /* light per-letter index [word, pos, first Arabic meaning, level], sorted: used for suggestions, glosses and history */
+  function ixLetter(c) {
+    if (!okLetter(c)) return Promise.resolve({ m: {}, a: [] });
+    if (!IXL[c]) IXL[c] = getJSON(IX_URL(c)).then(function (d) { var m = {}; d.w.forEach(function (x) { m[x[0]] = x; }); return { m: m, a: d.w }; }).catch(function (e) { delete IXL[c]; throw e; });
+    return IXL[c];
   }
-  function shard(c) {
-    if (!SH[c]) SH[c] = getJSON(SHARD(c)).then(function (d) { var m = {}; d.e.forEach(function (e) { m[e.w] = e; }); return m; }).catch(function (err) { delete SH[c]; throw err; });
-    return SH[c];
+  var exactInfo = function (w) { return ixLetter(w[0]).then(function (ix) { return ix.m[w] || null; }); };
+  /* full entries live in shards named after the first 2 letters (3 for the biggest groups, listed in meta.sh) */
+  var fk = function (k) { return k.replace(/ /g, '_').replace(/'/g, '~'); };
+  function shardKey(w) { var n = (META.sh && META.sh[w.slice(0, 2)]) || 2; return fk(w.slice(0, n)); }
+  function shard(k) {
+    if (!SH[k]) SH[k] = getJSON(SHARD(k)).then(function (d) { var m = {}; d.e.forEach(function (e) { m[e.w] = e; }); return m; }).catch(function (err) { delete SH[k]; throw err; });
+    return SH[k];
   }
-  var getEntry = function (w) { return shard(w[0]).then(function (m) { return m[w] || null; }); };
+  var getEntry = function (w) { return shard(shardKey(w)).then(function (m) { return m[w] || null; }); };
   function loadAr() {
     if (ARX) return Promise.resolve();
     if (!arP) arP = getJSON(AR_URL).then(function (d) { ARX = d; ARK = Object.keys(d).sort(); }).catch(function (e) { arP = null; throw e; });
@@ -59,15 +65,18 @@
     if (/est$/.test(w)) { o.push(w.slice(0, -3)); o.push(w.slice(0, -2)); }
     return o;
   }
-  /* returns the dictionary word that matches what the user typed ('' when unknown) */
-  function findEn(raw) {
-    var w = String(raw).toLowerCase().replace(/^[^a-z]+|[^a-z]+$/g, '');
-    if (!w) return '';
-    if (w in EN) return w;
-    if (IRR[w]) return IRR[w];
-    var c = stems(w);
-    for (var i = 1; i < c.length; i++) { if (c[i].length > 2 && c[i] in EN) return c[i]; }
-    return '';
+  /* resolves what the user typed (any form of the word, or a phrase) to its index row, or null */
+  function resolve(raw) {
+    var w = String(raw).toLowerCase().replace(/[^a-z' -]+/g, ' ').replace(/\s+/g, ' ').replace(/^[^a-z]+|[^a-z]+$/g, '');
+    if (!w) return Promise.resolve(null);
+    var c = IRR[w] ? [IRR[w], w] : [w];
+    if (w.indexOf(' ') < 0) stems(w).slice(1).forEach(function (x) { if (x.length > 2) c.push(x); });
+    var i = 0;
+    return (function next() {
+      if (i >= c.length) return null;
+      var x = c[i++];
+      return ixLetter(x[0]).then(function (ix) { return ix.m[x] || next(); });
+    })();
   }
   function findAr(raw) {
     var k = arKey(raw), r = ARX[k] || ARX['ال' + k] || ARX[normAr(raw)], out = [];
@@ -78,21 +87,23 @@
     return ws;
   }
   function suggest(q) {
-    var out = [];
     if (hasAr(q)) {
-      if (!ARK) return out;
+      var out = [];
+      if (!ARK) return Promise.resolve(out);
       var k = arKey(q);
       for (var i = 0; i < ARK.length && out.length < 8; i++) { if (ARK[i].indexOf(k) === 0) out.push({ ar: true, t: ARX[ARK[i]][0], w: ARX[ARK[i]][1].split('|')[0] }); }
-      return out;
+      return Promise.resolve(out);
     }
-    var w = q.toLowerCase().trim(); if (!w) return out;
-    var pre = [], con = [];
-    for (var j = 0; j < IX.length; j++) {
-      var x = IX[j][0];
-      if (x.indexOf(w) === 0) pre.push(IX[j]); else if (w.length > 2 && con.length < 12 && x.indexOf(w) > 0) con.push(IX[j]);
-    }
-    pre.sort(function (a, b) { return a[3] - b[3] || a[0].length - b[0].length; });
-    return pre.slice(0, 8).concat(con).slice(0, 8).map(function (x) { return { t: x[0], pos: x[1], m: x[2] }; });
+    var w = q.toLowerCase().replace(/\s+/g, ' ').trim();
+    if (!w || !okLetter(w[0])) return Promise.resolve([]);
+    return ixLetter(w[0]).then(function (ix) {
+      var a = ix.a, lo = 0, hi = a.length;
+      while (lo < hi) { var mid = (lo + hi) >> 1; if (a[mid][0] < w) lo = mid + 1; else hi = mid; }
+      var pre = [];
+      for (var j = lo; j < a.length && a[j][0].indexOf(w) === 0; j++) pre.push(a[j]);
+      pre.sort(function (x, y) { return x[3] - y[3] || x[0].length - y[0].length || (x[0] < y[0] ? -1 : 1); });
+      return pre.slice(0, 8).map(function (x) { return { t: x[0], pos: x[1], m: x[2] }; });
+    });
   }
 
   /* ---------- UI atoms ---------- */
@@ -113,7 +124,7 @@
   };
   var POS = { noun: ['noun', 'اسم'], verb: ['verb', 'فعل'], adj: ['adjective', 'صفة'], adv: ['adverb', 'ظرف'], prep: ['preposition', 'حرف جر'], pron: ['pronoun', 'ضمير'], conj: ['conjunction', 'حرف عطف'], det: ['determiner', 'أداة'] };
   var posName = function (p) { return POS[p] ? L(POS[p][0], POS[p][1]) : (p || ''); };
-  var LVL = { 1: ['Core', 'أساسي'], 2: ['Common', 'شائع'], 3: ['Advanced', 'متقدم'] };
+  var LVL = { 1: ['Core', 'أساسي'], 2: ['Common', 'شائع'], 3: ['Advanced', 'متقدم'], 4: ['Rare', 'نادر'] };
   function toast(m) { var t = $('#toast'); if (!t) return; t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove('on'); }, 1800); }
 
   /* ---------- shell ---------- */
@@ -133,14 +144,12 @@
       '</div>' +
       '<aside class="dc-side">' +
         '<button class="dc-wotd" id="dcWotd" type="button"></button>' +
-        '<div class="dc-stat" id="dcStat"></div>' +
-        '<div class="dc-off" id="dcOff"></div>' +
         '<div class="card dc-lists">' +
           '<div class="dc-lt" id="dcLt"><button data-l="hist">' + L('Recent', 'الأخيرة') + '</button><button data-l="saved">' + L('Saved', 'المحفوظة') + '</button></div>' +
           '<div class="dc-ls" id="dcLs"></div>' +
         '</div>' +
       '<p class="dc-credit">' + L('Data: Princeton WordNet, Arabic WordNet (CC BY-SA 3.0), FreeDict eng-ara (GPL), CMU Pronouncing Dictionary.', 'المصادر: Princeton WordNet وArabic WordNet (CC BY-SA 3.0) وFreeDict (GPL) وقاموس CMU للنطق.') + '</p></aside>';
-    renderTabs(); renderInput(); renderSide(); renderOut(); offlineStatus(0);
+    renderTabs(); renderInput(); renderSide(); renderOut();
   }
   function renderTabs() { $$('#dcTabs .dc-tab').forEach(function (b) { b.classList.toggle('on', b.dataset.m === st.mode); b.setAttribute('aria-selected', b.dataset.m === st.mode); }); }
 
@@ -207,8 +216,9 @@
         '<button class="dc-ib' + (saved ? ' on' : '') + '" id="dcSave" type="button" aria-label="' + L('Save', 'حفظ') + '" aria-pressed="' + saved + '">' + ic(P.star) + '</button>' +
         '<button class="dc-ib" id="dcCopy" type="button" aria-label="' + L('Copy', 'نسخ') + '">' + ic(P.copy) + '</button>' +
       '</div></div><div class="dc-body">';
-    h += '<div class="dc-sec"><h3>' + L('Meaning in Arabic', 'المعنى بالعربية') + '</h3><div class="dc-means">' +
+    if (e.ar && e.ar.length) h += '<div class="dc-sec"><h3>' + L('Meaning in Arabic', 'المعنى بالعربية') + '</h3><div class="dc-means">' +
       e.ar.map(function (m, k) { return '<span class="dc-mean" style="--n:' + k + '"><i>' + (k + 1) + '</i>' + esc(m) + '</span>'; }).join('') + '</div></div>';
+    else h += '<div class="dc-note">' + ic(P.info) + '<span>' + L('No Arabic translation for this word yet. The English definitions below are from the offline dictionary.', 'لا توجد ترجمة عربية لهذه الكلمة بعد. التعريفات الإنجليزية أدناه من القاموس المحفوظ على جهازك.') + '</span></div>';
     if (e.ex && e.ex.length) h += '<div class="dc-sec"><h3>' + L('Examples', 'أمثلة') + '</h3><div class="dc-ex">' +
       e.ex.map(function (x, k) { return '<div class="dc-ex-i" style="--n:' + k + '"><p class="dc-ex-en">' + enHighlight(x[0], e.w) + '</p><p class="dc-ex-ar">' + esc(x[1]) + '</p></div>'; }).join('') + '</div></div>';
     h += sensesHtml(e);
@@ -224,26 +234,27 @@
       if (parts.length > 1 && parts[0].indexOf('(') < 0) h += '<div class="dc-sec"><h3>' + (e.p === 'verb' ? L('Verb forms', 'تصريف الفعل') : L('Forms', 'الصيغ')) + '</h3><div class="dc-forms">' +
         parts.map(function (p, k) { return '<div><small>' + (isAr() ? labsAr[k] : labs[k]) + '</small>' + esc(p) + '</div>'; }).join('') + '</div></div>';
     }
-    if (e.fd && e.fd.length && !(e.s && e.s.length)) h += '<div class="dc-note">' + ic(P.info) + '<span>' + L('This word has translations only. Full definitions for it are not in the dictionary yet.', 'هذه الكلمة لها ترجمة فقط، والتعريفات الكاملة غير متوفرة لها بعد.') + '</span></div>';
+    if (e.ar && e.ar.length && !(e.s && e.s.length)) h += '<div class="dc-note">' + ic(P.info) + '<span>' + L('This word has translations only. Full definitions for it are not in the dictionary yet.', 'هذه الكلمة لها ترجمة فقط، والتعريفات الكاملة غير متوفرة لها بعد.') + '</span></div>';
     return h + '</div></div>';
   }
   function arResults(q) {
-    var ws = findAr(q);
-    if (!ws.length) return notFound(q);
-    return '<div class="dc-list">' + ws.slice(0, 14).map(function (w, k) {
-      var x = IX[EN[w]]; if (!x) return '';
-      return '<button type="button" class="dc-li" data-open="' + esc(w) + '" style="--n:' + k + '"><b>' + esc(w) + '</b>' + (x[1] ? '<span class="dc-pos">' + esc(posName(x[1])) + '</span>' : '') + '<span class="m">' + esc(x[2]) + '</span></button>';
+    var ws = findAr(q).slice(0, 14);
+    return Promise.all(ws.map(exactInfo)).then(function (xs) { return xs.filter(Boolean); });
+  }
+  function arList(xs) {
+    return '<div class="dc-list">' + xs.map(function (x, k) {
+      return '<button type="button" class="dc-li" data-open="' + esc(x[0]) + '" style="--n:' + k + '"><b>' + esc(x[0]) + '</b>' + (x[1] ? '<span class="dc-pos">' + esc(posName(x[1])) + '</span>' : '') + '<span class="m">' + esc(x[2]) + '</span></button>';
     }).join('') + '</div>';
   }
-  function notFound(q) {
-    var sug = suggest(q).slice(0, 4);
+  function notFound(q, sug) {
+    sug = sug || [];
     return '<div class="card dc-empty"><div class="big">' + ic(P.search) + '</div><h2>' + L('No result for', 'لا توجد نتيجة لـ') + ' “' + esc(q) + '”</h2>' +
       '<p>' + L('This word is not in the offline dictionary yet. Check the spelling or try another form of the word.', 'هذه الكلمة ليست في القاموس بعد. تأكد من الإملاء أو جرّب صيغة أخرى للكلمة.') + '</p>' +
-      (sug.length ? '<div class="dc-chips" style="justify-content:center">' + sug.map(function (s) { return '<button class="dc-pill" type="button" data-w="' + esc(s.ar ? s.t : s.t) + '">' + esc(s.t) + '</button>'; }).join('') + '</div>' : '') + '</div>';
+      (sug.length ? '<div class="dc-chips" style="justify-content:center">' + sug.map(function (s) { return '<button class="dc-pill" type="button" data-w="' + esc(s.t) + '">' + esc(s.t) + '</button>'; }).join('') + '</div>' : '') + '</div>';
   }
   function welcome() {
     return '<div class="card dc-empty"><div class="big">' + ic(P.book) + '</div><h2>' + L('Look up any word', 'ابحث عن أي كلمة') + '</h2>' +
-      '<p>' + L('Meanings, examples, synonyms, antonyms and more for ' + fmt(IX.length) + ' words, all working offline.', 'معانٍ وأمثلة ومرادفات وأضداد والمزيد لـ ' + fmt(IX.length) + ' كلمة، كلها تعمل بدون إنترنت.') + '</p></div>';
+      '<p>' + L('Meanings, examples, synonyms, antonyms and more for ' + fmt(META.n) + ' words and phrases, all working offline.', 'معانٍ وأمثلة ومرادفات وأضداد والمزيد لـ ' + fmt(META.n) + ' كلمة وعبارة، كلها تعمل بدون إنترنت.') + '</p></div>';
   }
   function gramSoon() {
     return '<div class="card dc-gram"><div class="orb">' + ic(P.spark) + '</div><h2>' + L('Grammar check is coming soon', 'تصحيح القواعد قريبًا') + '</h2>' +
@@ -252,57 +263,51 @@
   }
   var skeleton = function () { return '<div class="card dc-res"><div class="dc-head"><div class="dc-sk w"></div></div><div class="dc-body"><div class="dc-sk"></div><div class="dc-sk s"></div><div class="dc-sk"></div></div></div>'; };
 
+  function missing(out, my, q) {
+    suggest(q).catch(function () { return []; }).then(function (sug) { if (my === tok) out.innerHTML = notFound(q, sug.slice(0, 4)); });
+  }
   function renderOut() {
     var out = $('#dcOut'); if (!out) return;
     var my = ++tok;
     if (st.mode === 'gram') { out.innerHTML = gramSoon(); return; }
     if (st.mode === 'sent') { out.innerHTML = ''; return; }
-    if (!st.q) { out.innerHTML = welcome(); return; }
+    if (!st.q) { st.cur = null; out.innerHTML = welcome(); return; }
+    out.innerHTML = skeleton();
+    var q = st.q;
     if (st.dir === 'ar-en') {
-      out.innerHTML = skeleton();
-      loadAr().then(function () { if (my === tok) out.innerHTML = arResults(st.q); }, function () { if (my === tok) out.innerHTML = errCard(); });
+      loadAr().then(function () { return arResults(q); }).then(function (xs) {
+        if (my !== tok) return;
+        if (xs.length) out.innerHTML = arList(xs); else out.innerHTML = notFound(q, []);
+      }, function () { if (my === tok) out.innerHTML = errCard(); });
       return;
     }
-    var w = findEn(st.q);
-    if (!w) { st.cur = null; out.innerHTML = notFound(st.q); return; }
-    out.innerHTML = skeleton();
-    getEntry(w).then(function (e) {
-      if (my !== tok) return;
-      if (!e) { out.innerHTML = notFound(st.q); return; }
-      st.cur = e; out.innerHTML = entryHtml(e);
-    }, function () { if (my === tok) out.innerHTML = errCard(); });
+    resolve(q).then(function (x) {
+      if (!x) { if (my === tok) { st.cur = null; missing(out, my, q); } return null; }
+      return getEntry(x[0]).then(function (e) {
+        if (my !== tok) return;
+        if (!e) { missing(out, my, q); return; }
+        st.cur = e; out.innerHTML = entryHtml(e);
+      });
+    }).catch(function () { if (my === tok) out.innerHTML = errCard(); });
   }
   function errCard() {
     return '<div class="card dc-empty"><div class="big">' + ic(P.info) + '</div><h2>' + L('Could not load this part', 'تعذّر تحميل هذا الجزء') + '</h2><p>' + L('Connect to the internet once so the dictionary can be saved on your device.', 'اتصل بالإنترنت مرة واحدة ليُحفظ القاموس على جهازك.') + '</p></div>';
   }
 
   function renderSide() {
-    var pool = [];
-    IX.forEach(function (x, i) { if (x[3] <= 2 && x[1] && x[1] !== 'det' && x[0].length > 3) pool.push(i); });
-    var w = IX[pool[Math.floor(Date.now() / 864e5) * 7 % pool.length]];
-    var wb = $('#dcWotd');
-    wb.dataset.w = w[0];
-    wb.innerHTML = '<small>' + L('Word of the day', 'كلمة اليوم') + '</small><b dir="ltr">' + esc(w[0]) + '</b><span>' + esc(w[2]) + '</span>';
-    $('#dcStat').innerHTML = '<div><b>' + fmt(IX.length) + '</b><span>' + L('Words', 'كلمة') + '</span></div><div><b>' + fmt(st.saved.length) + '</b><span>' + L('Saved', 'محفوظة') + '</span></div>';
+    var wb = $('#dcWotd'), pool = (META && META.wotd) || [];
+    var w = pool.length ? pool[Math.floor(Date.now() / 864e5) % pool.length] : 'happy';
+    wb.dataset.w = w;
+    wb.innerHTML = '<small>' + L('Word of the day', 'كلمة اليوم') + '</small><b dir="ltr">' + esc(w) + '</b><span>&nbsp;</span>';
+    exactInfo(w).then(function (x) { var b = $('#dcWotd'); if (x && b) b.innerHTML = '<small>' + L('Word of the day', 'كلمة اليوم') + '</small><b dir="ltr">' + esc(w) + '</b><span>' + esc(x[2]) + '</span>'; }, function () {});
     $$('#dcLt button').forEach(function (b) { b.classList.toggle('on', b.dataset.l === st.list); });
-    var arr = st.list === 'hist' ? st.hist : st.saved, ls = $('#dcLs');
-    if (!arr.length) ls.innerHTML = '<p class="dc-none" style="padding:10px 6px">' + (st.list === 'hist' ? L('Your searches will appear here.', 'ستظهر عمليات بحثك هنا.') : L('Tap the star on a word to save it.', 'اضغط على النجمة لحفظ الكلمة.')) + '</p>';
-    else ls.innerHTML = arr.map(function (x) { var i = EN[x]; return i == null ? '' : '<button type="button" data-w="' + esc(x) + '" data-en="1"><b>' + esc(x) + '</b><small>' + esc(IX[i][2]) + '</small></button>'; }).join('') +
-      '<button type="button" class="dc-clr" data-clear="' + st.list + '">' + L('Clear list', 'مسح القائمة') + '</button>';
-  }
-
-  /* shows whether the whole dictionary is already stored on this device (service worker cache) */
-  function offlineStatus(n) {
-    var box = $('#dcOff'); if (!box) return;
-    var done = function (ok) {
-      box.innerHTML = ok ? '<div class="ok">' + ic(P.check) + '<span>' + L('Saved on this device. Works offline.', 'محفوظ على جهازك. يعمل بدون إنترنت.') + '</span></div>'
-        : '<div class="wait"><span class="dc-spin sm"></span><span>' + L('Saving the dictionary for offline use…', 'جارٍ حفظ القاموس للعمل بدون إنترنت…') + '</span></div>';
-    };
-    if (!('caches' in window)) { box.innerHTML = ''; return; }
-    caches.match('assets/dict/en/z.json', { ignoreSearch: true }).then(function (r) {
-      done(!!r);
-      if (!r && n < 12) setTimeout(function () { offlineStatus(n + 1); }, 4000);
-    }, function () { box.innerHTML = ''; });
+    var lst = st.list, arr = lst === 'hist' ? st.hist : st.saved, ls = $('#dcLs');
+    if (!arr.length) { ls.innerHTML = '<p class="dc-none" style="padding:10px 6px">' + (lst === 'hist' ? L('Your searches will appear here.', 'ستظهر عمليات بحثك هنا.') : L('Tap the star on a word to save it.', 'اضغط على النجمة لحفظ الكلمة.')) + '</p>'; return; }
+    Promise.all(arr.map(function (x) { return exactInfo(x).catch(function () { return null; }); })).then(function (xs) {
+      if (st.list !== lst || !$('#dcLs')) return;
+      $('#dcLs').innerHTML = xs.map(function (x, i) { return x ? '<button type="button" data-w="' + esc(x[0]) + '" data-en="1"><b>' + esc(x[0]) + '</b><small>' + esc(x[2]) + '</small></button>' : ''; }).join('') +
+        '<button type="button" class="dc-clr" data-clear="' + lst + '">' + L('Clear list', 'مسح القائمة') + '</button>';
+    });
   }
 
   /* ---------- actions ---------- */
@@ -312,10 +317,13 @@
     renderTabs(); renderInput(); renderOut(); commit(w);
   }
   function commit(w) {
-    var b = st.dir === 'en-ar' ? findEn(w) : '';
-    if (!b) return;
-    st.hist = [b].concat(st.hist.filter(function (x) { return x !== b; })).slice(0, 40);
-    save(); renderSide();
+    if (st.dir !== 'en-ar') return;
+    resolve(w).then(function (x) {
+      if (!x) return;
+      var b = x[0];
+      st.hist = [b].concat(st.hist.filter(function (h) { return h !== b; })).slice(0, 40);
+      save(); renderSide();
+    }, function () {});
   }
   function runSearch(q) {
     st.q = q.trim();
@@ -324,18 +332,23 @@
     if (st.q) commit(st.q);
   }
   function showSug() {
-    var q = ($('#dcQ') || {}).value || '', box = $('#dcSug');
-    if (!box) return;
+    var q = ($('#dcQ') || {}).value || '';
+    if (!$('#dcSug')) return;
     if (hasAr(q) && !ARK) { loadAr().then(showSug, function () {}); }
-    sugItems = q.trim() ? suggest(q) : []; sugSel = -1;
-    if (!sugItems.length) { box.hidden = true; return; }
-    box.hidden = false;
-    var ql = q.trim().toLowerCase();
-    box.innerHTML = sugItems.map(function (s, k) {
-      if (s.ar) return '<button type="button" role="option" data-k="' + k + '"><b>' + esc(s.t) + '</b><small dir="ltr">' + esc(s.w) + '</small></button>';
-      var b = s.t.indexOf(ql) === 0 ? '<mark>' + esc(s.t.slice(0, ql.length)) + '</mark>' + esc(s.t.slice(ql.length)) : esc(s.t);
-      return '<button type="button" role="option" data-k="' + k + '"><b>' + b + '</b>' + (s.pos ? '<em>' + esc(posName(s.pos)) + '</em>' : '') + '<small>' + esc(s.m) + '</small></button>';
-    }).join('');
+    var my = ++sugTok;
+    (q.trim() ? suggest(q) : Promise.resolve([])).then(function (items) {
+      var box = $('#dcSug');
+      if (my !== sugTok || !box) return;
+      sugItems = items; sugSel = -1;
+      if (!sugItems.length) { box.hidden = true; return; }
+      box.hidden = false;
+      var ql = q.trim().toLowerCase();
+      box.innerHTML = sugItems.map(function (s, k) {
+        if (s.ar) return '<button type="button" role="option" data-k="' + k + '"><b>' + esc(s.t) + '</b><small dir="ltr">' + esc(s.w) + '</small></button>';
+        var b = s.t.indexOf(ql) === 0 ? '<mark>' + esc(s.t.slice(0, ql.length)) + '</mark>' + esc(s.t.slice(ql.length)) : esc(s.t);
+        return '<button type="button" role="option" data-k="' + k + '"><b>' + b + '</b>' + (s.pos ? '<em>' + esc(posName(s.pos)) + '</em>' : '') + '<small>' + esc(s.m) + '</small></button>';
+      }).join('');
+    }, function () {});
   }
   function pickSug(k) {
     var s = sugItems[k]; if (!s) return;
@@ -356,16 +369,31 @@
     var ar = st.dir === 'ar-en';
     var go = function () {
       var toks = text.split(/\s+/).map(function (t) { return t.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, ''); }).filter(Boolean);
-      var gloss = [], html = toks.map(function (t, k) {
-        var w = '', g = '';
-        if (ar) { var r = findAr(t); if (r.length) { w = r[0]; g = w; } }
-        else { w = findEn(t); if (w) g = IX[EN[w]][2]; }
-        gloss.push(g || t);
-        return '<button type="button" class="dc-tk' + (g ? '' : ' miss') + '" ' + (w ? 'data-open="' + esc(w) + '"' : 'disabled') + ' style="--n:' + Math.min(k, 30) + '"><b>' + esc(t) + '</b><i>' + esc(g || '—') + '</i></button>';
-      }).join('');
-      out.innerHTML = '<div class="card dc-sent"><div class="dc-sec"><h3>' + L('Word by word', 'كلمة بكلمة') + '</h3><div class="dc-tokens' + (ar ? ' ar' : '') + '">' + html + '</div></div>' +
-        '<div class="dc-sec"><h3>' + L('Rough meaning', 'المعنى التقريبي') + '</h3><div class="dc-gloss" dir="' + (ar ? 'ltr' : 'rtl') + '">' + esc(gloss.join(' ')) + '</div></div>' +
-        '<div class="dc-note">' + ic(P.info) + '<span>' + L('This is a word-by-word guide from the offline dictionary. Full natural sentence translation will arrive with the offline translation model. Tap any word for its full card.', 'هذا شرح كلمة بكلمة من القاموس المحفوظ على جهازك. الترجمة الكاملة الطبيعية للجمل ستصل مع نموذج الترجمة بدون إنترنت. اضغط على أي كلمة لعرض بطاقتها.') + '</span></div></div>';
+      var none = { w: '', g: '' };
+      /* English: match the longest phrase first (give up, take part, in front of), then single words */
+      var units = ar ? Promise.resolve(toks.map(function (t) { var r = findAr(t); return { t: t, w: r[0] || '', g: r[0] || '' }; })) : (function () {
+        var out = [], i = 0;
+        return (function step() {
+          if (i >= toks.length) return Promise.resolve(out);
+          var sizes = [3, 2, 1].filter(function (n) { return i + n <= toks.length; }), j = 0;
+          return (function tryn() {
+            var n = sizes[j++], t = toks.slice(i, i + n).join(' ');
+            return resolve(t).catch(function () { return null; }).then(function (x) {
+              if (x || n === 1) { out.push({ t: t, w: x ? x[0] : '', g: x ? x[2] : '' }); i += n; return step(); }
+              return tryn();
+            });
+          })();
+        })();
+      })();
+      units.then(function (rs) {
+        var gloss = [], html = rs.map(function (r, k) {
+          gloss.push(r.g || r.t);
+          return '<button type="button" class="dc-tk' + (r.g ? '' : ' miss') + '" ' + (r.w ? 'data-open="' + esc(r.w) + '"' : 'disabled') + ' style="--n:' + Math.min(k, 30) + '"><b>' + esc(r.t) + '</b><i>' + esc(r.g || '—') + '</i></button>';
+        }).join('');
+        out.innerHTML = '<div class="card dc-sent"><div class="dc-sec"><h3>' + L('Word by word', 'كلمة بكلمة') + '</h3><div class="dc-tokens' + (ar ? ' ar' : '') + '">' + html + '</div></div>' +
+          '<div class="dc-sec"><h3>' + L('Rough meaning', 'المعنى التقريبي') + '</h3><div class="dc-gloss" dir="' + (ar ? 'ltr' : 'rtl') + '">' + esc(gloss.join(' ')) + '</div></div>' +
+          '<div class="dc-note">' + ic(P.info) + '<span>' + L('This is a word-by-word guide from the offline dictionary. Full natural sentence translation will arrive with the offline translation model. Tap any word for its full card.', 'هذا شرح كلمة بكلمة من القاموس المحفوظ على جهازك. الترجمة الكاملة الطبيعية للجمل ستصل مع نموذج الترجمة بدون إنترنت. اضغط على أي كلمة لعرض بطاقتها.') + '</span></div></div>';
+      });
     };
     if (ar) loadAr().then(go, function () { out.innerHTML = errCard(); }); else go();
   }
@@ -404,7 +432,7 @@
       clearTimeout(timer);
       var v = e.target.value; var c = $('#dcClr'); c && c.classList.toggle('on', !!v);
       showSug();
-      timer = setTimeout(function () { st.q = v.trim(); if (!st.q) { renderOut(); return; } if (st.dir === 'ar-en' || findEn(st.q)) renderOut(); }, 220);
+      timer = setTimeout(function () { var q0 = v.trim(); st.q = q0; if (!q0) { renderOut(); return; } if (st.dir === 'ar-en') { renderOut(); return; } resolve(q0).then(function (x) { if (x && st.q === q0) renderOut(); }, function () {}); }, 220);
     });
     root.addEventListener('keydown', function (e) {
       if (e.target.id === 'dcQ') {
@@ -430,13 +458,13 @@
   function init() {
     if (inited) return; inited = true;
     root = $('#dcRoot'); load();
-    loadIndex().then(function () { shell(); bind(); if (st.dir === 'ar-en') loadAr().catch(function () {}); }).catch(function () {
+    loadMeta().then(function () { shell(); bind(); if (st.dir === 'ar-en') loadAr().catch(function () {}); }).catch(function () {
       inited = false;
       root.innerHTML = '<div class="card dc-empty" style="grid-column:1/-1"><div class="big">' + ic(P.info) + '</div><h2>' + L('Could not load the dictionary', 'تعذّر تحميل القاموس') + '</h2><p>' + L('Connect once so the dictionary can be saved on your device, then it works offline.', 'اتصل بالإنترنت مرة واحدة ليُحفظ القاموس على جهازك، وبعدها يعمل بدون إنترنت.') + '</p></div>';
     });
   }
   function route() { if ((location.hash || '').indexOf('#/dict') === 0) init(); }
   addEventListener('hashchange', route);
-  addEventListener('novix:lang', function () { banner(); if (IX.length && root) shell(); });
+  addEventListener('novix:lang', function () { banner(); if (META && root) shell(); });
   banner(); route();
 })();

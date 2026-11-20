@@ -14,7 +14,7 @@ SRC_DIR holds: wordnet/ (WordNet 3.0 dict files), omw-1.4/arb/wn-data-arb.tab, e
 import sys, os, re, json, collections
 import xml.etree.ElementTree as ET
 
-SRC = sys.argv[1]; OUT = sys.argv[2]; MAX_WORDS = int(sys.argv[3]) if len(sys.argv) > 3 else 30000
+SRC = sys.argv[1]; OUT = sys.argv[2]; MAX_WORDS = int(sys.argv[3]) if len(sys.argv) > 3 else 10**9
 CURATED = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'core.json')       # hand-written core entries (kept as-is)
 
 import wordfreq, cmudict
@@ -122,7 +122,11 @@ def stem_cands(w):
         if len(w) > 5 and w[-4] == w[-5]: o.append(w[:-4])
     return o
 
-def level(z): return 1 if z >= 4.6 else (2 if z >= 3.6 else 3)
+FORCED = {'is': 'be', 'am': 'be', 'are': 'be', 'was': 'be', 'were': 'be', 'been': 'be', 'being': 'be', 'has': 'have', 'had': 'have', 'having': 'have', 'does': 'do', 'did': 'do', 'done': 'do', 'doing': 'do'}
+RISKY = re.compile(r"expletive|curse|profan|swear|derog|damn|hell\b|bitch|bastard|vulgar|obscene|slang|offensive|sexual|penis|vagina|genital|prostitut|erotic|porn|nazi|given name|surname|first name|kill|murder|rape|suicid|cocaine|heroin|alcohol|beer|wine|liquor|drunk|gambl|cigarette|tobacco|weapon", re.I)
+NOT_WOTD = set('damn dick hell ass bitch bastard shit fuck crap piss slut whore cock pussy tit boob sex nigger gay january february march april may june july august september october november december monday tuesday wednesday thursday friday saturday sunday'.split())
+
+def level(z): return 1 if z >= 4.6 else (2 if z >= 3.6 else (3 if z >= 2.6 else 4))
 
 def main():
     os.makedirs(OUT + '/en', exist_ok=True)
@@ -136,15 +140,15 @@ def main():
     # candidate lemmas
     lemmas = collections.defaultdict(dict)   # lemma -> pos -> [offsets]
     for (lemma, pl), offs in order.items():
-        if re.fullmatch(r"[a-z][a-z'-]*", lemma): lemmas[lemma][pl] = offs
+        if re.fullmatch(r"[a-z][a-z' -]*", lemma): lemmas[lemma][pl] = offs
     cands = []
     for w in set(lemmas) | set(fd) | set(core):
-        if not re.fullmatch(r"[a-z]([a-z'-]*[a-z])?", w): continue
+        if not re.fullmatch(r"[a-z]([a-z' -]*[a-z])?", w) or '  ' in w: continue
         if len(w) == 1 and w not in ('a', 'i') and w not in core: continue
         z = zipf(w)
-        if not (w in core or ((w in lemmas or z >= 3.2) and z >= 2.0)): continue
+        if not (w in core or w in lemmas or w in fd): continue
         # skip pure inflections (went, posed, studies...) - the app maps them back to the base word
-        if w not in core and w not in lemmas:
+        if w not in core and w not in lemmas and ' ' not in w:
             base = irr.get(w, (None,))[0]
             if base and base in lemmas: continue
             if any(c in lemmas and len(c) > 2 for c in stem_cands(w)): continue
@@ -196,7 +200,7 @@ def main():
             if a and norm_ar(a) not in [norm_ar(x) for x in top]: top.append(a)
         top = top[:6]
         if w in core: top = core[w]['ar']
-        if not top: continue
+        if not top and not senses: continue
         e = {'w': w, 'l': level(z), 'ar': top}
         pr = ipa(w)
         if pr: e['i'] = pr
@@ -211,20 +215,42 @@ def main():
 
     ranked = sorted(entries.values(), key=lambda x: -x[1])[:MAX_WORDS]
     final = {e['w']: e for e, z in ranked}
-    # shards
-    shards = collections.defaultdict(list)
-    for w in sorted(final): shards[w[0]].append(final[w])
-    for f in os.listdir(OUT + '/en'): os.remove(f'{OUT}/en/{f}')
-    for ch, lst in shards.items():
-        json.dump({'e': lst}, open(f'{OUT}/en/{ch}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-    # index (word list for suggestions, sentence glosses, spelling etc.)
+    zmap = {e['w']: z for e, z in ranked}
+    fk = lambda k: k.replace(' ', '_').replace("'", '~')
+
+    # shards: first 2 letters; a group bigger than SHARD_MAX bytes is split by 3 letters (recorded in meta.sh)
+    SHARD_MAX = 1_300_000
+    g2 = collections.defaultdict(list)
+    for w in sorted(final): g2[w[:2]].append(final[w])
+    split = {}
+    for k, lst in g2.items():
+        if len(json.dumps(lst, ensure_ascii=False, separators=(',', ':')).encode()) > SHARD_MAX and len(k) == 2: split[k] = 3
+    for d in ('en', 'ix'):
+        for f in os.listdir(f'{OUT}/{d}') if os.path.isdir(f'{OUT}/{d}') else []: os.remove(f'{OUT}/{d}/{f}')
+        os.makedirs(f'{OUT}/{d}', exist_ok=True)
+    if os.path.exists(OUT + '/index.json'): os.remove(OUT + '/index.json')
+    groups = collections.defaultdict(list)
+    for w in sorted(final): groups[w[:split.get(w[:2], 2)]].append(final[w])
+    for k, lst in groups.items():
+        json.dump({'e': lst}, open(f'{OUT}/en/{fk(k)}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     def pos_of(e):
         if e.get('p'): return e['p']
         return e['s'][0][0] if e.get('s') else ''
-    index = {'v': 2, 'n': len(final),
-             'w': [[w, pos_of(e), e['ar'][0], e['l']] for w, e in sorted(final.items())],
-             'irr': {k: v[0] for k, v in irr.items() if v[0] in final and k not in final}}
-    json.dump(index, open(f'{OUT}/index.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    # light per-letter index: suggestions + sentence glosses  [word, pos, first Arabic meaning, level]
+    byl = collections.defaultdict(list)
+    for w in sorted(final):
+        e = final[w]; byl[w[0]].append([w, pos_of(e), e['ar'][0] if e['ar'] else '', e['l']])
+    for c, lst in byl.items():
+        json.dump({'w': lst}, open(f'{OUT}/ix/{c}.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
+    # word of the day pool: common single words with senses and Arabic, spread over the frequency range
+    pool = [w for w, e in sorted(final.items(), key=lambda x: -zmap[x[0]])
+            if e['l'] <= 2 and e.get('s') and len(e['ar']) >= 2 and ' ' not in w and len(w) > 3 and pos_of(e) in ('noun', 'verb', 'adj')
+            and w not in NOT_WOTD and not w.endswith('s') and not any(RISKY.search(x[1]) for x in e['s'])]
+    step = max(1, len(pool) // 366)
+    meta = {'v': 3, 'n': len(final), 'sh': split,
+            'irr': dict({k: v[0] for k, v in irr.items() if v[0] in final and k not in final}, **{k: v for k, v in FORCED.items() if v in final}),
+            'wotd': pool[300::step][:366]}
+    json.dump(meta, open(f'{OUT}/meta.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 
     # Arabic -> English
     rev = collections.defaultdict(lambda: [None, collections.OrderedDict()])
@@ -250,6 +276,8 @@ def main():
         out[k] = [disp, '|'.join(ens)]
     json.dump(out, open(f'{OUT}/ar-en.json', 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
     tot = sum(os.path.getsize(f'{OUT}/en/{f}') for f in os.listdir(OUT + '/en'))
-    print('entries', len(final), 'shards', len(shards), 'en bytes', tot, 'index', os.path.getsize(OUT + '/index.json'), 'ar-en keys', len(out), os.path.getsize(OUT + '/ar-en.json'))
+    itot = sum(os.path.getsize(f'{OUT}/ix/{f}') for f in os.listdir(OUT + '/ix'))
+    big = max(os.path.getsize(f'{OUT}/en/{f}') for f in os.listdir(OUT + '/en'))
+    print('entries', len(final), 'shards', len(groups), 'split', len(split), 'en bytes', tot, 'biggest shard', big, 'ix bytes', itot, 'ar-en keys', len(out), os.path.getsize(OUT + '/ar-en.json'))
 
 main()

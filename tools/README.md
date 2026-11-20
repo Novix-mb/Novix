@@ -1,6 +1,6 @@
 # Dictionary build tools
 
-`build_dict.py` generates `assets/dict/` (index.json, en/<letter>.json, ar-en.json) from open data.
+`build_dict.py` generates `assets/dict/` (meta.json, ix/<letter>.json, en/<prefix>.json, ar-en.json) from open data.
 It is a developer tool only: it is not deployed (see `SKIP_DIRS` in `.github/workflows/deploy.yml`).
 
 Download the sources into one folder (SRC):
@@ -8,7 +8,7 @@ Download the sources into one folder (SRC):
 - FreeDict `eng-ara.tei` and `ara-eng.tei` (github.com/freedict/fd-dictionaries), converted to `SRC/ea.json` and `SRC/ae.json` as `{headword: [translations]}`
 - `pip install wordfreq cmudict`
 
-Then run: `python3 tools/build_dict.py SRC assets/dict 45000`
+Then run: `python3 tools/build_dict.py SRC assets/dict`
 
 Licences of the data: WordNet (Princeton licence), Arabic WordNet (CC BY-SA 3.0), FreeDict eng-ara (GPL-2.0-or-later, Arabeyes.org), CMUdict (BSD-style), wordfreq (Apache-2.0).
 `core.json` holds the hand-written core entries that override generated ones.

@@ -10059,6 +10059,7 @@
     if (!('caches' in window) || !/^https?:$/.test(location.protocol)) return;
     const T = {
         'Offline copy': 'النسخة بدون إنترنت',
+        'Includes the offline dictionary': 'تشمل القاموس بدون إنترنت',
         'Update offline copy': 'تحديث النسخة بدون إنترنت',
         'Updating offline copy…': 'جارٍ تحديث النسخة بدون إنترنت…',
         'Offline copy is up to date': 'تم تحديث النسخة بدون إنترنت',
@@ -10078,7 +10079,7 @@
     const label = () => {
         const l = document.getElementById('offLbl'),
             t = document.getElementById('offTxt');
-        if (l) l.textContent = tr('Offline copy');
+        if (l) l.innerHTML = tr('Offline copy') + '<small style="display:block;font-weight:600;opacity:.65;font-size:11.5px;margin-top:2px">' + tr('Includes the offline dictionary') + '</small>';
         if (t && !busy) t.textContent = tr('Update offline copy');
     };
 
@@ -10155,10 +10156,23 @@
                     })();
                     const buf = res.arrayBuffer();
                     await Promise.all([pump, buf]);
-                    store[idx] = {
+                    const data = await buf;
+                    if (f.indexOf('assets/dict/') > -1) {
+                        /* the dictionary is big: save each file right away instead of keeping it in memory with the rest */
+                        await (await caches.open('novix-code')).put(new URL(f, location.href).href, new Response(data, {
+                            status: 200,
+                            headers: {
+                                'Content-Type': res.headers.get('content-type') || 'application/json'
+                            }
+                        }));
+                        store[idx] = {
+                            f: f,
+                            saved: true
+                        };
+                    } else store[idx] = {
                         f: f,
                         type: res.headers.get('content-type') || '',
-                        buf: await buf
+                        buf: data
                     };
                 } catch (e) {
                     if (/Failed to fetch|NetworkError|Load failed/i.test(String(e && e.message))) throw e;
@@ -10179,7 +10193,7 @@
             const code = await caches.open('novix-code');
             const media = await caches.open('novix-media');
             for (const it of store) {
-                if (!it) continue;
+                if (!it || it.saved) continue;
                 const r = new Response(it.buf, {
                     status: 200,
                     headers: {

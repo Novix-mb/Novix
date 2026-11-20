@@ -172,9 +172,11 @@
 .dc-lvl.l1 { background: #d7f3e6; color: #1f6b4b }
 .dc-lvl.l2 { background: #dde6ff; color: #3b4fb8 }
 .dc-lvl.l3 { background: #f3e3ff; color: #7a3fb0 }
+.dc-lvl.l4 { background: #eceff1; color: #5d6b75 }
 :root[data-theme="dark"] .dc-lvl.l1 { background: #1d4637; color: #9be3c2 }
 :root[data-theme="dark"] .dc-lvl.l2 { background: #25305f; color: #b9c7ff }
 :root[data-theme="dark"] .dc-lvl.l3 { background: #3b2552; color: #dcb8ff }
+:root[data-theme="dark"] .dc-lvl.l4 { background: #2b343a; color: #b3bec6 }
 .dc-posg { display: grid; gap: 4px; margin-bottom: 18px }
 .dc-posg:last-child { margin-bottom: 0 }
 .dc-posh { margin-bottom: 6px }
