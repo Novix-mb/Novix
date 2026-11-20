@@ -28,7 +28,7 @@ jobs:
           python3 - <<'PY'
           import os, re, json, hashlib
 
-          SKIP_DIRS = {'.git', '.github', 'node_modules'}
+          SKIP_DIRS = {'.git', '.github', 'node_modules', 'tools'}
           SKIP_FILES = {'sw.js', 'README.md', 'robots.txt', 'sitemap.xml', 'version.json', '.nojekyll', 'CNAME'}
           files = []
           for root, dirs, names in os.walk('.'):
