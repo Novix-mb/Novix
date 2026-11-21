@@ -276,3 +276,110 @@
 .dc-ring { width: 128px; height: 128px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--acc) calc(var(--p) * 1%), var(--bg2) 0); position: relative }
 .dc-ring::before { content: ""; position: absolute; inset: 12px; border-radius: 50%; background: var(--card) }
 .dc-ring b { position: relative; font-size: 28px; font-weight: 800; color: var(--primary) }
+
+/* ======================================================================
+   v4 — refined look. Signature: a small violet "ink dot" (word end, active
+   tab, section markers) and fine violet specks, like salt grains, on hero surfaces.
+   ====================================================================== */
+:root { --dcp: #6d4fe0; --dcp-soft: #efeafd; --dcp-ink: #4b32b0 }
+:root[data-theme="dark"] { --dcp: #a995ff; --dcp-soft: #2a2447; --dcp-ink: #cfc4ff }
+.dc, .dc-banner { --speck: radial-gradient(circle, var(--dcp) 0 1.3px, transparent 1.8px) }
+
+/* banner: compact, with violet specks */
+.dc-banner { min-height: 0 !important; padding-block: 22px !important; position: relative }
+.dc-banner .banner-art { max-height: 120px }
+.dc-banner::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: .55;
+  background-image: var(--speck), var(--speck), var(--speck), var(--speck);
+  background-size: 140px 90px, 97px 131px, 211px 173px, 61px 79px;
+  background-position: 12px 18px, 47px 61px, 120px 7px, 80px 40px;
+  -webkit-mask-image: linear-gradient(100deg, transparent 35%, #000 85%); mask-image: linear-gradient(100deg, transparent 35%, #000 85%) }
+[dir=rtl] .dc-banner::after { -webkit-mask-image: linear-gradient(260deg, transparent 35%, #000 85%); mask-image: linear-gradient(260deg, transparent 35%, #000 85%) }
+.dc-banner .eyebrow { display: inline-flex; align-items: center; gap: 8px }
+.dc-banner .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--dcp); box-shadow: 0 0 0 4px color-mix(in srgb, var(--dcp) 20%, transparent) }
+
+/* search card */
+.dc-search { padding: 14px 16px 18px; gap: 16px; border: 1px solid var(--line); box-shadow: 0 10px 34px rgba(40, 70, 60, .08) }
+.dc-tabs { background: transparent; padding: 0; gap: 4px; border-bottom: 1px solid var(--line); border-radius: 0 }
+.dc-tab { height: 46px; border-radius: 0; position: relative; padding: 0 18px; color: var(--muted) }
+.dc-tab.on { background: transparent; box-shadow: none; color: var(--text) }
+.dc-tab::after { content: ""; position: absolute; inset-inline: 14px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--dcp); transform: scaleX(0); transition: transform .25s }
+.dc-tab.on::after { transform: scaleX(1) }
+.dc-tab.on .i { color: var(--dcp) }
+.dc-tab.on > span:not(.dc-soon)::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-inline-start: 7px; border-radius: 50%; background: var(--dcp); vertical-align: 2px }
+.dc-soon { background: var(--dcp-soft); color: var(--dcp-ink); letter-spacing: 0; text-transform: none; font-size: 10.5px }
+.dc-field input { height: 58px; border: 1.5px solid var(--line); background: var(--card); border-radius: 18px; box-shadow: 0 2px 0 rgba(40, 70, 60, .03) inset }
+.dc-field input:focus, .dc-ta:focus { border-color: var(--dcp); box-shadow: 0 0 0 4px color-mix(in srgb, var(--dcp) 16%, transparent) }
+.dc-dir { background: transparent; border: 1px solid var(--line); border-radius: 18px; padding: 4px 6px }
+.dc-swap { background: var(--dcp-soft); color: var(--dcp-ink); box-shadow: none }
+.dc-sug b mark { color: var(--dcp) }
+.dc-sug em { background: var(--dcp-soft); color: var(--dcp-ink) }
+.dc-pill { border-radius: 10px; height: 32px; font-weight: 600 }
+.dc-pill:hover { border-color: var(--dcp); background: var(--dcp-soft) }
+
+/* entry */
+.dc-res { border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(40, 70, 60, .09) }
+.dc-head { background: var(--card); border-bottom: 1px solid var(--line); padding: 26px 28px 22px; position: relative; overflow: hidden }
+.dc-head::before { content: ""; position: absolute; inset-block: 0; inset-inline-end: 0; width: 46%; pointer-events: none; opacity: .5;
+  background-image: var(--speck), var(--speck), var(--speck); background-size: 120px 80px, 83px 109px, 157px 131px; background-position: 20px 12px, 55px 50px, 10px 30px;
+  -webkit-mask-image: linear-gradient(270deg, #000, transparent); mask-image: linear-gradient(270deg, #000, transparent) }
+[dir=rtl] .dc-head::before { -webkit-mask-image: linear-gradient(90deg, #000, transparent); mask-image: linear-gradient(90deg, #000, transparent) }
+.dc-head > * { position: relative }
+.dc-word { font-size: clamp(34px, 6vw, 54px); letter-spacing: -.02em }
+.dc-word::after { content: ""; display: inline-block; width: .17em; height: .17em; margin-inline-start: .08em; border-radius: 50%; background: var(--dcp); vertical-align: baseline }
+.dc-pos { background: transparent; color: var(--dcp-ink); padding: 0; font-size: 14px; font-style: italic; font-weight: 700; border-radius: 0 }
+.dc-pos + .dc-pos::before { content: "·"; margin-inline-end: 10px; font-style: normal; color: var(--muted) }
+.dc-lvl { border-radius: 8px; background: var(--dcp-soft) !important; color: var(--dcp-ink) !important; font-size: 11.5px }
+.dc-ib { border: 1px solid var(--line); box-shadow: none; background: var(--card); color: var(--muted); border-radius: 50% }
+.dc-ib:hover { color: var(--dcp); border-color: var(--dcp); transform: none }
+.dc-ib.on { background: var(--dcp); border-color: var(--dcp); color: #fff }
+.dc-body { gap: 28px; padding: 24px 28px 30px }
+.dc-sec h3 { font-size: 13px; letter-spacing: 0; text-transform: none; color: var(--text); font-weight: 800 }
+.dc-sec h3::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--dcp); flex: none }
+.dc-sec h3::after { background: var(--line) }
+.dc-means { gap: 8px 16px; align-items: baseline }
+.dc-mean { background: transparent; padding: 0; border-radius: 0; font-size: 22px; font-weight: 700; color: var(--text) }
+.dc-mean:first-child { background: transparent; color: var(--dcp-ink); font-size: 34px; font-weight: 800; line-height: 1.3 }
+:root[data-theme="dark"] .dc-mean:first-child { color: var(--dcp-ink) }
+.dc-mean i { width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 50%; background: var(--dcp-soft); color: var(--dcp-ink); opacity: 1; font-size: 11px }
+.dc-mean + .dc-mean::before { display: none }
+.dc-ex-i { background: transparent; border: 1px solid var(--line); border-inline-start: 3px solid var(--dcp); border-radius: 14px }
+.dc-sno { background: var(--dcp-soft); color: var(--dcp-ink); border-radius: 50% }
+.dc-sar span { background: transparent; border: 1px solid var(--line); font-weight: 700 }
+.dc-mini:hover, .dc-pill.syn:hover { border-color: var(--dcp); background: var(--dcp-soft) }
+.dc-prep span { background: var(--dcp-soft); color: var(--dcp-ink) }
+.dc-forms div { background: transparent; border: 1px solid var(--line) }
+.dc-minis .lab { letter-spacing: 0; text-transform: none; font-size: 11.5px }
+.dc-note .i { color: var(--dcp) }
+.dc-note { background: var(--dcp-soft) }
+
+/* side column */
+.dc-wotd { background: linear-gradient(150deg, #2b2158, #4a35b0 70%, #6d4fe0); border-radius: 22px; padding: 22px }
+.dc-wotd::after { inset: 0; width: auto; height: auto; border-radius: 0; background-image: radial-gradient(circle, rgba(255,255,255,.7) 0 1.2px, transparent 1.7px), radial-gradient(circle, rgba(255,255,255,.5) 0 1px, transparent 1.5px), radial-gradient(circle, rgba(255,255,255,.6) 0 1.3px, transparent 1.8px); background-size: 110px 76px, 73px 97px, 149px 121px; background-position: 14px 10px, 40px 30px, 80px 5px; opacity: .55 }
+.dc-wotd > * { position: relative; z-index: 1 }
+.dc-wotd small { letter-spacing: 0; text-transform: none; font-size: 12.5px; display: flex; align-items: center; gap: 8px }
+.dc-wotd small::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff }
+.dc-wotd b { font-size: 32px }
+.dc-lists { border: 1px solid var(--line); box-shadow: none }
+.dc-lt { background: var(--bg2); padding: 4px; border-radius: 14px }
+.dc-lt button { background: transparent; border-radius: 10px }
+.dc-lt button.on { background: var(--card); color: var(--dcp-ink); box-shadow: 0 2px 8px rgba(40, 70, 60, .1) }
+.dc-ls button:hover { background: var(--dcp-soft) }
+
+/* welcome / empty / grammar */
+.dc-empty .big { background: var(--dcp-soft); color: var(--dcp); position: relative }
+.dc-empty .big::after { content: ""; position: absolute; top: 12px; inset-inline-end: 12px; width: 10px; height: 10px; border-radius: 50%; background: var(--dcp) }
+.dc-gram .orb { background: linear-gradient(135deg, #8d75f0, var(--dcp)) }
+
+/* my words + quiz */
+.dc-go { background: var(--primary); }
+:root[data-theme="dark"] .dc-go { color: #0e1916 }
+.dc-wi { box-shadow: none; border: 1px solid var(--line) }
+.dc-wword:hover b { color: var(--dcp) }
+.dc-wedit { border-color: var(--dcp) }
+.dc-prog i { background: var(--dcp) }
+.dc-ring { background: conic-gradient(var(--dcp) calc(var(--p) * 1%), var(--bg2) 0) }
+.dc-qb:not([disabled]):hover { border-color: var(--dcp) }
+.dc-wh { border: 1px solid var(--line); box-shadow: none }
+@media (max-width: 640px) { .dc-head::before { display: none } .dc-mean:first-child { font-size: 28px } .dc-body { padding: 20px 18px 24px } .dc-head { padding: 20px 18px } }
+:root[data-theme="dark"] .dc-head { background: var(--card) }
+@media (max-width: 520px) { .dc-tabs { overflow: visible } .dc-tab { flex: 1 1 0; padding: 0 4px; gap: 5px; font-size: 12.5px; min-width: 0 } .dc-tab .i { display: none } .dc-tab.on > span:not(.dc-soon)::after { margin-inline-start: 5px } .dc-soon { display: none } }
