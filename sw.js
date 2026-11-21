@@ -48,7 +48,11 @@ const RECHECK_MS = 12 * 60 * 60 * 1000;
 const NET_TIMEOUT = 5000;
 /* every code file the app can load (including the ones loaded later, like the Smart Board and the PDF/file editor).
    They are always refreshed together, so no section is left running an older version than the rest of the app. */
-const CODE_FILES = Array.from(new Set(ALL_FILES.concat(PRECACHE))).filter(f => f === './' || (f !== './version.json' && CODE_RE.test(f)));
+/* The offline dictionary (assets/dict/) is a separate, optional download (Settings > Offline copy).
+   It is never fetched by the automatic install/refresh below; files the user opened or downloaded stay cached. */
+const DICT_RE = /^\.\/assets\/dict\//;
+const SITE_FILES = ALL_FILES.filter(f => !DICT_RE.test(f));
+const CODE_FILES = Array.from(new Set(SITE_FILES.concat(PRECACHE))).filter(f => f === './' || (f !== './version.json' && CODE_RE.test(f)));
 
 /* ---------- Cache cleanup ----------
    Only touches Cache Storage (the app's own downloaded copy). It never touches the user's files:
@@ -75,7 +79,7 @@ self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const code = await caches.open(CODE);
     const media = await caches.open(MEDIA);
-    await Promise.allSettled(ALL_FILES.map(async f => {
+    await Promise.allSettled(SITE_FILES.map(async f => {
       if (f === './version.json') return;
       if (!CODE_RE.test(f) && await media.match(new Request(f, { mode: 'same-origin' }))) return;
       const res = await fetch(f, { cache: 'reload' });

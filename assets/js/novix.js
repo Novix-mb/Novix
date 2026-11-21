@@ -10059,7 +10059,17 @@
     if (!('caches' in window) || !/^https?:$/.test(location.protocol)) return;
     const T = {
         'Offline copy': 'النسخة بدون إنترنت',
-        'Includes the offline dictionary': 'تشمل القاموس بدون إنترنت',
+        'Choose what to update': 'اختر ما تريد تحديثه',
+        'Update the site': 'تحديث الموقع',
+        'Pages, tools and sounds. The dictionary is separate.': 'الصفحات والأدوات والأصوات. القاموس منفصل عنها.',
+        'Offline dictionary': 'القاموس بدون إنترنت',
+        'Not downloaded yet · about 40 MB': 'لم يتم تنزيله بعد · حوالي 40 ميجا',
+        'Downloaded': 'تم تنزيله',
+        'Partly downloaded': 'تم تنزيل جزء منه',
+        'Download': 'تنزيل',
+        'Update': 'تحديث',
+        'Updating the dictionary…': 'جارٍ تحديث القاموس…',
+        'Dictionary is up to date': 'القاموس محدّث',
         'Update offline copy': 'تحديث النسخة بدون إنترنت',
         'Updating offline copy…': 'جارٍ تحديث النسخة بدون إنترنت…',
         'Offline copy is up to date': 'تم تحديث النسخة بدون إنترنت',
@@ -10073,13 +10083,14 @@
     const ar = () => document.documentElement.lang === 'ar' || document.documentElement.dir === 'rtl';
     const tr = k => (ar() && T[k]) || k;
     const CODE_RE = /\.(?:html|js|css|webmanifest|json)$/i;
+    const isDict = f => f.indexOf('assets/dict/') > -1;
     let busy = false,
         pop = null;
 
     const label = () => {
         const l = document.getElementById('offLbl'),
             t = document.getElementById('offTxt');
-        if (l) l.innerHTML = tr('Offline copy') + '<small style="display:block;font-weight:600;opacity:.65;font-size:11.5px;margin-top:2px">' + tr('Includes the offline dictionary') + '</small>';
+        if (l) l.textContent = tr('Offline copy');
         if (t && !busy) t.textContent = tr('Update offline copy');
     };
 
@@ -10108,16 +10119,18 @@
         return JSON.parse(m[1]).filter(f => f !== './version.json');
     };
 
-    const run = async () => {
+    const run = async mode => {
+        mode = mode === 'dict' ? 'dict' : 'site';
         if (busy) return;
         busy = true;
         const btn = document.getElementById('offBtn');
         if (btn) btn.disabled = true;
         const o = ui();
-        o.t.textContent = tr('Updating offline copy…');
+        o.t.textContent = tr(mode === 'dict' ? 'Updating the dictionary…' : 'Updating offline copy…');
         const fail = [];
         try {
-            const files = await listFiles();
+            const all = await listFiles();
+            const files = all.filter(f => isDict(f) === (mode === 'dict'));
             const n = files.length;
             /* download everything first into a staging list, so a broken connection never leaves a half-empty cache */
             const part = new Array(n).fill(0);
@@ -10202,7 +10215,7 @@
                 });
                 await (CODE_RE.test(it.f) ? code : media).put(new URL(it.f, location.href).href, r);
             }
-            const keep = new Set(files.concat(['./', './index.html']).map(f => new URL(f, location.href).href));
+            const keep = new Set(all.concat(['./', './index.html']).map(f => new URL(f, location.href).href));
             let freedN = 0,
                 freedB = 0;
             for (const c of [code, media]) {
@@ -10219,12 +10232,14 @@
                 for (const n of await caches.keys())
                     if (n !== 'novix-code' && n !== 'novix-media') await caches.delete(n);
             } catch (e) {}
-            try {
-                const regs = await navigator.serviceWorker.getRegistrations();
-                for (const r of regs) await r.unregister();
-                await navigator.serviceWorker.register('sw.js')
-            } catch (e) {}
-            o.t.textContent = tr('Offline copy is up to date');
+            if (mode === 'site') {
+                try {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (const r of regs) await r.unregister();
+                    await navigator.serviceWorker.register('sw.js')
+                } catch (e) {}
+            }
+            o.t.textContent = tr(mode === 'dict' ? 'Dictionary is up to date' : 'Offline copy is up to date');
             o.p.textContent = '100%';
             o.i.style.width = '100%';
             if (freedN) o.sub.textContent += ' · ' + tr('Old files removed') + ': ' + freedN + ' (' + (freedB / 1048576).toFixed(1) + ' MB)';
@@ -10234,8 +10249,9 @@
             }
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;gap:8px;margin-top:10px';
-            row.innerHTML = '<button type="button" class="nx-off-go">' + tr('Reload') + '</button><button type="button" class="nx-off-x">' + tr('Close') + '</button>';
-            row.querySelector('.nx-off-go').onclick = () => location.reload();
+            row.innerHTML = (mode === 'site' ? '<button type="button" class="nx-off-go">' + tr('Reload') + '</button>' : '') + '<button type="button" class="nx-off-x">' + tr('Close') + '</button>';
+            const rl = row.querySelector('.nx-off-go');
+            if (rl) rl.onclick = () => location.reload();
             row.querySelector('.nx-off-x').onclick = () => {
                 pop.remove();
                 pop = null;
@@ -10252,7 +10268,7 @@
                 pop.remove();
                 pop = null;
                 busy = false;
-                run();
+                run(mode);
             };
             row.querySelector('.nx-off-x').onclick = () => {
                 pop.remove();
@@ -10266,9 +10282,62 @@
         }
     };
 
+    /* what is saved on this device for the dictionary (it is a separate download from the site) */
+    const dictStatus = async () => {
+        try {
+            const all = await listFiles();
+            const total = all.filter(isDict).length;
+            const keys = await (await caches.open('novix-code')).keys();
+            return {
+                have: keys.filter(k => k.url.indexOf('/assets/dict/') > -1).length,
+                total: total
+            };
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const choose = () => {
+        if (busy) return;
+        if (pop) pop.remove();
+        pop = document.createElement('div');
+        pop.id = 'nx-off-pop';
+        pop.innerHTML = '<div class="nx-off-row"><span class="t">' + tr('Choose what to update') + '</span></div>' +
+            '<div class="nx-off-opt"><div><b>' + tr('Update the site') + '</b><small>' + tr('Pages, tools and sounds. The dictionary is separate.') + '</small></div><button type="button" class="nx-off-go" data-m="site">' + tr('Update') + '</button></div>' +
+            '<div class="nx-off-opt"><div><b>' + tr('Offline dictionary') + '</b><small class="ds">' + tr('Not downloaded yet · about 40 MB') + '</small></div><button type="button" class="nx-off-go" data-m="dict">' + tr('Download') + '</button></div>' +
+            '<div style="display:flex;margin-top:10px"><button type="button" class="nx-off-x">' + tr('Close') + '</button></div>';
+        document.body.appendChild(pop);
+        const me = pop;
+        me.querySelectorAll('[data-m]').forEach(b => b.onclick = () => {
+            me.remove();
+            pop = null;
+            run(b.dataset.m);
+        });
+        me.querySelector('.nx-off-x').onclick = () => {
+            me.remove();
+            if (pop === me) pop = null;
+        };
+        dictStatus().then(st => {
+            if (!st || !me.isConnected) return;
+            const ds = me.querySelector('.ds'),
+                btn = me.querySelector('[data-m="dict"]');
+            if (st.have && st.have >= st.total) {
+                ds.textContent = tr('Downloaded') + ' · ' + st.total + ' ' + tr('files');
+                btn.textContent = tr('Update');
+            } else if (st.have) {
+                ds.textContent = tr('Partly downloaded') + ' · ' + st.have + ' / ' + st.total + ' ' + tr('files');
+                btn.textContent = tr('Download');
+            }
+        });
+    };
+
     document.addEventListener('click', e => {
-        if (e.target.closest && e.target.closest('#offBtn')) run();
+        if (e.target.closest && e.target.closest('#offBtn')) choose();
     });
+    window.novixOffline = {
+        run: run,
+        choose: choose
+    };
     addEventListener('novix:lang', label);
     label();
 })();
